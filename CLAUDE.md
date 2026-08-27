@@ -27,10 +27,14 @@ Done:
   event's own picture; 15 kept after filtering out the category logo tiles.
 - On-screen control bar (prev/pause/next, progress, counter, speed, full
   screen), bottom-right, auto-hiding with the cursor.
+- Studio photos pulled from the shared *Social Media Photos* Google Photos
+  album: 10 of 12 studios now have current-space photos. 30-slide loop.
 
 Next:
-- Photos for the 6 studios with none yet (ceramics, screen printing,
-  leatherworking, metalworking, a/v studio, classroom). Hank is supplying these.
+- Photos for **leatherworking** and **a/v studio** - the only two studios still
+  without any. Nothing suitable in the album's recent pages.
+- Drop the `50-deck-*.jpg` photos once every studio has enough current ones;
+  they are of the old Wallingford space and only exist as a backstop.
 - Deploy. Output is static; nothing needs a server.
 - Possibly a scheduled events refresh (daily GitHub Action) once the scraper has
   proven stable across a site change or two.
@@ -74,6 +78,14 @@ avoids pulling in an image library for two numbers.
 UA stylesheet's `[hidden]` rule, so a `flex` element with the `hidden` attribute
 stays visible. `global.css` forces it. This bites the event card, whose
 occurrence options are flex rows toggled by `hidden`.
+
+**Google Photos album extraction.** The share page embeds its list as JSON in
+the `AF_initDataCallback` block keyed `ds:1`; records are
+`[id, [url, w, h], takenMs, ...]` and `url + "=w2400"` fetches full size. Two
+traps: **video records come back with a play button burned into the thumbnail**
+(detect them by the key `76647426` in the record's trailing dict - 26 of 300),
+and **only the first ~300 records are embedded**, newest first, so anything
+older than the last one needs the continuation token in `data[2]`.
 
 **Lazy images need explicit warming.** A lazy image inside a slide sitting at
 `opacity: 0` may never load on its own, which shows as a slide fading in with a

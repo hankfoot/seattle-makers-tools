@@ -168,11 +168,37 @@ src/
 
 ## Provenance of the artwork
 
-Studio photos, the wordmark, and eight of the studio icons were extracted from
-the *Background Reel* PDF at full resolution. Four icons (ceramics, screen
-printing, leatherworking, classroom) are drawn to match, as the deck predates
-those studios.
+**Studio photos** come from the shared *Social Media Photos* Google Photos
+album, named `NN-album-NNN.jpg`. They show the current Interbay space.
+
+**Photos named `50-deck-NN.jpg`** were extracted from the *Background Reel* PDF.
+They are of the **old Wallingford space**, so they sort behind the album photos
+and only appear if a studio runs out. Delete them once every studio has enough
+current photos.
+
+The wordmark and eight studio icons also came out of that PDF at full
+resolution; four icons (ceramics, screen printing, leatherworking, classroom)
+are drawn to match, as the deck predates those studios.
 
 The deck's brand card is not reused: it lists eight services and the old
 Wallingford address with a Gas Works Park map. `BrandSlide.astro` rebuilds it
 with the twelve current studios and the Interbay location.
+
+### Pulling more from the album
+
+The share page embeds its photo list as JSON in an `AF_initDataCallback` block
+keyed `ds:1`; each record is `[id, [url, width, height], takenMs, …]` and a
+full-size download is that url plus `=w2400`.
+
+Two things to watch:
+
+- **Videos.** Their thumbnails come back with a play button burned in, which
+  looks like a bug on a slide. A record is a video when its trailing dict has
+  the key `76647426` — 26 of the album's 300 items are.
+- **Only the first ~300 records are embedded**, newest first, reaching back to
+  2025-07-18; the album itself goes back to 2022. Older ones need the
+  continuation token in `data[2]`.
+
+**Still missing photos: leatherworking and a/v studio.** Neither appears in the
+album's recent pages. They have icons and will show event cards, but no photo
+block until someone adds files to `public/studios/`.

@@ -27,6 +27,16 @@ export type Slide =
  */
 const PHOTOS_PER_STUDIO = 2;
 
+/**
+ * Show the brand card at the top of every Nth studio block.
+ *
+ * The deck put one before every block, but that was six studios. Once ten have
+ * photos, one-per-block means the same card roughly every half minute, which
+ * reads as a stutter rather than a spine. Every third block puts it on screen
+ * about once a minute.
+ */
+const BRAND_EVERY = 3;
+
 export function buildReel(opts: { now?: string; maxPhotos?: number } = {}): Slide[] {
   const { maxPhotos = PHOTOS_PER_STUDIO } = opts;
 
@@ -49,20 +59,21 @@ export function buildReel(opts: { now?: string; maxPhotos?: number } = {}): Slid
     return [{ type: 'brand' }, ...eventSlides];
   }
 
-  // Spread the event cards over the photo blocks as evenly as they divide.
-  const per = Math.floor(eventSlides.length / blocks.length);
-  const extra = eventSlides.length % blocks.length;
+  // Spread the event cards evenly across the loop rather than filling from the
+  // front - otherwise, with fewer events than studios, every event lands in the
+  // first half and the reel tails off into photos.
+  const perBlock: Slide[][] = blocks.map(() => []);
+  eventSlides.forEach((slide, j) => {
+    const at = Math.min(blocks.length - 1, Math.floor((j * blocks.length) / eventSlides.length));
+    perBlock[at].push(slide);
+  });
 
   const slides: Slide[] = [];
-  let cursor = 0;
   blocks.forEach(({ studio, photos }, i) => {
-    slides.push({ type: 'brand' });
+    if (i % BRAND_EVERY === 0) slides.push({ type: 'brand' });
     for (const src of photos.slice(0, maxPhotos)) slides.push({ type: 'photo', studio, src });
-    const take = per + (i < extra ? 1 : 0);
-    slides.push(...eventSlides.slice(cursor, cursor + take));
-    cursor += take;
+    slides.push(...perBlock[i]);
   });
-  slides.push(...eventSlides.slice(cursor));
 
   return slides;
 }
