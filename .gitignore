@@ -1,0 +1,14 @@
+.DS_Store
+Thumbs.db
+*.zip
+*.tar.gz
+.env
+secrets/
+*-backups/
+*.kicad_prl
+build/
+dist/
+*.elf
+*.hex
+*.bin
+
