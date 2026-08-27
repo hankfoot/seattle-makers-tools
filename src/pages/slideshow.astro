@@ -4,7 +4,6 @@ import BrandSlide from '../components/BrandSlide.astro';
 import PhotoSlide from '../components/PhotoSlide.astro';
 import EventSlide from '../components/EventSlide.astro';
 import { buildReel } from '../lib/reel';
-import { FETCHED_AT } from '../lib/events';
 
 const slides = buildReel();
 ---
@@ -21,10 +20,55 @@ const slides = buildReel();
         })
       }
     </div>
-    <p id="status" hidden class="absolute bottom-6 left-1/2 -translate-x-1/2 rounded bg-black/70 px-4 py-2 text-lg text-white"></p>
-    <p class="pointer-events-none absolute right-3 bottom-2 text-[11px] text-white/25 select-none">
-      events fetched {FETCHED_AT.slice(0, 10)}
+    <p
+      id="status"
+      hidden
+      class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded bg-black/80 px-6 py-4 text-xl text-white"
+    >
     </p>
+
+    {/* Sits outside #stage so it stays a constant physical size whatever the
+        display, and never scales up with the 1920x1080 artwork. */}
+    <div id="controls" role="group" aria-label="Slideshow controls">
+      <button type="button" data-act="prev" title="Previous (←)" aria-label="Previous slide">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.4 4.6 8 12l7.4 7.4" /></svg>
+      </button>
+
+      <button type="button" data-act="play" title="Pause (space)" aria-label="Pause">
+        <svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M9 5v14M15 5v14" />
+        </svg>
+        <svg class="i-play" viewBox="0 0 24 24" aria-hidden="true" hidden>
+          <path d="M7 4.8v14.4L19 12z" fill="currentColor" stroke="none" />
+        </svg>
+      </button>
+
+      <button type="button" data-act="next" title="Next (→)" aria-label="Next slide">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.6 4.6 16 12l-7.4 7.4" /></svg>
+      </button>
+
+      <div class="ctl-progress" aria-hidden="true"><i id="progress"></i></div>
+      <span id="counter" class="ctl-readout" aria-live="off">1 / 1</span>
+
+      <div class="ctl-sep"></div>
+
+      <button type="button" data-act="slower" title="Slower" aria-label="Slower">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14" /></svg>
+      </button>
+      <span id="speed" class="ctl-readout">9s</span>
+      <button type="button" data-act="faster" title="Faster" aria-label="Faster">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+      </button>
+
+      <div class="ctl-sep"></div>
+
+      <button type="button" data-act="full" title="Full screen (f)" aria-label="Toggle full screen">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" />
+        </svg>
+      </button>
+    </div>
+
   </div>
 </Base>
 
@@ -75,6 +119,113 @@ const slides = buildReel();
 
   body.cursor-hidden {
     cursor: none;
+  }
+
+  /* ---------------------------------------------------------- controls --- */
+
+  /* Bottom-right, not bottom-centre: the studio chip owns the bottom-left and
+     the wordmark the bottom-centre, so this is the one free corner. */
+  #controls {
+    position: absolute;
+    right: 24px;
+    bottom: 24px;
+    transform: translateY(6px);
+    z-index: 10;
+
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 7px 12px;
+
+    border-radius: 999px;
+    background: rgba(17, 17, 17, 0.82);
+    backdrop-filter: blur(14px);
+    box-shadow: 0 6px 28px rgba(0, 0, 0, 0.45);
+    color: #fff;
+    font-size: 13px;
+
+    opacity: 0;
+    visibility: hidden;
+    transition:
+      opacity 220ms ease,
+      transform 220ms ease,
+      visibility 0s linear 220ms;
+  }
+  /* Revealed by pointer movement, and pinned open while pointer or keyboard
+     focus is inside it so a control can never slide away mid-click. */
+  #controls.is-shown,
+  #controls:hover,
+  #controls:focus-within {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+    transition-delay: 0s;
+  }
+
+  #controls button {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+  }
+  #controls button:hover {
+    background: rgba(255, 255, 255, 0.16);
+  }
+  #controls button:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 1px;
+  }
+  #controls svg {
+    width: 19px;
+    height: 19px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .ctl-readout {
+    padding: 0 4px;
+    font-variant-numeric: tabular-nums;
+    color: rgba(255, 255, 255, 0.85);
+    white-space: nowrap;
+    user-select: none;
+  }
+  .ctl-sep {
+    width: 1px;
+    height: 20px;
+    margin: 0 5px;
+    background: rgba(255, 255, 255, 0.22);
+  }
+
+  .ctl-progress {
+    width: 74px;
+    height: 3px;
+    margin: 0 8px 0 6px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.25);
+    overflow: hidden;
+  }
+  .ctl-progress > i {
+    display: block;
+    width: 0;
+    height: 100%;
+    border-radius: inherit;
+    background: #fff;
+  }
+  .ctl-progress > i.run {
+    animation: fill var(--dwell-ms, 9900ms) linear forwards;
+  }
+  @keyframes fill {
+    to {
+      width: 100%;
+    }
   }
 
   @media (prefers-reduced-motion: reduce) {

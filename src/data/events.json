@@ -1,6 +1,6 @@
 {
   "source": "https://seattlemakers.org/events",
-  "fetchedAt": "2026-08-27T20:37:20.176Z",
+  "fetchedAt": "2026-08-27T21:06:08.462Z",
   "count": 142,
   "events": [
     {
@@ -46,7 +46,8 @@
       "categories": [
         "woodworking"
       ],
-      "summary": "Get hands-on with woodworking in this four-session beginner series! You'll master essential tools like the miter saw, table saw, and router, while learning key techniques for precise cuts, joinery…"
+      "checked": true,
+      "summary": "Get hands-on with woodworking in this four-session beginner series! You'll master essential tools like the miter saw, table saw, and router, while learning key techniques for precise cuts, joinery"
     },
     {
       "id": 159600,
@@ -79,6 +80,7 @@
       "categories": [
         "sewing"
       ],
+      "checked": true,
       "summary": "Ready to tackle sewing projects at the top level? Join us for our Industrial Sewing Certification!"
     },
     {
@@ -129,7 +131,9 @@
         "cnc",
         "cnc-routing"
       ],
-      "summary": "Learn and practice the 3 steps of cnc: design, manufacture, control!"
+      "checked": true,
+      "summary": "Learn and practice the 3 steps of cnc: design, manufacture, control!",
+      "image": "/events/cnc-certification-series-3-part-series.jpg"
     },
     {
       "id": 159586,
@@ -146,6 +150,7 @@
       "categories": [
         "crafts"
       ],
+      "checked": true,
       "summary": "Are you a member of the LGBTQIA+ community? Do you like crafting? Join us every other Monday at the Queer Crafters meetup at SeattleMakers!"
     },
     {
@@ -161,6 +166,7 @@
       "categories": [
         "ceramics"
       ],
+      "checked": true,
       "summary": "Get hands-on with clay in this four-session beginner series! You'll learn the foundations of wheel throwing and how the full ceramic process works, including glazing and firing."
     },
     {
@@ -193,8 +199,7 @@
       ],
       "categories": [
         "laser-cutting"
-      ],
-      "summary": "Become certified to use the 90 watt laser cutters at Seattle Makers!"
+      ]
     },
     {
       "id": 158642,
@@ -210,8 +215,7 @@
       ],
       "categories": [
         "print-making"
-      ],
-      "summary": "Welcome to the fascinating art of analog screen printing! The purpose of this course is to gain necessary knowledge of the screen printing studio, while expanding and experimenting with advanced…"
+      ]
     },
     {
       "id": 159290,
@@ -228,7 +232,8 @@
       "categories": [
         "woodworking"
       ],
-      "summary": "Get hands-on with woodworking in this four-session beginner series! You'll master essential tools like the miter saw, table saw, and router, while learning key techniques for precise cuts, joinery…"
+      "checked": true,
+      "summary": "Get hands-on with woodworking in this four-session beginner series! You'll master essential tools like the miter saw, table saw, and router, while learning key techniques for precise cuts, joinery"
     },
     {
       "id": 159276,
@@ -275,7 +280,9 @@
       "categories": [
         "sewing"
       ],
-      "summary": "Join WashMasks Mutual Aid for our first event at Seattle Makers! Join us in protecting farmworkers from heat stress. The goal is to deliver hundreds of cooling wraps to farmworkers across the state."
+      "checked": true,
+      "summary": "Join WashMasks Mutual Aid for our first event at Seattle Makers! Join us in protecting farmworkers from heat stress. The goal is to deliver hundreds of cooling wraps to farmworkers across the state.",
+      "image": "/events/sewing-mutual-aid-cooling-neck-wraps.jpg"
     },
     {
       "id": 158514,
@@ -292,6 +299,7 @@
       "categories": [
         "3d-printing"
       ],
+      "checked": true,
       "summary": "Become certified to use the 3D printers at Seattle Makers!"
     },
     {
@@ -309,6 +317,7 @@
       "categories": [
         "electronics"
       ],
+      "checked": true,
       "summary": "Come learn how to translate an electronics schematic into a printed circuit board"
     },
     {
@@ -327,7 +336,9 @@
         "cnc-routing",
         "woodworking"
       ],
-      "summary": "For members who already have learned how to use our smaller 3′ Wood CNC router, this class will level you up to be able to use our huge 4′ x 10′ Industrial Wood CNC."
+      "checked": true,
+      "summary": "For members who already have learned how to use our smaller 3′ Wood CNC router, this class will level you up to be able to use our huge 4′ x 10′ Industrial Wood CNC.",
+      "image": "/events/big-cnc-industrial-4-x-10-wood-cutting-certification.jpg"
     },
     {
       "id": 154058,
@@ -386,7 +397,9 @@
         "meetup"
       ],
       "categories": [],
-      "summary": "Join us for Seattle Makers Game Night where we promote the development and creation of maker projects and games of all kinds."
+      "checked": true,
+      "summary": "Join us for Seattle Makers Game Night where we promote the development and creation of maker projects and games of all kinds.",
+      "image": "/events/free-game-night.jpg"
     },
     {
       "id": 159433,
@@ -435,7 +448,9 @@
       "categories": [
         "electronics"
       ],
-      "summary": "Ready to level up your electronics skills? In this hands-on workshop, you’ll learn the basics of working with programmable LEDs by creating your own sound-reactive lamp. No experience required!"
+      "checked": true,
+      "summary": "Ready to level up your electronics skills? In this hands-on workshop, you’ll learn the basics of working with programmable LEDs by creating your own sound-reactive lamp. No experience required!",
+      "image": "/events/programmable-leds-cancelled.jpg"
     },
     {
       "id": 158517,
@@ -468,6 +483,7 @@
       "categories": [
         "sewing"
       ],
+      "checked": true,
       "summary": "Got clothes with holes? Don’t throw them out! Join us for Mending Monday and learn how to mend a variety of different garments and tear types. No hand-sewing experience? No problem!"
     },
     {
@@ -529,6 +545,7 @@
       "categories": [
         "cosplay"
       ],
+      "checked": true,
       "summary": "Are you a cosplayer? Interested in conventions, fandom events, ren faires and other cosplay adjacent events? Join us every other Thursday at the Cosplay meetup at Seattle Makers!"
     },
     {
@@ -542,7 +559,9 @@
       "soldOut": false,
       "kinds": [],
       "categories": [],
-      "summary": "Do you have an electronics project that you keep putting off? Join us every second Tuesday of the month for our Electronics Meetup and get it done!"
+      "checked": true,
+      "summary": "Do you have an electronics project that you keep putting off? Join us every second Tuesday of the month for our Electronics Meetup and get it done!",
+      "image": "/events/electronics-and-robotics-meetup-guided-studio.jpg"
     },
     {
       "id": 154059,
@@ -636,6 +655,7 @@
       "categories": [
         "crafts"
       ],
+      "checked": true,
       "summary": "Are you a member of the LGBTQIA+ community? Do you like crafting? Join us every other Monday at the Queer Crafters meetup at SeattleMakers!"
     },
     {
@@ -652,8 +672,7 @@
       ],
       "categories": [
         "laser-cutting"
-      ],
-      "summary": "Become certified to use the 90 watt laser cutters at Seattle Makers!"
+      ]
     },
     {
       "id": 162470,
@@ -670,6 +689,7 @@
       "categories": [
         "woodworking"
       ],
+      "checked": true,
       "summary": "Are you interested in learning to dimension your own wood? During this certification for members, we will learn to dimension lumber with the following tools: Jointer - create a flat face and a flat"
     },
     {
@@ -734,8 +754,7 @@
       ],
       "categories": [
         "print-making"
-      ],
-      "summary": "Welcome to the fascinating art of analog screen printing! The purpose of this course is to gain necessary knowledge of the screen printing studio, while expanding and experimenting with advanced…"
+      ]
     },
     {
       "id": 159280,
@@ -766,6 +785,7 @@
       "categories": [
         "sewing"
       ],
+      "checked": true,
       "summary": "Learn how to confidently use a sewing machine - from threading and bobbin winding to mastering basic stitches. Walk away with the skills to start your own sewing journey!"
     },
     {
@@ -783,7 +803,9 @@
       "categories": [
         "sewing"
       ],
-      "summary": "Ready to take your sewing to the next level? Join us for our Serger and Coverstitch Certification!"
+      "checked": true,
+      "summary": "Ready to take your sewing to the next level? Join us for our Serger and Coverstitch Certification!",
+      "image": "/events/serger-coverstitch-certification-sewing.jpg"
     },
     {
       "id": 160091,
@@ -800,6 +822,7 @@
       "categories": [
         "electronics"
       ],
+      "checked": true,
       "summary": "Ready to assemble circuits and join wires? Learn fundamental soldering skills to start tackling all your electronics projects in the Soldering 101 class."
     },
     {
@@ -815,7 +838,9 @@
         "meetup"
       ],
       "categories": [],
-      "summary": "Join the Hardware Hacking Hands-On Workshop by Symbol Crash, and start hacking on some actual embedded devices! No experience needed!"
+      "checked": true,
+      "summary": "Join the Hardware Hacking Hands-On Workshop by Symbol Crash, and start hacking on some actual embedded devices! No experience needed!",
+      "image": "/events/hardware-hacking-meetup.jpg"
     },
     {
       "id": 158519,
@@ -832,6 +857,7 @@
       "categories": [
         "3d-printing"
       ],
+      "checked": true,
       "summary": "Become certified to use the 3D printers at Seattle Makers!"
     },
     {
@@ -863,7 +889,9 @@
       "categories": [
         "electronics"
       ],
-      "summary": "Ready to level up your electronics skills? In this hands-on workshop, you’ll learn the basics of working with programmable LEDs by creating your own sound-reactive lamp. No experience required!"
+      "checked": true,
+      "summary": "Ready to level up your electronics skills? In this hands-on workshop, you’ll learn the basics of working with programmable LEDs by creating your own sound-reactive lamp. No experience required!",
+      "image": "/events/programmable-leds.jpg"
     },
     {
       "id": 154832,
@@ -892,7 +920,9 @@
         "meetup"
       ],
       "categories": [],
-      "summary": "Join us for Seattle Makers Game Night where we promote the development and creation of maker projects and games of all kinds."
+      "checked": true,
+      "summary": "Join us for Seattle Makers Game Night where we promote the development and creation of maker projects and games of all kinds.",
+      "image": "/events/free-game-night.jpg"
     },
     {
       "id": 163823,
@@ -942,7 +972,9 @@
         "leatherworking-sewing",
         "sewing"
       ],
-      "summary": "Step into the world of leathercraft in this hands-on beginner class where you’ll create your very own handmade leather journal!"
+      "checked": true,
+      "summary": "Step into the world of leathercraft in this hands-on beginner class where you’ll create your very own handmade leather journal!",
+      "image": "/events/leather-working-basics-leather-mini-briefcase.jpg"
     },
     {
       "id": 163099,
@@ -975,6 +1007,7 @@
       "categories": [
         "ceramics"
       ],
+      "checked": true,
       "summary": "Get hands-on with clay in this four-session beginner series! You'll learn the foundations of wheel throwing and how the full ceramic process works, including glazing and firing."
     },
     {
@@ -1008,6 +1041,7 @@
       "categories": [
         "sewing"
       ],
+      "checked": true,
       "summary": "Got clothes with holes? Don’t throw them out! Join us for Mending Monday and learn how to mend a variety of different garments and tear types. No hand-sewing experience? No problem!"
     },
     {
@@ -1026,7 +1060,9 @@
         "cnc-routing",
         "woodworking"
       ],
-      "summary": "For members who already have learned how to use our smaller 3′ Wood CNC router, this class will level you up to be able to use our huge 4′ x 10′ Industrial Wood CNC."
+      "checked": true,
+      "summary": "For members who already have learned how to use our smaller 3′ Wood CNC router, this class will level you up to be able to use our huge 4′ x 10′ Industrial Wood CNC.",
+      "image": "/events/big-cnc-industrial-4-x-10-wood-cutting-certification.jpg"
     },
     {
       "id": 164764,
@@ -1073,6 +1109,7 @@
       "categories": [
         "cosplay"
       ],
+      "checked": true,
       "summary": "Are you a cosplayer? Interested in conventions, fandom events, ren faires and other cosplay adjacent events? Join us every other Thursday at the Cosplay meetup at Seattle Makers!"
     },
     {
@@ -1090,6 +1127,7 @@
       "categories": [
         "print-making"
       ],
+      "checked": true,
       "summary": "Take your screen printing skills to the next level with this advanced class focused on multi-color printing!"
     },
     {
@@ -1121,6 +1159,7 @@
       "categories": [
         "sewing"
       ],
+      "checked": true,
       "summary": "Curious about the embroidery machine but are wondering where do I start? This class will demystify the embroidery machine and set you up for success!"
     },
     {
@@ -1185,6 +1224,7 @@
       "categories": [
         "crafts"
       ],
+      "checked": true,
       "summary": "Are you a member of the LGBTQIA+ community? Do you like crafting? Join us every other Monday at the Queer Crafters meetup at SeattleMakers!"
     },
     {
@@ -1201,8 +1241,7 @@
       ],
       "categories": [
         "laser-cutting"
-      ],
-      "summary": "Become certified to use the 90 watt laser cutters at Seattle Makers!"
+      ]
     },
     {
       "id": 161269,
@@ -1235,6 +1274,7 @@
       "categories": [
         "sewing"
       ],
+      "checked": true,
       "summary": "Ready to tackle sewing projects at the top level? Join us for our Industrial Sewing Certification!"
     },
     {
@@ -1251,8 +1291,7 @@
       ],
       "categories": [
         "print-making"
-      ],
-      "summary": "Welcome to the fascinating art of analog screen printing! The purpose of this course is to gain necessary knowledge of the screen printing studio, while expanding and experimenting with advanced…"
+      ]
     },
     {
       "id": 162854,
@@ -1300,6 +1339,7 @@
       "categories": [
         "3d-printing"
       ],
+      "checked": true,
       "summary": "Become certified to use the 3D printers at Seattle Makers!"
     },
     {
@@ -1317,7 +1357,9 @@
       "categories": [
         "sewing"
       ],
-      "summary": "Ready to take your sewing to the next level? Join us for our Serger and Coverstitch Certification!"
+      "checked": true,
+      "summary": "Ready to take your sewing to the next level? Join us for our Serger and Coverstitch Certification!",
+      "image": "/events/serger-coverstitch-certification-sewing.jpg"
     },
     {
       "id": 154062,
@@ -1348,6 +1390,7 @@
       "categories": [
         "electronics"
       ],
+      "checked": true,
       "summary": "Ready to assemble circuits and join wires? Learn fundamental soldering skills to start tackling all your electronics projects in the Soldering 101 class."
     },
     {
@@ -1365,7 +1408,8 @@
       "categories": [
         "woodworking"
       ],
-      "summary": "Get hands-on with woodworking in this four-session beginner series! You'll master essential tools like the miter saw, table saw, and router, while learning key techniques for precise cuts, joinery…"
+      "checked": true,
+      "summary": "Get hands-on with woodworking in this four-session beginner series! You'll master essential tools like the miter saw, table saw, and router, while learning key techniques for precise cuts, joinery"
     },
     {
       "id": 164608,
@@ -1460,6 +1504,7 @@
       "categories": [
         "ceramics"
       ],
+      "checked": true,
       "summary": "Get hands-on with clay in this four-session beginner series! You'll learn the foundations of wheel throwing and how the full ceramic process works, including glazing and firing."
     },
     {
@@ -1477,6 +1522,7 @@
       "categories": [
         "sewing"
       ],
+      "checked": true,
       "summary": "Got clothes with holes? Don’t throw them out! Join us for Mending Monday and learn how to mend a variety of different garments and tear types. No hand-sewing experience? No problem!"
     },
     {
@@ -1494,7 +1540,9 @@
       "categories": [
         "3d-printing"
       ],
-      "summary": "This is the certification course to use the Prusa XL 3D Printer. This certification class is perfect for members who already have a handle on Prusa printers and slicing software, and want to dive…"
+      "checked": true,
+      "summary": "This is the certification course to use the Prusa XL 3D Printer. This certification class is perfect for members who already have a handle on Prusa printers and slicing software, and want to dive",
+      "image": "/events/3d-printing-certification-prusa-xl-with-2-heads.jpg"
     },
     {
       "id": 162901,
@@ -1511,7 +1559,8 @@
       "categories": [
         "woodworking"
       ],
-      "summary": "Get hands-on with woodworking in this four-session beginner series! You'll master essential tools like the miter saw, table saw, and router, while learning key techniques for precise cuts, joinery…"
+      "checked": true,
+      "summary": "Get hands-on with woodworking in this four-session beginner series! You'll master essential tools like the miter saw, table saw, and router, while learning key techniques for precise cuts, joinery"
     },
     {
       "id": 164983,
@@ -1573,7 +1622,9 @@
       "categories": [
         "electronics"
       ],
-      "summary": "Do you have an electronics project that you keep putting off? Join us every second Tuesday of the month for our Electronics Meetup and get it done!"
+      "checked": true,
+      "summary": "Do you have an electronics project that you keep putting off? Join us every second Tuesday of the month for our Electronics Meetup and get it done!",
+      "image": "/events/electronics-and-robotics-meetup-guided-studio.jpg"
     },
     {
       "id": 163095,
@@ -1590,6 +1641,7 @@
       "categories": [
         "cosplay"
       ],
+      "checked": true,
       "summary": "Are you a cosplayer? Interested in conventions, fandom events, ren faires and other cosplay adjacent events? Join us every other Thursday at the Cosplay meetup at Seattle Makers!"
     },
     {
@@ -1605,6 +1657,7 @@
         "meetup"
       ],
       "categories": [],
+      "checked": true,
       "summary": "Community Makers* is excited to partner with Seattle Makers to host another Community Fix-It Fair!"
     },
     {
@@ -1622,6 +1675,7 @@
       "categories": [
         "sewing"
       ],
+      "checked": true,
       "summary": "Curious about the embroidery machine but are wondering where do I start? This class will demystify the embroidery machine and set you up for success!"
     },
     {
@@ -1655,7 +1709,9 @@
       "categories": [
         "print-making"
       ],
-      "summary": "Join us to learn monoprinting, a fun way to create unique, handmade designs on paper or fabric. Unleash your imagination and bring your designs to life!"
+      "checked": true,
+      "summary": "Join us to learn monoprinting, a fun way to create unique, handmade designs on paper or fabric. Unleash your imagination and bring your designs to life!",
+      "image": "/events/monoprinting-printmaking-with-gelli-plates.jpg"
     },
     {
       "id": 163874,
@@ -1672,6 +1728,7 @@
       "categories": [
         "sewing"
       ],
+      "checked": true,
       "summary": "Learn how to confidently use a sewing machine - from threading and bobbin winding to mastering basic stitches. Walk away with the skills to start your own sewing journey!"
     },
     {
@@ -1688,8 +1745,7 @@
       ],
       "categories": [
         "laser-cutting"
-      ],
-      "summary": "Become certified to use the 90 watt laser cutters at Seattle Makers!"
+      ]
     },
     {
       "id": 162897,
@@ -1722,6 +1778,7 @@
       "categories": [
         "crafts"
       ],
+      "checked": true,
       "summary": "Are you a member of the LGBTQIA+ community? Do you like crafting? Join us every other Monday at the Queer Crafters meetup at SeattleMakers!"
     },
     {
@@ -1754,8 +1811,7 @@
       ],
       "categories": [
         "print-making"
-      ],
-      "summary": "Welcome to the fascinating art of analog screen printing! The purpose of this course is to gain necessary knowledge of the screen printing studio, while expanding and experimenting with advanced…"
+      ]
     },
     {
       "id": 162858,
@@ -1786,7 +1842,9 @@
       "categories": [
         "sewing"
       ],
-      "summary": "Ready to take your sewing to the next level? Join us for our Serger and Coverstitch Certification!"
+      "checked": true,
+      "summary": "Ready to take your sewing to the next level? Join us for our Serger and Coverstitch Certification!",
+      "image": "/events/serger-coverstitch-certification-sewing.jpg"
     },
     {
       "id": 160406,
@@ -1801,7 +1859,9 @@
         "meetup"
       ],
       "categories": [],
-      "summary": "Join the Hardware Hacking Hands-On Workshop by Symbol Crash, and start hacking on some actual embedded devices! No experience needed!"
+      "checked": true,
+      "summary": "Join the Hardware Hacking Hands-On Workshop by Symbol Crash, and start hacking on some actual embedded devices! No experience needed!",
+      "image": "/events/hardware-hacking-meetup.jpg"
     },
     {
       "id": 164615,
@@ -1818,6 +1878,7 @@
       "categories": [
         "electronics"
       ],
+      "checked": true,
       "summary": "Ready to assemble circuits and join wires? Learn fundamental soldering skills to start tackling all your electronics projects in the Soldering 101 class."
     },
     {
@@ -1835,6 +1896,7 @@
       "categories": [
         "3d-printing"
       ],
+      "checked": true,
       "summary": "Become certified to use the 3D printers at Seattle Makers!"
     },
     {
@@ -1852,6 +1914,7 @@
       "categories": [
         "sewing"
       ],
+      "checked": true,
       "summary": "Learn how to confidently use a sewing machine - from threading and bobbin winding to mastering basic stitches. Walk away with the skills to start your own sewing journey!"
     },
     {
@@ -1897,7 +1960,9 @@
       "categories": [
         "electronics"
       ],
-      "summary": "Ready to level up your electronics skills? In this hands-on workshop, you’ll learn the basics of working with programmable LEDs by creating your own sound-reactive lamp. No experience required!"
+      "checked": true,
+      "summary": "Ready to level up your electronics skills? In this hands-on workshop, you’ll learn the basics of working with programmable LEDs by creating your own sound-reactive lamp. No experience required!",
+      "image": "/events/programmable-leds.jpg"
     },
     {
       "id": 163104,
@@ -1930,6 +1995,7 @@
       "categories": [
         "sewing"
       ],
+      "checked": true,
       "summary": "Got clothes with holes? Don’t throw them out! Join us for Mending Monday and learn how to mend a variety of different garments and tear types. No hand-sewing experience? No problem!"
     },
     {
@@ -1948,7 +2014,9 @@
         "cnc",
         "cnc-routing"
       ],
-      "summary": "Learn and practice the 3 steps of cnc: design, manufacture, control!"
+      "checked": true,
+      "summary": "Learn and practice the 3 steps of cnc: design, manufacture, control!",
+      "image": "/events/cnc-certification-series-3-part-series.jpg"
     },
     {
       "id": 162860,
@@ -1995,6 +2063,7 @@
       "categories": [
         "print-making"
       ],
+      "checked": true,
       "summary": "Take your screen printing skills to the next level with this advanced class focused on multi-color printing!"
     },
     {
@@ -2025,8 +2094,7 @@
       ],
       "categories": [
         "laser-cutting"
-      ],
-      "summary": "Become certified to use the 90 watt laser cutters at Seattle Makers!"
+      ]
     },
     {
       "id": 163106,
@@ -2043,6 +2111,7 @@
       "categories": [
         "crafts"
       ],
+      "checked": true,
       "summary": "Are you a member of the LGBTQIA+ community? Do you like crafting? Join us every other Monday at the Queer Crafters meetup at SeattleMakers!"
     },
     {
@@ -2076,7 +2145,9 @@
       "categories": [
         "ceramics"
       ],
-      "summary": "Learn how to bring your own imagery to clay in this hands-on screen printing workshop. Students will use pre-burnt screens to print designs and underglazes onto leather-hard clay slabs, exploring…"
+      "checked": true,
+      "summary": "Learn how to bring your own imagery to clay in this hands-on screen printing workshop. Students will use pre-burnt screens to print designs and underglazes onto leather-hard clay slabs, exploring",
+      "image": "/events/screen-printing-for-clay.jpg"
     },
     {
       "id": 163878,
@@ -2093,6 +2164,7 @@
       "categories": [
         "sewing"
       ],
+      "checked": true,
       "summary": "Learn how to confidently use a sewing machine - from threading and bobbin winding to mastering basic stitches. Walk away with the skills to start your own sewing journey!"
     },
     {
@@ -2110,6 +2182,7 @@
       "categories": [
         "3d-printing"
       ],
+      "checked": true,
       "summary": "Become certified to use the 3D printers at Seattle Makers!"
     },
     {
@@ -2141,6 +2214,7 @@
       "categories": [
         "sewing"
       ],
+      "checked": true,
       "summary": "Ready to tackle sewing projects at the top level? Join us for our Industrial Sewing Certification!"
     },
     {
@@ -2157,8 +2231,7 @@
       ],
       "categories": [
         "print-making"
-      ],
-      "summary": "Welcome to the fascinating art of analog screen printing! The purpose of this course is to gain necessary knowledge of the screen printing studio, while expanding and experimenting with advanced…"
+      ]
     },
     {
       "id": 164660,
@@ -2175,6 +2248,7 @@
       "categories": [
         "crafts"
       ],
+      "checked": true,
       "summary": "Are you a member of the LGBTQIA+ community? Do you like crafting? Join us every other Monday at the Queer Crafters meetup at SeattleMakers!"
     },
     {
@@ -2192,7 +2266,9 @@
       "categories": [
         "3d-printing"
       ],
-      "summary": "This is the certification course to use the Prusa XL 3D Printer. This certification class is perfect for members who already have a handle on Prusa printers and slicing software, and want to dive…"
+      "checked": true,
+      "summary": "This is the certification course to use the Prusa XL 3D Printer. This certification class is perfect for members who already have a handle on Prusa printers and slicing software, and want to dive",
+      "image": "/events/3d-printing-certification-prusa-xl-with-2-heads.jpg"
     },
     {
       "id": 160407,
@@ -2207,7 +2283,9 @@
         "meetup"
       ],
       "categories": [],
-      "summary": "Join the Hardware Hacking Hands-On Workshop by Symbol Crash, and start hacking on some actual embedded devices! No experience needed!"
+      "checked": true,
+      "summary": "Join the Hardware Hacking Hands-On Workshop by Symbol Crash, and start hacking on some actual embedded devices! No experience needed!",
+      "image": "/events/hardware-hacking-meetup.jpg"
     },
     {
       "id": 162447,
@@ -2224,7 +2302,9 @@
       "categories": [
         "ceramics"
       ],
-      "summary": "A hands-on introduction to slip casting and plaster mold making, including demos and practice designed to give students a baseline for using slip casting in their own ceramics practice."
+      "checked": true,
+      "summary": "A hands-on introduction to slip casting and plaster mold making, including demos and practice designed to give students a baseline for using slip casting in their own ceramics practice.",
+      "image": "/events/intro-to-slip-casting.jpg"
     },
     {
       "id": 162427,
@@ -2241,7 +2321,9 @@
       "categories": [
         "ceramics"
       ],
-      "summary": "A hands-on introduction to making your own pottery tools using 3D printing and laser cutting, from premade files or custom designs."
+      "checked": true,
+      "summary": "A hands-on introduction to making your own pottery tools using 3D printing and laser cutting, from premade files or custom designs.",
+      "image": "/events/making-your-own-clay-tools.jpg"
     },
     {
       "id": 160408,
@@ -2256,7 +2338,9 @@
         "meetup"
       ],
       "categories": [],
-      "summary": "Join the Hardware Hacking Hands-On Workshop by Symbol Crash, and start hacking on some actual embedded devices! No experience needed!"
+      "checked": true,
+      "summary": "Join the Hardware Hacking Hands-On Workshop by Symbol Crash, and start hacking on some actual embedded devices! No experience needed!",
+      "image": "/events/hardware-hacking-meetup.jpg"
     },
     {
       "id": 164988,
@@ -2273,6 +2357,7 @@
       "categories": [
         "sewing"
       ],
+      "checked": true,
       "summary": "Ready to tackle sewing projects at the top level? Join us for our Industrial Sewing Certification!"
     },
     {
@@ -2290,6 +2375,7 @@
       "categories": [
         "sewing"
       ],
+      "checked": true,
       "summary": "Ready to tackle sewing projects at the top level? Join us for our Industrial Sewing Certification!"
     }
   ]

@@ -14,6 +14,10 @@ export type SmEvent = {
   kinds: string[];
   categories: string[];
   summary?: string;
+  /** Local path to the event's own picture, when its page had one big enough. */
+  image?: string;
+  /** The event page was fetched; absence of summary/image is a fact, not a gap. */
+  checked?: boolean;
 };
 
 export const EVENTS = raw.events as SmEvent[];
@@ -24,6 +28,12 @@ export const FETCHED_AT = raw.fetchedAt as string;
  * open studio hours, building tours, and new-member orientations.
  */
 const HIDDEN_KINDS = new Set(['guided-studio', 'tour', 'orientation']);
+
+/**
+ * Organisers mark a scrapped class by editing its title rather than removing
+ * the event, so "(CANCELLED)" is the only signal there is.
+ */
+const CANCELLED = /\bcancell?ed\b/i;
 
 /**
  * Preference order within a studio. Classes are the thing to advertise to a
@@ -73,7 +83,11 @@ export function pickByStudio({
 }: { now?: string; windowDays?: number; perStudio?: number } = {}): StudioPick[] {
   const horizon = addDays(now, windowDays);
   const upcoming = EVENTS.filter(
-    (e) => e.start >= now && !e.soldOut && !e.kinds.some((k) => HIDDEN_KINDS.has(k)),
+    (e) =>
+      e.start >= now &&
+      !e.soldOut &&
+      !CANCELLED.test(e.title) &&
+      !e.kinds.some((k) => HIDDEN_KINDS.has(k)),
   );
 
   const byStudio = new Map<string, SmEvent[]>();

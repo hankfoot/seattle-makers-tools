@@ -3,11 +3,15 @@
  *
  * Built for a machine nobody is watching: it scales itself to whatever display
  * it lands on, keeps the screen awake, hides the cursor, and never depends on
- * the network once the page has loaded.
+ * the network once the page has loaded. The control bar is there for when
+ * somebody *is* watching and wants to hold a slide or skip ahead.
  */
 
 const STAGE_W = 1920;
 const STAGE_H = 1080;
+
+/** Seconds per slide, cycled by the -/+ controls. */
+const SPEEDS = [4, 6, 9, 12, 16, 22];
 
 const params = new URLSearchParams(location.search);
 const num = (key: string, fallback: number) => {
@@ -15,7 +19,7 @@ const num = (key: string, fallback: number) => {
   return Number.isFinite(v) && v > 0 ? v : fallback;
 };
 
-const SECONDS = num('seconds', 9);
+let seconds = num('seconds', 9);
 const FADE_MS = num('fade', 900);
 const ONLY_STUDIOS = (params.get('studios') ?? '')
   .split(',')
@@ -27,9 +31,18 @@ const stage = document.getElementById('stage');
 const wrap = document.getElementById('stage-wrap');
 if (!stage || !wrap) throw new Error('slideshow: stage missing');
 
-// Set before the first slide is shown, or slide one animates on the fallbacks.
-document.documentElement.style.setProperty('--fade-ms', `${FADE_MS}ms`);
-document.documentElement.style.setProperty('--dwell-ms', `${SECONDS * 1000 + FADE_MS}ms`);
+const status = document.getElementById('status');
+const controls = document.getElementById('controls');
+const progress = document.getElementById('progress');
+const counter = document.getElementById('counter');
+const speedOut = document.getElementById('speed');
+
+function applyTiming(): void {
+  document.documentElement.style.setProperty('--fade-ms', `${FADE_MS}ms`);
+  document.documentElement.style.setProperty('--dwell-ms', `${seconds * 1000 + FADE_MS}ms`);
+  if (speedOut) speedOut.textContent = `${seconds}s`;
+}
+applyTiming();
 
 /* ---------------------------------------------------------------- scaling */
 
@@ -92,12 +105,12 @@ for (const s of stage.querySelectorAll<HTMLElement>('.slide')) {
   if (!live.has(s)) s.classList.add('is-out');
 }
 
-const status = document.getElementById('status');
 if (slides.length === 0) {
   if (status) {
     status.textContent = 'No slides match this filter.';
     status.hidden = false;
   }
+  if (controls) controls.hidden = true;
   throw new Error('slideshow: no slides');
 }
 
@@ -126,11 +139,21 @@ function warm(i: number): void {
   }
 }
 
+/** Restart the dwell bar from zero, or leave it frozen while paused. */
+function resetProgress(): void {
+  if (!progress) return;
+  progress.classList.remove('run');
+  void progress.offsetWidth; // reflow, so the animation actually replays
+  if (!paused) progress.classList.add('run');
+}
+
 function show(i: number): void {
   index = ((i % slides.length) + slides.length) % slides.length;
   slides.forEach((s, n) => s.classList.toggle('is-active', n === index));
   warm(index);
   warm(index + 1);
+  if (counter) counter.textContent = `${index + 1} / ${slides.length}`;
+  resetProgress();
 }
 
 function schedule(): void {
@@ -139,12 +162,42 @@ function schedule(): void {
   timer = window.setTimeout(() => {
     show(index + 1);
     schedule();
-  }, SECONDS * 1000);
+  }, seconds * 1000);
 }
 
 function step(delta: number): void {
   show(index + delta);
   schedule();
+}
+
+function setPaused(next: boolean): void {
+  paused = next;
+  // Resuming restarts the full dwell rather than resuming a part-spent one, so
+  // the slide you just unpaused on gets a proper look.
+  if (progress) progress.classList.toggle('run', !paused);
+  if (!paused) resetProgress();
+  const btn = controls?.querySelector<HTMLButtonElement>('[data-act="play"]');
+  if (btn) {
+    btn.querySelector<SVGElement>('.i-pause')!.hidden = paused;
+    btn.querySelector<SVGElement>('.i-play')!.hidden = !paused;
+    btn.title = paused ? 'Play (space)' : 'Pause (space)';
+    btn.setAttribute('aria-label', paused ? 'Play' : 'Pause');
+  }
+  schedule();
+}
+
+function nudgeSpeed(delta: number): void {
+  const at = SPEEDS.indexOf(seconds);
+  const next = at === -1 ? SPEEDS.findIndex((s) => s >= seconds) : at + delta;
+  seconds = SPEEDS[Math.min(SPEEDS.length - 1, Math.max(0, next))] ?? seconds;
+  applyTiming();
+  resetProgress();
+  schedule();
+}
+
+function toggleFullscreen(): void {
+  if (document.fullscreenElement) document.exitFullscreen();
+  else document.documentElement.requestFullscreen().catch(() => {});
 }
 
 show(0);
@@ -165,7 +218,66 @@ schedule();
   setTimeout(warmRest, 1500);
 }
 
+/* --------------------------------------------------------------- controls */
+
+controls?.addEventListener('click', (e) => {
+  const btn = (e.target as HTMLElement).closest<HTMLElement>('[data-act]');
+  if (!btn) return;
+  switch (btn.dataset.act) {
+    case 'prev': step(-1); break;
+    case 'next': step(1); break;
+    case 'play': setPaused(!paused); break;
+    case 'slower': nudgeSpeed(1); break;
+    case 'faster': nudgeSpeed(-1); break;
+    case 'full': toggleFullscreen(); break;
+  }
+  reveal();
+});
+
+addEventListener('keydown', (e) => {
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  switch (e.key) {
+    case ' ':
+      e.preventDefault();
+      setPaused(!paused);
+      break;
+    case 'ArrowRight':
+      e.preventDefault();
+      step(1);
+      break;
+    case 'ArrowLeft':
+      e.preventDefault();
+      step(-1);
+      break;
+    case 'f':
+    case 'F':
+      toggleFullscreen();
+      break;
+    default:
+      return;
+  }
+  reveal();
+});
+
 /* ------------------------------------------------------------- kiosk care */
+
+/**
+ * Cursor and control bar share one idle timer: move the mouse and both appear,
+ * leave it alone and the screen goes back to being just the reel.
+ */
+let idle: number | undefined;
+function reveal(): void {
+  document.body.classList.remove('cursor-hidden');
+  controls?.classList.add('is-shown');
+  clearTimeout(idle);
+  idle = window.setTimeout(() => {
+    document.body.classList.add('cursor-hidden');
+    controls?.classList.remove('is-shown');
+  }, 2800);
+}
+reveal();
+addEventListener('mousemove', reveal);
+addEventListener('mousedown', reveal);
 
 /** Keep the display awake; the lock is dropped whenever the tab is hidden. */
 let lock: WakeLockSentinel | null = null;
@@ -185,41 +297,5 @@ document.addEventListener('visibilitychange', () => {
     // A machine that slept through several slides should not resume mid-fade.
     show(index);
     schedule();
-  }
-});
-
-let idle: number | undefined;
-function nudgeCursor(): void {
-  document.body.classList.remove('cursor-hidden');
-  clearTimeout(idle);
-  idle = window.setTimeout(() => document.body.classList.add('cursor-hidden'), 2500);
-}
-nudgeCursor();
-addEventListener('mousemove', nudgeCursor);
-
-addEventListener('keydown', (e) => {
-  switch (e.key) {
-    case ' ':
-      e.preventDefault();
-      paused = !paused;
-      if (status) {
-        status.textContent = paused ? 'paused' : '';
-        status.hidden = !paused;
-      }
-      schedule();
-      break;
-    case 'ArrowRight':
-      e.preventDefault();
-      step(1);
-      break;
-    case 'ArrowLeft':
-      e.preventDefault();
-      step(-1);
-      break;
-    case 'f':
-    case 'F':
-      if (document.fullscreenElement) document.exitFullscreen();
-      else document.documentElement.requestFullscreen().catch(() => {});
-      break;
   }
 });

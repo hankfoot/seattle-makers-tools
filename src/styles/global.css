@@ -34,6 +34,12 @@
   --font-sans: 'Lato', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
 }
 
+/* Tailwind's display utilities outrank the UA rule for [hidden], so a flex
+   element with the hidden attribute would otherwise stay visible. */
+[hidden] {
+  display: none !important;
+}
+
 html {
   font-family: var(--font-sans);
   background: var(--color-sm-ink);

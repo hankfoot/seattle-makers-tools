@@ -20,8 +20,15 @@ export type Slide =
  * - Event cards are distributed across the blocks rather than one per block, so
  *   every studio's pick appears once per loop however many photo blocks exist.
  */
+/**
+ * Photos shown per studio per loop. The deck used three, but that was across
+ * six studios; at twelve it makes the loop long enough that a passer-by waits
+ * too long for the events to come round again.
+ */
+const PHOTOS_PER_STUDIO = 2;
+
 export function buildReel(opts: { now?: string; maxPhotos?: number } = {}): Slide[] {
-  const { maxPhotos = 3 } = opts;
+  const { maxPhotos = PHOTOS_PER_STUDIO } = opts;
 
   const blocks = studiosWithPhotos();
   const picks = pickByStudio({ now: opts.now }).filter((p) => p.events.length > 0);

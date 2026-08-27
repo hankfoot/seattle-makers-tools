@@ -17,13 +17,16 @@ it, add studio photos, and refresh events.
 Slideshow tool is built and verified against a production build.
 
 Done:
-- 30-slide reel following the *Background Reel* deck's rhythm (brand card ->
-  three studio photos -> an upcoming class).
+- 25-slide reel following the *Background Reel* deck's rhythm (brand card ->
+  two studio photos -> an upcoming class).
 - Assets extracted from that deck: 17 studio photos across 6 studios, the
   wordmark, and 8 studio icons. 4 more icons drawn to match.
 - Brand card rebuilt in HTML with the 12 current studios and the Interbay
   address (the deck still showed Wallingford / Gas Works Park).
-- `scripts/fetch-events.mjs` scrapes the calendar; 142 events on file.
+- `scripts/fetch-events.mjs` scrapes the calendar (142 events) and pulls each
+  event's own picture; 15 kept after filtering out the category logo tiles.
+- On-screen control bar (prev/pause/next, progress, counter, speed, full
+  screen), bottom-right, auto-hiding with the cursor.
 
 Next:
 - Photos for the 6 studios with none yet (ceramics, screen printing,
@@ -54,6 +57,23 @@ already run.
 **Do not use `translate3d` in the Ken Burns keyframes.** It promotes the image
 to its own compositor layer, which some capture and remote-display paths render
 as solid black. The 2D form is deliberate.
+
+**Event pictures are filtered by compression density, not size.** The site's
+per-category logo tiles arrive at the same 1220px as real class photos, so width
+cannot separate them. Flat artwork compresses to a fraction of what a photograph
+needs: measured across the calendar, logo tiles land at 0.018-0.054 bytes/px and
+every real photo at 0.080+, so `MIN_BYTES_PER_PIXEL = 0.06` splits them cleanly.
+Dimensions come from parsing the JPEG SOF / PNG IHDR header directly, which
+avoids pulling in an image library for two numbers.
+
+**Cancelled classes are only signalled in the title.** Organisers edit
+"(CANCELLED)" into the event name rather than removing the event, so
+`src/lib/events.ts` matches that string.
+
+**`[hidden]` needs a global override.** Tailwind's display utilities outrank the
+UA stylesheet's `[hidden]` rule, so a `flex` element with the `hidden` attribute
+stays visible. `global.css` forces it. This bites the event card, whose
+occurrence options are flex rows toggled by `hidden`.
 
 **Lazy images need explicit warming.** A lazy image inside a slide sitting at
 `opacity: 0` may never load on its own, which shows as a slide fading in with a

@@ -39,7 +39,14 @@ open -na "Google Chrome" --args --kiosk --app=http://localhost:4321/slideshow
 display should not sleep while the reel is running — but check the machine's own
 power settings too, since a wake lock cannot stop a system-level sleep.
 
-While it runs:
+### While it runs
+
+Move the mouse and a **control bar** fades in at the bottom-right: previous,
+pause/play, next, a dwell progress bar, the slide counter, speed down/up, and
+full screen. It hides again after a couple of idle seconds, along with the
+cursor, so an unattended machine shows nothing but the reel.
+
+The same actions have keys:
 
 | Key | |
 | --- | --- |
@@ -47,7 +54,8 @@ While it runs:
 | `←` `→` | previous / next slide |
 | `f` | toggle full screen |
 
-The cursor hides itself after a couple of idle seconds.
+Resuming from pause restarts the slide's full dwell rather than finishing a
+part-spent one, so the slide you unpaused on gets a proper look.
 
 ### URL options
 
@@ -67,9 +75,11 @@ Photos are discovered from the filesystem, so this is mostly drag-and-drop:
 2. If the studio is new, add an icon at `public/brand/icons/<slug>.(png|svg)`
    and a line to `STUDIOS` in [`src/data/studios.ts`](src/data/studios.ts).
 
-The reel picks the change up on the next build. Three photos per studio matches
-the rhythm of the original deck; more are fine, `maxPhotos` in
-[`src/lib/reel.ts`](src/lib/reel.ts) caps how many are used per block.
+The reel picks the change up on the next build. Two photos per studio are used
+per loop — the deck used three, but that was across six studios; at twelve it
+makes the loop long enough that a passer-by waits too long for the events to
+come round again. Extra photos in a folder are harmless; `PHOTOS_PER_STUDIO` in
+[`src/lib/reel.ts`](src/lib/reel.ts) sets how many are used.
 
 `studios.ts` is also where calendar categories are mapped onto studios — that
 mapping is many-to-one on purpose (`cnc` and `cnc-routing` are one studio;
@@ -95,6 +105,26 @@ Because it is a scrape, it is the part most likely to break if the site is
 redesigned. It fails loudly rather than silently: if it parses zero events it
 exits non-zero and leaves the previous `events.json` alone.
 
+It also saves each event's own picture into `public/events/`, so an event card
+shows the actual class rather than a generic studio shot. Two filters decide
+what is worth keeping:
+
+- **under 600px wide** — the site has a batch of 300px category tiles that would
+  be upscaled past the point of looking deliberate.
+- **under 0.06 compressed bytes per pixel** — size alone does not separate the
+  site's logo tiles from real photos, since both arrive at 1220px. Compression
+  does: flat artwork squeezes to a fraction of what a photograph needs. On the
+  current calendar the logo tiles sit at 0.018–0.054 and every real photo at
+  0.080 or above.
+
+Anything rejected falls back to a studio photo. Promotional artwork (a game
+night poster, a sew-along flyer) scores like a photo and is kept, which is the
+intent — it is real art for that event. If a logo ever slips through, delete it
+from `public/events/` and that card falls back too.
+
+Both `src/data/events.json` and `public/events/` are generated but **committed**,
+so a fresh clone builds a working reel without touching the network.
+
 **Prices are deliberately absent.** They are not published anywhere
 machine-readable — they live behind the cart — and a stale price on a public
 display is worse than no price.
@@ -103,8 +133,10 @@ display is worse than no price.
 
 One card per studio, showing that studio's next occurrence, preferring a
 **class** over a **certification** over a **meetup**. Open studio hours, tours
-and orientations never appear, and neither do sold-out classes — so a studio
-whose classes are all full simply has no card that week.
+and orientations never appear, and neither do sold-out or cancelled classes — so
+a studio whose classes are all full simply has no card that week. (Organisers
+mark a scrapped class by editing "(CANCELLED)" into its title rather than
+removing the event, so that string is the only signal there is.)
 
 Each card also carries its next few occurrences in the markup, and the browser
 reveals the first one still in the future. That way a build from a fortnight ago
@@ -119,6 +151,7 @@ The output is plain static files. Any static host works; nothing needs a server.
 ```
 public/
   studios/<slug>/*.jpg     studio photos (drop-in, discovered at build)
+  events/*.jpg             event pictures pulled by the scraper
   brand/icons/<slug>.*     studio icons
   brand/wordmark.png       the SEATTLE makers lockup
   fonts/                   self-hosted Lato
