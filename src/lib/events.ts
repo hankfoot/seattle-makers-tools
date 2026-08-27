@@ -78,7 +78,7 @@ export type StudioPick = { studio: Studio; events: SmEvent[] };
  */
 export function pickByStudio({
   now = localNow(),
-  windowDays = 60,
+  windowDays = 120,
   perStudio = 3,
 }: { now?: string; windowDays?: number; perStudio?: number } = {}): StudioPick[] {
   const horizon = addDays(now, windowDays);
@@ -110,8 +110,22 @@ export function pickByStudio({
     // Same class, several occurrences: keep the soonest of each distinct title
     // so the fallbacks are genuinely different events, not the same one twice.
     const seen = new Set<string>();
-    const events = tiered.filter((e) => !seen.has(e.title) && seen.add(e.title)).slice(0, perStudio);
-    picks.push({ studio, events });
+    const distinct = tiered.filter((e) => !seen.has(e.title) && seen.add(e.title));
+
+    // An editorial pick from studios.ts takes the slot outright, whatever its
+    // tier or date - but only while it is genuinely upcoming, so a stale
+    // override quietly stops applying instead of emptying the studio's card.
+    if (studio.preferEvent) {
+      const wanted = studio.preferEvent.toLowerCase();
+      const favourite = all.find((e) => e.title.toLowerCase().includes(wanted));
+      if (favourite) {
+        const rest = distinct.filter((e) => e.title !== favourite.title);
+        picks.push({ studio, events: [favourite, ...rest].slice(0, perStudio) });
+        continue;
+      }
+    }
+
+    picks.push({ studio, events: distinct.slice(0, perStudio) });
   }
   return picks;
 }

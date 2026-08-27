@@ -28,11 +28,19 @@ Done:
 - On-screen control bar (prev/pause/next, progress, counter, speed, full
   screen), bottom-right, auto-hiding with the cursor.
 - Studio photos pulled from the shared *Social Media Photos* Google Photos
-  album: 10 of 12 studios now have current-space photos. 30-slide loop.
+  album: 9 of 11 studios have current-space photos. 28-slide loop.
+- Each studio's event card sits directly after that studio's photos.
+- Event cards use the event's own photo, else the studio icon - never a generic
+  studio photo, which in that frame reads as a picture of the class.
+- `preferEvent` in studios.ts is the editorial override for which class a studio
+  features (electronics -> Programmable LEDs).
 
 Next:
 - Photos for **leatherworking** and **a/v studio** - the only two studios still
   without any. Nothing suitable in the album's recent pages.
+- 3d printing, cnc and laser cutting still show *certifications* rather than
+  classes. That is the calendar, not the ranking: none of the three has an
+  upcoming class, only certifications. Revisit when the calendar fills out.
 - Drop the `50-deck-*.jpg` photos once every studio has enough current ones;
   they are of the old Wallingford space and only exist as a backstop.
 - Deploy. Output is static; nothing needs a server.

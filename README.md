@@ -83,7 +83,8 @@ come round again. Extra photos in a folder are harmless; `PHOTOS_PER_STUDIO` in
 
 `studios.ts` is also where calendar categories are mapped onto studios — that
 mapping is many-to-one on purpose (`cnc` and `cnc-routing` are one studio;
-`cosplay`, `design` and `crafts` are topical tags and map to nothing).
+`cosplay`, `design` and `crafts` are topical tags and map to nothing) — and
+where `preferEvent` lets you name the class a studio should feature.
 
 ## Refreshing events
 
@@ -131,12 +132,29 @@ display is worse than no price.
 
 ### Which events reach a slide
 
-One card per studio, showing that studio's next occurrence, preferring a
-**class** over a **certification** over a **meetup**. Open studio hours, tours
-and orientations never appear, and neither do sold-out or cancelled classes — so
-a studio whose classes are all full simply has no card that week. (Organisers
-mark a scrapped class by editing "(CANCELLED)" into its title rather than
-removing the event, so that string is the only signal there is.)
+One card per studio, and it sits **directly after that studio's photos** — the
+class on offer is for the room you were just looking at.
+
+The pick prefers a **class** over a **certification** over a **meetup**, looking
+120 days ahead, so a real class next month beats a certification next week.
+Certifications only surface for studios that genuinely have no class scheduled.
+Open studio hours, tours and orientations never appear, and neither do sold-out
+or cancelled classes — so a studio whose classes are all full has no card that
+week. (Organisers mark a scrapped class by editing "(CANCELLED)" into its title
+rather than removing the event, so that string is the only signal there is.)
+
+When the ranking is defensible but a different class would sell the studio
+better, set `preferEvent` on that studio in `studios.ts` to a substring of the
+title. It wins outright whenever it is upcoming, and quietly stops applying once
+it is not, so a stale override can never empty a card:
+
+```ts
+{ slug: 'electronics', …, preferEvent: 'Programmable LEDs' }
+```
+
+The card shows the **event's own photo** when its page had one worth using, and
+the **studio icon** on a tinted panel otherwise — never a generic studio photo,
+which in that frame would read as a picture of the class itself.
 
 Each card also carries its next few occurrences in the markup, and the browser
 reveals the first one still in the future. That way a build from a fortnight ago

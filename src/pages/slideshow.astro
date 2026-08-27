@@ -16,7 +16,7 @@ const slides = buildReel();
           if (slide.type === 'brand') return <BrandSlide />;
           if (slide.type === 'photo')
             return <PhotoSlide studio={slide.studio} src={slide.src} eager={i < 2} />;
-          return <EventSlide studio={slide.studio} events={slide.events} photo={slide.photo} />;
+          return <EventSlide studio={slide.studio} events={slide.events} />;
         })
       }
     </div>

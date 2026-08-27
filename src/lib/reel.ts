@@ -1,28 +1,15 @@
 import { pickByStudio, type SmEvent } from './events';
-import { studiosWithPhotos, photosFor } from './photos';
+import { studiosWithPhotos } from './photos';
 import type { Studio } from '../data/studios';
 
 export type Slide =
   | { type: 'brand' }
   | { type: 'photo'; studio: Studio; src: string }
-  | { type: 'event'; studio: Studio; events: SmEvent[]; photo: string | null };
+  | { type: 'event'; studio: Studio; events: SmEvent[] };
 
 /**
- * Build the loop, following the rhythm of the brand deck:
- *
- *   brand card -> three photos of one studio -> an upcoming class -> repeat
- *
- * Two departures from the deck, both because the data outgrew it:
- *
- * - Studios with events but no photos yet (ceramics and screen printing are the
- *   busiest studios on the calendar) still get event cards. Tying event cards
- *   to photo blocks would silently hide the most active parts of the space.
- * - Event cards are distributed across the blocks rather than one per block, so
- *   every studio's pick appears once per loop however many photo blocks exist.
- */
-/**
  * Photos shown per studio per loop. The deck used three, but that was across
- * six studios; at twelve it makes the loop long enough that a passer-by waits
+ * six studios; at eleven it makes the loop long enough that a passer-by waits
  * too long for the events to come round again.
  */
 const PHOTOS_PER_STUDIO = 2;
@@ -37,43 +24,44 @@ const PHOTOS_PER_STUDIO = 2;
  */
 const BRAND_EVERY = 3;
 
+/**
+ * Build the loop, following the rhythm of the brand deck:
+ *
+ *   brand card -> photos of one studio -> that studio's next class -> repeat
+ *
+ * Pairing each event card with its own studio's photos is the point: the class
+ * being advertised is for the room you were just looking at. A studio with a
+ * class on but no photos yet still gets its card, appended after the blocks,
+ * rather than losing the airtime.
+ *
+ * The brand card leads every third block rather than every one. The deck put it
+ * before each of six; at eleven studios that is the same card roughly every
+ * half minute, which reads as a stutter rather than a spine.
+ */
 export function buildReel(opts: { now?: string; maxPhotos?: number } = {}): Slide[] {
   const { maxPhotos = PHOTOS_PER_STUDIO } = opts;
 
   const blocks = studiosWithPhotos();
-  const picks = pickByStudio({ now: opts.now }).filter((p) => p.events.length > 0);
-
-  const eventSlides: Slide[] = picks.map(({ studio, events }) => {
-    const own = photosFor(studio.slug);
-    return {
-      type: 'event',
-      studio,
-      events,
-      // No photos for this studio yet - the card falls back to the studio icon
-      // on a tinted panel, which reads as deliberate rather than broken.
-      photo: own.length ? own[own.length - 1] : null,
-    };
-  });
-
-  if (blocks.length === 0) {
-    return [{ type: 'brand' }, ...eventSlides];
+  const cardFor = new Map<string, Slide>();
+  for (const { studio, events } of pickByStudio({ now: opts.now })) {
+    if (events.length) cardFor.set(studio.slug, { type: 'event', studio, events });
   }
-
-  // Spread the event cards evenly across the loop rather than filling from the
-  // front - otherwise, with fewer events than studios, every event lands in the
-  // first half and the reel tails off into photos.
-  const perBlock: Slide[][] = blocks.map(() => []);
-  eventSlides.forEach((slide, j) => {
-    const at = Math.min(blocks.length - 1, Math.floor((j * blocks.length) / eventSlides.length));
-    perBlock[at].push(slide);
-  });
 
   const slides: Slide[] = [];
   blocks.forEach(({ studio, photos }, i) => {
     if (i % BRAND_EVERY === 0) slides.push({ type: 'brand' });
     for (const src of photos.slice(0, maxPhotos)) slides.push({ type: 'photo', studio, src });
-    slides.push(...perBlock[i]);
+    const card = cardFor.get(studio.slug);
+    if (card) {
+      slides.push(card);
+      cardFor.delete(studio.slug);
+    }
   });
+
+  // Studios with a class on but no photos yet still deserve the airtime.
+  const orphans = [...cardFor.values()];
+  if (slides.length === 0) slides.push({ type: 'brand' });
+  slides.push(...orphans);
 
   return slides;
 }

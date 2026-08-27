@@ -23,6 +23,14 @@ export type Studio = {
   icon: string;
   /** Raw calendar category slugs that resolve to this studio. */
   eventCategories: string[];
+  /**
+   * Editorial override: case-insensitive substring of the event title to
+   * feature for this studio when it is upcoming. Use it when the automatic
+   * pick is defensible but a different class sells the studio better - the
+   * ranking cannot know that "Programmable LEDs" is a more enticing shop
+   * window than "Soldering 101" when both are classes.
+   */
+  preferEvent?: string;
 };
 
 export const STUDIOS: Studio[] = [
@@ -30,14 +38,13 @@ export const STUDIOS: Studio[] = [
   { slug: '3d-printing',     name: '3d printing',     icon: '/brand/icons/3d-printing.png',     eventCategories: ['3d-printing'] },
   { slug: 'woodshop',        name: 'woodshop',        icon: '/brand/icons/woodshop.png',        eventCategories: ['woodworking'] },
   { slug: 'sewing',          name: 'sewing',          icon: '/brand/icons/sewing.png',          eventCategories: ['sewing'] },
-  { slug: 'electronics',     name: 'electronics',     icon: '/brand/icons/electronics.png',     eventCategories: ['electronics'] },
+  { slug: 'electronics',     name: 'electronics',     icon: '/brand/icons/electronics.png',     eventCategories: ['electronics'], preferEvent: 'Programmable LEDs' },
   { slug: 'cnc',             name: 'cnc',             icon: '/brand/icons/cnc.png',             eventCategories: ['cnc', 'cnc-routing'] },
   { slug: 'ceramics',        name: 'ceramics',        icon: '/brand/icons/ceramics.svg',        eventCategories: ['ceramics'] },
   { slug: 'screen-printing', name: 'screen printing', icon: '/brand/icons/screen-printing.svg', eventCategories: ['print-making'] },
   { slug: 'leatherworking',  name: 'leatherworking',  icon: '/brand/icons/leatherworking.svg',  eventCategories: ['leatherworking', 'leatherworking-sewing'] },
   { slug: 'metalworking',    name: 'metalworking',    icon: '/brand/icons/metalworking.png',    eventCategories: [] },
   { slug: 'av-studio',       name: 'a/v studio',      icon: '/brand/icons/av-studio.png',       eventCategories: [] },
-  { slug: 'classroom',       name: 'classroom',       icon: '/brand/icons/classroom.svg',       eventCategories: [] },
 ];
 
 export const STUDIO_BY_SLUG = new Map(STUDIOS.map((s) => [s.slug, s]));

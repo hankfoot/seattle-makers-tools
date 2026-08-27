@@ -9,7 +9,10 @@ import type { Studio } from '../data/studios';
  * that has not already happened. That is what lets a build keep telling the
  * truth as it ages: if the soonest class has passed, the card falls forward to
  * the next date instead of advertising a class that already ran. Each candidate
- * is a different class, so each carries its own picture.
+ * is a different class, so each carries its own picture - or, when its page had
+ * none worth using, the studio icon on a tinted panel. The icon is deliberate:
+ * a generic studio photo in that frame reads as a picture *of the class*, which
+ * it is not.
  *
  * Cost is deliberately absent - prices live behind the site's cart and are not
  * published anywhere machine-readable, and a wrong price on a public display is
@@ -18,10 +21,8 @@ import type { Studio } from '../data/studios';
 interface Props {
   studio: Studio;
   events: SmEvent[];
-  /** Studio photo, used when the event's own page had no usable picture. */
-  photo: string | null;
 }
-const { studio, events, photo } = Astro.props;
+const { studio, events } = Astro.props;
 ---
 
 <div class="slide bg-white" data-type="event" data-studio={studio.slug}>
@@ -29,21 +30,19 @@ const { studio, events, photo } = Astro.props;
     <p class="mb-[26px] text-[38px] leading-none font-bold text-sm-ink">upcoming event:</p>
 
     {
-      events.map((e, i) => {
-        const src = e.image ?? photo;
-        return (
-          <div class="event-option flex items-start gap-[64px]" data-start={e.start} hidden={i !== 0}>
-            {src ? (
+      events.map((e, i) => (
+        <div class="event-option flex items-start gap-[64px]" data-start={e.start} hidden={i !== 0}>
+            {e.image ? (
               <img
                 class="h-[476px] w-[392px] shrink-0 bg-sm-mist object-cover"
-                src={src}
-                alt={e.image ? e.title : `${studio.name} at Seattle Makers`}
+                src={e.image}
+                alt={e.title}
                 loading="lazy"
                 decoding="async"
               />
             ) : (
               <div class="flex h-[476px] w-[392px] shrink-0 items-center justify-center bg-sm-mist">
-                <img src={studio.icon} alt="" class="h-[210px] w-[210px]" />
+                <img src={studio.icon} alt="" class="h-[240px] w-[240px]" />
               </div>
             )}
 
@@ -72,8 +71,7 @@ const { studio, events, photo } = Astro.props;
               </p>
             </div>
           </div>
-        );
-      })
+        ))
     }
   </div>
 
