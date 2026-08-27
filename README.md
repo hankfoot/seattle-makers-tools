@@ -1,0 +1,145 @@
+# seattle-makers-tools
+
+Small web tools for Seattle Makers, all on one static site.
+
+| Tool | Path | What it does |
+| --- | --- | --- |
+| Slideshow | `/slideshow` | A looping reel of studio photos and upcoming classes, for running full-screen at markets and tabling events. |
+
+Astro + Tailwind v4, static output. Every asset is local — once the page has
+loaded, the reel keeps running with the network unplugged.
+
+## Getting started
+
+```bash
+npm install
+npm run dev
+```
+
+| Command | What it does |
+| --- | --- |
+| `npm run dev` | Dev server at http://localhost:4321 |
+| `npm run build` | Static site into `dist/` |
+| `npm run preview` | Serve the built `dist/` |
+| `npm run events` | Refresh event data from seattlemakers.org |
+
+## Running the reel at a market
+
+Build it, serve `dist/`, and open Chrome in kiosk mode:
+
+```bash
+npm run build && npm run preview
+```
+
+```bash
+open -na "Google Chrome" --args --kiosk --app=http://localhost:4321/slideshow
+```
+
+`Esc` leaves kiosk mode. The page requests a **screen wake lock**, so the
+display should not sleep while the reel is running — but check the machine's own
+power settings too, since a wake lock cannot stop a system-level sleep.
+
+While it runs:
+
+| Key | |
+| --- | --- |
+| `space` | pause / resume |
+| `←` `→` | previous / next slide |
+| `f` | toggle full screen |
+
+The cursor hides itself after a couple of idle seconds.
+
+### URL options
+
+| Param | Default | |
+| --- | --- | --- |
+| `seconds` | `9` | Seconds per slide |
+| `fade` | `900` | Crossfade in ms |
+| `studios` | all | Comma-separated slugs, e.g. `?studios=woodshop,ceramics` |
+| `events` | `1` | `?events=0` for photos only |
+
+## Adding a studio's photos
+
+Photos are discovered from the filesystem, so this is mostly drag-and-drop:
+
+1. Put landscape JPEGs (1920px wide or better) in `public/studios/<slug>/`.
+   They appear in filename order; `01.jpg`, `02.jpg`, `03.jpg` is the convention.
+2. If the studio is new, add an icon at `public/brand/icons/<slug>.(png|svg)`
+   and a line to `STUDIOS` in [`src/data/studios.ts`](src/data/studios.ts).
+
+The reel picks the change up on the next build. Three photos per studio matches
+the rhythm of the original deck; more are fine, `maxPhotos` in
+[`src/lib/reel.ts`](src/lib/reel.ts) caps how many are used per block.
+
+`studios.ts` is also where calendar categories are mapped onto studios — that
+mapping is many-to-one on purpose (`cnc` and `cnc-routing` are one studio;
+`cosplay`, `design` and `crafts` are topical tags and map to nothing).
+
+## Refreshing events
+
+```bash
+npm run events
+```
+
+Run it before a market. It rewrites `src/data/events.json`, so rebuild after.
+
+### How event data works
+
+There is no usable API. The WordPress REST API and `/wp-json/` both return 401,
+`?ical=1` returns HTML, and `/events/feed/` carries only post-publish dates
+rather than event dates. So `scripts/fetch-events.mjs` scrapes the calendar page
+— one unauthenticated GET returns about a year of events — and then pulls each
+distinct class's blurb from its own page's `og:description`.
+
+Because it is a scrape, it is the part most likely to break if the site is
+redesigned. It fails loudly rather than silently: if it parses zero events it
+exits non-zero and leaves the previous `events.json` alone.
+
+**Prices are deliberately absent.** They are not published anywhere
+machine-readable — they live behind the cart — and a stale price on a public
+display is worse than no price.
+
+### Which events reach a slide
+
+One card per studio, showing that studio's next occurrence, preferring a
+**class** over a **certification** over a **meetup**. Open studio hours, tours
+and orientations never appear, and neither do sold-out classes — so a studio
+whose classes are all full simply has no card that week.
+
+Each card also carries its next few occurrences in the markup, and the browser
+reveals the first one still in the future. That way a build from a fortnight ago
+still shows a real date instead of advertising a class that already ran.
+
+## Deploying
+
+The output is plain static files. Any static host works; nothing needs a server.
+
+## Layout
+
+```
+public/
+  studios/<slug>/*.jpg     studio photos (drop-in, discovered at build)
+  brand/icons/<slug>.*     studio icons
+  brand/wordmark.png       the SEATTLE makers lockup
+  fonts/                   self-hosted Lato
+scripts/fetch-events.mjs   the calendar scraper
+src/
+  data/studios.ts          studio list + category mapping
+  data/events.json         generated; commit it
+  lib/events.ts            which events get a card
+  lib/photos.ts            filesystem photo discovery
+  lib/reel.ts              slide order
+  components/              BrandSlide, PhotoSlide, EventSlide, StudioChip
+  scripts/slideshow.ts     the runtime
+```
+
+## Provenance of the artwork
+
+Studio photos, the wordmark, and eight of the studio icons were extracted from
+the *Background Reel* PDF at full resolution. Four icons (ceramics, screen
+printing, leatherworking, classroom) are drawn to match, as the deck predates
+those studios.
+
+The deck's brand card is not reused: it lists eight services and the old
+Wallingford address with a Gas Works Park map. `BrandSlide.astro` rebuilds it
+with the twelve current studios and the Interbay location.

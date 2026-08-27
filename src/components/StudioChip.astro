@@ -1,0 +1,22 @@
+---
+import type { Studio } from '../data/studios';
+
+/**
+ * The white pill in the bottom-left of every photo slide. Rebuilt in CSS rather
+ * than shipped as a raster (the deck's version is baked art), so a new studio
+ * needs only an icon file and a line in studios.ts.
+ */
+interface Props {
+  studio: Studio;
+}
+const { studio } = Astro.props;
+---
+
+<div
+  class="absolute bottom-0 left-0 flex items-center gap-[30px] rounded-tr-[46px] bg-white pt-[34px] pr-[64px] pb-[40px] pl-[38px]"
+>
+  <img src={studio.icon} alt="" class="block h-[124px] w-[124px]" />
+  <span class="text-[74px] leading-none font-black tracking-[-0.01em] text-sm-ink">
+    {studio.name}
+  </span>
+</div>

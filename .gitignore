@@ -12,3 +12,10 @@ dist/
 *.hex
 *.bin
 
+
+# node / astro
+node_modules/
+.astro/
+.vercel/
+*.log
+.claude/launch.json

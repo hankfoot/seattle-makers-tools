@@ -1,0 +1,86 @@
+---
+import { formatWhen, type SmEvent } from '../lib/events';
+import type { Studio } from '../data/studios';
+
+/**
+ * The white "upcoming event" card from the brand deck.
+ *
+ * Every candidate occurrence is rendered, and the browser reveals the first one
+ * that has not already happened. That is what lets a build keep telling the
+ * truth as it ages: if the soonest class has passed, the card falls forward to
+ * the next date instead of advertising a class that already ran.
+ *
+ * Cost is deliberately absent - prices live behind the site's cart and are not
+ * published anywhere machine-readable, and a wrong price on a public display is
+ * worse than no price at all.
+ */
+interface Props {
+  studio: Studio;
+  events: SmEvent[];
+  photo: string | null;
+}
+const { studio, events, photo } = Astro.props;
+---
+
+<div class="slide bg-white" data-type="event" data-studio={studio.slug}>
+  <div class="absolute inset-0 flex flex-col justify-center px-[96px] pt-[40px] pb-[150px]">
+    <div class="flex items-start gap-[64px]">
+      {
+        photo ? (
+          <img
+            class="h-[476px] w-[392px] shrink-0 object-cover"
+            src={photo}
+            alt={`${studio.name} at Seattle Makers`}
+            loading="lazy"
+            decoding="async"
+          />
+        ) : (
+          <div class="flex h-[476px] w-[392px] shrink-0 items-center justify-center bg-sm-mist">
+            <img src={studio.icon} alt="" class="h-[210px] w-[210px]" />
+          </div>
+        )
+      }
+
+      <div class="min-w-0 flex-1 pt-[8px]">
+        <p class="mb-[26px] text-[38px] leading-none font-bold text-sm-ink">upcoming event:</p>
+
+        {
+          events.map((e, i) => (
+            <div class="event-option" data-start={e.start} hidden={i !== 0}>
+              <h2 class="text-[86px] leading-[0.98] font-black tracking-[-0.015em] text-sm-ink">
+                {e.title}
+              </h2>
+
+              {e.summary && (
+                <p
+                  class="mt-[28px] line-clamp-4 max-w-[1120px] text-[42px] leading-[1.32] font-normal text-sm-ink"
+                >
+                  {e.summary}
+                </p>
+              )}
+
+              <p class="mt-[36px] flex flex-wrap items-baseline gap-x-[54px] gap-y-[10px] text-[44px] leading-none text-sm-ink">
+                <span>
+                  <span class="font-bold">date:</span> {formatWhen(e.start).day}
+                </span>
+                <span>
+                  <span class="font-bold">time:</span> {formatWhen(e.start).time}
+                </span>
+              </p>
+            </div>
+          ))
+        }
+
+        <p class="mt-[44px] text-[34px] leading-none font-bold text-sm-green">
+          register at seattlemakers.org/events
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <img
+    src="/brand/wordmark.png"
+    alt="Seattle Makers"
+    class="absolute bottom-[54px] left-1/2 h-[76px] w-auto -translate-x-1/2"
+  />
+</div>

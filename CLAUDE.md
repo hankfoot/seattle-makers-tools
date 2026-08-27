@@ -4,16 +4,61 @@
 
 ## What this is
 
-<!-- One-liner. Long-form overview, goals, BOM, and decisions live in the
-     vault: schmardware-vault/projects/<category>/seattle-makers-tools/_index.md -->
+A suite of small web tools for Seattle Makers, served as one static site.
+The first is a looping **slideshow** for markets and tabling events.
+
+Astro + Tailwind v4, static output. See [README.md](README.md) for how to run
+it, add studio photos, and refresh events.
 
 **Started:** 2026-08-27
 
 ## Current state
 
-<!-- Where we left off, what's next. Update at the end of each session. -->
+Slideshow tool is built and verified against a production build.
 
-Project initialized.
+Done:
+- 30-slide reel following the *Background Reel* deck's rhythm (brand card ->
+  three studio photos -> an upcoming class).
+- Assets extracted from that deck: 17 studio photos across 6 studios, the
+  wordmark, and 8 studio icons. 4 more icons drawn to match.
+- Brand card rebuilt in HTML with the 12 current studios and the Interbay
+  address (the deck still showed Wallingford / Gas Works Park).
+- `scripts/fetch-events.mjs` scrapes the calendar; 142 events on file.
+
+Next:
+- Photos for the 6 studios with none yet (ceramics, screen printing,
+  leatherworking, metalworking, a/v studio, classroom). Hank is supplying these.
+- Deploy. Output is static; nothing needs a server.
+- Possibly a scheduled events refresh (daily GitHub Action) once the scraper has
+  proven stable across a site change or two.
+
+## Implementation notes
+
+**The event scrape is the fragile part.** There is no usable API - WP REST and
+`/wp-json/` 401, `?ical=1` returns HTML, and `/events/feed/` carries post-publish
+dates rather than event dates. The calendar page is the only public source of
+real event times, and it hands over ~a year in one GET. The scraper exits
+non-zero on a zero-event parse and leaves the previous JSON in place, so a site
+redesign breaks the refresh loudly instead of quietly emptying the reel.
+
+**Times are stored as floating local strings** (`"2026-09-05T13:00"`), not UTC
+instants. The calendar publishes wall-clock Seattle time and the market PC runs
+in Seattle, so this renders exactly what the site says and sidesteps timezone
+conversion entirely. It also means plain string comparison sorts and filters
+correctly.
+
+**Event cards carry several occurrences and the browser picks.** The site is
+static, so without this a build from last week would advertise a class that has
+already run.
+
+**Do not use `translate3d` in the Ken Burns keyframes.** It promotes the image
+to its own compositor layer, which some capture and remote-display paths render
+as solid black. The 2D form is deliberate.
+
+**Lazy images need explicit warming.** A lazy image inside a slide sitting at
+`opacity: 0` may never load on its own, which shows as a slide fading in with a
+hole in it. `slideshow.ts` warms the current and next slide, then the whole reel
+in the background.
 
 ## Logging what you learn
 

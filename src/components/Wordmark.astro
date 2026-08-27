@@ -1,0 +1,14 @@
+---
+/**
+ * The "SEATTLE makers" lockup on its white plate, bleeding off the top-right
+ * corner exactly as it does in the brand deck.
+ */
+interface Props {
+  class?: string;
+}
+const { class: cls = '' } = Astro.props;
+---
+
+<div class={`absolute top-0 right-0 bg-white rounded-bl-[34px] pl-[46px] pr-[40px] pt-[26px] pb-[24px] ${cls}`}>
+  <img src="/brand/wordmark.png" alt="Seattle Makers" class="block h-[86px] w-auto" />
+</div>

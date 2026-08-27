@@ -1,0 +1,25 @@
+---
+import StudioChip from './StudioChip.astro';
+import Wordmark from './Wordmark.astro';
+import type { Studio } from '../data/studios';
+
+interface Props {
+  studio: Studio;
+  src: string;
+  /** First slide of the reel is eager so there is no blank first frame. */
+  eager?: boolean;
+}
+const { studio, src, eager = false } = Astro.props;
+---
+
+<div class="slide" data-type="photo" data-studio={studio.slug}>
+  <img
+    class="ken absolute inset-0 h-full w-full object-cover"
+    src={src}
+    alt={`${studio.name} at Seattle Makers`}
+    loading={eager ? 'eager' : 'lazy'}
+    decoding="async"
+  />
+  <Wordmark />
+  <StudioChip studio={studio} />
+</div>

@@ -1,0 +1,41 @@
+@import 'tailwindcss';
+
+/* Self-hosted so the reel renders identically on a market PC with no network. */
+@font-face {
+  font-family: 'Lato';
+  src: url('/fonts/lato-400.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: block;
+}
+@font-face {
+  font-family: 'Lato';
+  src: url('/fonts/lato-700.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: block;
+}
+@font-face {
+  font-family: 'Lato';
+  src: url('/fonts/lato-900.woff2') format('woff2');
+  font-weight: 900;
+  font-style: normal;
+  font-display: block;
+}
+
+@theme {
+  /* Sampled from the wordmark in the brand deck. */
+  --color-sm-green: #10733c;
+  --color-sm-green-dark: #0b5a2e;
+  --color-sm-ink: #111111;
+  --color-sm-paper: #ffffff;
+  --color-sm-mist: #f1f1f1;
+
+  --font-sans: 'Lato', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+
+html {
+  font-family: var(--font-sans);
+  background: var(--color-sm-ink);
+  color: var(--color-sm-ink);
+}

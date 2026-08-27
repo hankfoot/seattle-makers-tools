@@ -1,0 +1,92 @@
+---
+import Base from '../layouts/Base.astro';
+import BrandSlide from '../components/BrandSlide.astro';
+import PhotoSlide from '../components/PhotoSlide.astro';
+import EventSlide from '../components/EventSlide.astro';
+import { buildReel } from '../lib/reel';
+import { FETCHED_AT } from '../lib/events';
+
+const slides = buildReel();
+---
+
+<Base title="Slideshow — Seattle Makers" bare description="Looping reel of studios and upcoming classes at Seattle Makers.">
+  <div id="stage-wrap" class="fixed inset-0 overflow-hidden bg-black">
+    <div id="stage">
+      {
+        slides.map((slide, i) => {
+          if (slide.type === 'brand') return <BrandSlide />;
+          if (slide.type === 'photo')
+            return <PhotoSlide studio={slide.studio} src={slide.src} eager={i < 2} />;
+          return <EventSlide studio={slide.studio} events={slide.events} photo={slide.photo} />;
+        })
+      }
+    </div>
+    <p id="status" hidden class="absolute bottom-6 left-1/2 -translate-x-1/2 rounded bg-black/70 px-4 py-2 text-lg text-white"></p>
+    <p class="pointer-events-none absolute right-3 bottom-2 text-[11px] text-white/25 select-none">
+      events fetched {FETCHED_AT.slice(0, 10)}
+    </p>
+  </div>
+</Base>
+
+<style is:global>
+  #stage {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 1920px;
+    height: 1080px;
+    transform-origin: center center;
+    background: #000;
+  }
+
+  .slide {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    opacity: 0;
+    transition: opacity var(--fade-ms, 900ms) ease-in-out;
+  }
+  .slide.is-active {
+    opacity: 1;
+    z-index: 1;
+  }
+  /* Dropped from the loop (past event, or filtered out by ?studios=). */
+  .slide.is-out {
+    display: none;
+  }
+
+  /* Slow push on photo slides. Runs only while the slide is on screen. */
+  .ken {
+    transform: scale(1.06);
+  }
+  .is-active .ken {
+    animation: ken var(--dwell-ms, 9900ms) linear forwards;
+  }
+  /* 2D on purpose: a translate3d here promotes the image to its own compositor
+     layer, which some capture and remote-display paths render as black. */
+  @keyframes ken {
+    from {
+      transform: scale(1.02) translate(0, 0);
+    }
+    to {
+      transform: scale(1.1) translate(-1.1%, -0.9%);
+    }
+  }
+
+  body.cursor-hidden {
+    cursor: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .is-active .ken {
+      animation: none;
+    }
+    .slide {
+      transition-duration: 1ms;
+    }
+  }
+</style>
+
+<script>
+  import '../scripts/slideshow';
+</script>
