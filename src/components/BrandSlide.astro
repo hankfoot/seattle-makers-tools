@@ -1,12 +1,16 @@
 ---
-import InterbayMap from './InterbayMap.astro';
 import { STUDIOS } from '../data/studios';
 
 /**
  * The interstitial "what is this place" card. Rebuilt from the deck rather than
- * reused as art, because the deck's version is out of date in two ways: it
- * lists eight services when there are now twelve studios, and it gives the old
- * Wallingford address and a Gas Works Park map.
+ * reused as art, because the deck's version is out of date: it lists eight
+ * services when there are now eleven studios, and it gives the old Wallingford
+ * address alongside a Gas Works Park map.
+ *
+ * Where the deck had the map, this has a QR to the interest form. At a market
+ * nobody is navigating to the building from the screen - they are deciding
+ * whether to give you their email - so the scannable thing earns the space that
+ * a map cannot.
  */
 const left = STUDIOS.slice(0, Math.ceil(STUDIOS.length / 2));
 const right = STUDIOS.slice(Math.ceil(STUDIOS.length / 2));
@@ -74,8 +78,13 @@ const right = STUDIOS.slice(Math.ceil(STUDIOS.length / 2));
         </svg>
       </div>
 
-      <div class="mt-[26px] h-[430px] w-[430px] border-[5px] border-sm-ink">
-        <InterbayMap />
+      <div class="mt-[28px] flex flex-col items-center">
+        <div class="border-[5px] border-sm-ink bg-white p-[22px]">
+          <img src="/brand/qr-interest.svg" alt="" class="block h-[352px] w-[352px]" />
+        </div>
+        <p class="mt-[18px] text-[38px] leading-none font-black text-sm-green">
+          scan to get in touch
+        </p>
       </div>
 
       <div class="mt-[26px] text-center">

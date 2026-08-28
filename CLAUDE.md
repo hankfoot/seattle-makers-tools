@@ -34,6 +34,11 @@ Done:
   studio photo, which in that frame reads as a picture of the class.
 - `preferEvent` in studios.ts is the editorial override for which class a studio
   features (electronics -> Programmable LEDs).
+- Interest-form QR: on the brand card where the map used to be, and full screen
+  on `q`. Generated at author time by `npm run qr` into public/brand/, so the
+  page ships no QR library. Verified by decoding the shipped SVG with OpenCV.
+- The Interbay map is gone - it was inaccurate, and at a market the scannable
+  thing is worth more than the map anyway.
 
 Next:
 - Photos for **leatherworking** and **a/v studio** - the only two studios still

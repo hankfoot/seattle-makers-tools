@@ -8,13 +8,15 @@
     "build": "astro build",
     "preview": "astro preview",
     "events": "node scripts/fetch-events.mjs",
-    "check": "astro check"
+    "check": "astro check",
+    "qr": "node scripts/make-qr.mjs"
   },
   "dependencies": {
     "astro": "^7.2.9"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.3.3",
+    "qrcode": "^1.5.4",
     "tailwindcss": "^4.3.3"
   }
 }

@@ -36,6 +36,7 @@ const controls = document.getElementById('controls');
 const progress = document.getElementById('progress');
 const counter = document.getElementById('counter');
 const speedOut = document.getElementById('speed');
+const qrOverlay = document.getElementById('qr-overlay');
 
 function applyTiming(): void {
   document.documentElement.style.setProperty('--fade-ms', `${FADE_MS}ms`);
@@ -195,6 +196,29 @@ function nudgeSpeed(delta: number): void {
   schedule();
 }
 
+/**
+ * The interest-form QR, held up to someone who wants to sign up on the spot.
+ *
+ * Opening it pauses the reel, so the slide behind does not move on while a
+ * stranger is squaring up their phone. Closing resumes only if the reel was
+ * running beforehand.
+ */
+let pausedBeforeQr = false;
+function setQr(open: boolean): void {
+  if (!qrOverlay) return;
+  if (open === !qrOverlay.hidden) return;
+  if (open) {
+    pausedBeforeQr = paused;
+    qrOverlay.hidden = false;
+    setPaused(true);
+  } else {
+    qrOverlay.hidden = true;
+    if (!pausedBeforeQr) setPaused(false);
+  }
+  const btn = controls?.querySelector<HTMLButtonElement>('[data-act="qr"]');
+  btn?.setAttribute('aria-pressed', String(open));
+}
+
 function toggleFullscreen(): void {
   if (document.fullscreenElement) document.exitFullscreen();
   else document.documentElement.requestFullscreen().catch(() => {});
@@ -229,10 +253,15 @@ controls?.addEventListener('click', (e) => {
     case 'play': setPaused(!paused); break;
     case 'slower': nudgeSpeed(1); break;
     case 'faster': nudgeSpeed(-1); break;
+    case 'qr': setQr(qrOverlay?.hidden ?? true); break;
     case 'full': toggleFullscreen(); break;
   }
   reveal();
 });
+
+// Anywhere on the scrim dismisses it - the likeliest next input after someone
+// has finished scanning is a tap, not a hunt for the button.
+qrOverlay?.addEventListener('click', () => setQr(false));
 
 addEventListener('keydown', (e) => {
   if (e.metaKey || e.ctrlKey || e.altKey) return;
@@ -248,6 +277,14 @@ addEventListener('keydown', (e) => {
     case 'ArrowLeft':
       e.preventDefault();
       step(-1);
+      break;
+    case 'q':
+    case 'Q':
+      setQr(qrOverlay?.hidden ?? true);
+      break;
+    case 'Escape':
+      if (qrOverlay && !qrOverlay.hidden) setQr(false);
+      else return;
       break;
     case 'f':
     case 'F':
