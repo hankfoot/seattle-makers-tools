@@ -30,6 +30,8 @@ const fTitle = $<HTMLInputElement>('f-title');
 const fSub = $('f-sub');
 const fUrl = $<HTMLInputElement>('f-url');
 const fUrlNote = $('f-url-note');
+const fAlign = $('f-align');
+const alignNote = $('align-note');
 const fAll = $('f-all');
 const fNone = $('f-none');
 const fCount = $('f-count');
@@ -54,8 +56,15 @@ let direction: 'horizontal' | 'vertical' = 'horizontal';
  * the code and the label stops looking like one thing. That is exactly the
  * row-flow-with-a-code case, so it is the only one that goes left.
  */
-const alignFor = (flow: 'row' | 'column', hasQr: boolean) =>
+const autoAlign = (flow: 'row' | 'column', hasQr: boolean) =>
   flow === 'row' && hasQr ? 'left' : 'center';
+
+/**
+ * Auto is the default and gets it right for a title-and-subtitle label, but it
+ * cannot know when the copy is a checklist - which wants a left edge whatever
+ * the code is doing. So auto is a default, not a verdict.
+ */
+let alignMode: 'auto' | 'left' | 'center' = 'auto';
 
 /**
  * A code takes about a third of a wide label's width, or a good part of a tall
@@ -93,7 +102,7 @@ let on = FIRST_ONLY();
 /* ------------------------------------------------------------ rich text */
 
 /** The only markup a label may carry. Everything else is unwrapped. */
-const KEEP = new Set(['B', 'STRONG', 'I', 'EM', 'BR']);
+const KEEP = new Set(['B', 'STRONG', 'I', 'EM', 'BR', 'CODE', 'UL', 'OL', 'LI']);
 
 /**
  * Elements whose *contents* go too. Unwrapping these would keep their text -
@@ -310,7 +319,10 @@ async function render(): Promise<void> {
   // Build one label, then clone it into every switched-on position.
   const proto = tpl.content.firstElementChild!.cloneNode(true) as HTMLElement;
   proto.dataset.flow = flow;
-  proto.dataset.align = alignFor(flow, hasQr);
+  const resolvedAlign = alignMode === 'auto' ? autoAlign(flow, hasQr) : alignMode;
+  proto.dataset.align = resolvedAlign;
+  alignNote.textContent =
+    alignMode === 'auto' ? `Auto chose ${resolvedAlign === 'left' ? 'left' : 'centre'}.` : '';
   proto.dataset.rot = upright ? '1' : '0';
   proto.style.setProperty('--pad', `${pad}in`);
   proto.style.setProperty('--gap', `${gap}in`);
@@ -540,12 +552,69 @@ function syncTools(): void {
     const anchor = document.getSelection()?.anchorNode ?? null;
     const inside = Boolean(field && anchor && field.contains(anchor));
     for (const b of tools.querySelectorAll('button')) {
-      b.setAttribute(
-        'aria-pressed',
-        String(inside && document.queryCommandState(b.dataset.cmd!)),
-      );
+      const cmd = b.dataset.cmd!;
+      const on =
+        inside && (cmd === 'code' ? inCode(field!) : document.queryCommandState(cmd));
+      b.setAttribute('aria-pressed', String(on));
     }
   }
+}
+
+fAlign.addEventListener('click', (e) => {
+  const b = (e.target as HTMLElement).closest<HTMLButtonElement>('button[data-align]');
+  if (!b) return;
+  alignMode = b.dataset.align as typeof alignMode;
+  for (const o of fAlign.querySelectorAll('button')) {
+    o.setAttribute('aria-pressed', String(o === b));
+  }
+  void render();
+});
+
+/**
+ * No execCommand for inline code, so wrap the selection by hand - and unwrap it
+ * again when the caret is already inside one, so the button toggles like the
+ * others rather than nesting <code> inside <code>.
+ */
+function toggleCode(field: HTMLElement): void {
+  const sel = document.getSelection();
+  if (!sel || !sel.rangeCount) return;
+
+  let node: Node | null = sel.anchorNode;
+  while (node && node !== field) {
+    if (node.nodeType === 1 && (node as Element).tagName === 'CODE') {
+      const el = node as Element;
+      const parent = el.parentNode!;
+      while (el.firstChild) parent.insertBefore(el.firstChild, el);
+      parent.removeChild(el);
+      return;
+    }
+    node = node.parentNode;
+  }
+
+  const range = sel.getRangeAt(0);
+  if (range.collapsed) return;
+  const code = document.createElement('code');
+  code.append(range.extractContents());
+  range.insertNode(code);
+  sel.removeAllRanges();
+  const after = document.createRange();
+  after.selectNodeContents(code);
+  sel.addRange(after);
+}
+
+/** Whether the caret sits inside a <code> within this field. */
+function inCode(field: HTMLElement): boolean {
+  let node: Node | null = document.getSelection()?.anchorNode ?? null;
+  while (node && node !== field) {
+    if (node.nodeType === 1 && (node as Element).tagName === 'CODE') return true;
+    node = node.parentNode;
+  }
+  return false;
+}
+
+function runCmd(field: HTMLElement, cmd: string): void {
+  if (cmd === 'code') toggleCode(field);
+  else document.execCommand(cmd);
 }
 
 for (const tools of document.querySelectorAll<HTMLElement>('.lb-tools')) {
@@ -558,9 +627,9 @@ for (const tools of document.querySelectorAll<HTMLElement>('.lb-tools')) {
     if (!b) return;
     field.focus();
     // execCommand is deprecated but remains the only one-liner that toggles
-    // bold/italic across a selection, and it works in every browser this tool
-    // will run in. Whatever it produces is put through clean() anyway.
-    document.execCommand(b.dataset.cmd!);
+    // bold/italic and lists across a selection, and it works in every browser
+    // this tool will run in. Whatever it produces goes through clean() anyway.
+    runCmd(field, b.dataset.cmd!);
     void render();
     syncTools();
   });
@@ -572,12 +641,18 @@ for (const field of [fSub]) {
   field.addEventListener('keydown', (e) => {
     if ((e.metaKey || e.ctrlKey) && (e.key === 'b' || e.key === 'i')) {
       e.preventDefault();
-      document.execCommand(e.key === 'b' ? 'bold' : 'italic');
+      runCmd(field, e.key === 'b' ? 'bold' : 'italic');
       void render();
       syncTools();
       return;
     }
     if (e.key === 'Enter') {
+      // Inside a list, Enter is the list's own job - it opens the next item.
+      if (document.queryCommandState('insertUnorderedList') ||
+          document.queryCommandState('insertOrderedList')) {
+        setTimeout(() => void render(), 0);
+        return;
+      }
       // A plain <br>, not the <div> or <p> contenteditable would otherwise
       // insert - clean() would have to unwrap those back into breaks anyway.
       e.preventDefault();
@@ -607,12 +682,27 @@ if (qStock && SHEETS.some((s) => s.stock === qStock)) {
     o.setAttribute('aria-pressed', String(o.dataset.stock === stock));
   }
 }
+const qAlign = q.get('align');
+if (qAlign === 'auto' || qAlign === 'left' || qAlign === 'center') {
+  alignMode = qAlign;
+  for (const o of fAlign.querySelectorAll('button')) {
+    o.setAttribute('aria-pressed', String(o.dataset.align === alignMode));
+  }
+}
 const qDir = q.get('dir');
 if (qDir === 'horizontal' || qDir === 'vertical') direction = qDir;
 const qTitle = q.get('title');
 if (qTitle !== null) fTitle.value = qTitle;
 const qSub = q.get('sub');
-if (qSub !== null) fSub.textContent = qSub;
+if (qSub !== null) {
+  // Interpreted as markup so a bookmarked label keeps its bullets and code,
+  // then put through the same clean() as anything typed - which allows only
+  // b/i/br/code/ul/ol/li and deletes script and style outright. Parsing happens
+  // in a detached element, which never runs scripts.
+  const holder = document.createElement('div');
+  holder.innerHTML = qSub;
+  fSub.innerHTML = clean(holder);
+}
 const qUrl = q.get('url');
 if (qUrl !== null) fUrl.value = qUrl;
 

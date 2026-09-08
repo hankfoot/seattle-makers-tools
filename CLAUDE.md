@@ -169,11 +169,13 @@ the forced value is written into state so moving on to a stock that does offer
 upright does not silently spring back to a setting the previous sheet could not
 honour.
 
-**Label alignment is derived, not chosen.** Centre reads best everywhere except
-one case: a code sitting *beside* the words, where a centred column drifts away
-from the code and the label stops looking like one object. That is exactly
-row-flow-with-a-code, so it is the only case that goes left. There is no manual
-control - a toggle here only invites the wrong answer.
+**Label alignment defaults from the content but can be overridden.** Auto reads
+best for a title-and-subtitle label: centre everywhere except a code sitting
+*beside* the words, where a centred column drifts away from the code and the
+label stops looking like one object. But auto cannot know the copy is a
+checklist, which wants a left edge whatever the code is doing - so Auto is the
+default, not the verdict, and Left/Centre override it. The control reports what
+auto resolved to, so it never looks like nothing happened.
 
 **Type starts 15% smaller when there is a code**, because the code takes about a
 third of a wide label's width or a good part of a tall one's height, and type
@@ -256,7 +258,14 @@ do nothing for a phrase that is already the largest, heaviest thing on the
 label, and a line break only invites the copy to grow. It also means the fit can
 assume the title wants exactly one line.
 
-**Label copy is rich text, sanitised to `b` / `i` / `br`.** `clean()` unwraps
+**List markers on a label are drawn by hand, not by `list-style`.** The gap after
+a native marker is not controllable and comes out far too wide at label sizes,
+and a marker outside the text flow cannot be centred - a hanging indent needs a
+left edge to hang from. `li::before` with a counter for ordered lists solves
+both.
+
+**Label copy is rich text, sanitised to `b` / `i` / `br` / `code` / `ul` / `ol` /
+`li`.** `clean()` unwraps
 everything else, turning block elements into line breaks so text does not run
 together, and *deletes* `script`/`style` and friends outright - unwrapping those
 would keep their text, so a pasted script tag became label copy reading "bad()".

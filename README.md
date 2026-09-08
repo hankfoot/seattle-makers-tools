@@ -213,12 +213,14 @@ and sometimes between jobs. Unlike the sign tool these pages are full-bleed by
 necessity — the die-cut is where it is, so the page cannot carry a safety
 margin, and anything other than true size puts the ink between the labels.
 
-The **subtitle** takes bold, italics and line breaks — ⌘B / ⌘I, Enter for a new
-line. The title is plain text by design.
+The **subtitle** takes bold, italics, inline code, bullet and numbered lists, and
+line breaks — ⌘B / ⌘I, Enter for a new line. The title is plain text by design.
 
-Alignment looks after itself: centred, except when a code sits beside the words
+Alignment defaults to **Auto**: centred, except when a code sits beside the words
 on a wide label, where everything goes left so the label reads as one object.
-Type also starts a notch smaller when there is a code to share the room with. Type sizes itself to the label and shrinks to fit, so a long title stays on
+Override it with Left or Centre — a checklist usually wants Left whatever the
+code is doing. Type also starts a notch smaller when there is a code to share the
+room with. Type sizes itself to the label and shrinks to fit, so a long title stays on
 the label instead of breaking mid-word, and the title-to-copy ratio stays the
 same (1.8×) on every stock. Two things to watch:
 
@@ -226,8 +228,9 @@ same (1.8×) on every stock. Two things to watch:
   hold a code much over 0.6mm per module with a normal URL, and the tool warns
   below 0.8mm. Use a short link, or a bigger label.
 - **Nothing is saved.** To keep a sheet, bookmark it —
-  `?stock=&dir=&title=&sub=&url=&on=` fills the form, and `on=` names the
-  positions to print (1-based, matching the numbers on the preview).
+  `?stock=&dir=&align=&title=&sub=&url=&on=` fills the form. `on=` names the
+  positions to print (1-based, matching the numbers on the preview), and `sub=`
+  may carry markup, so a bookmarked checklist keeps its bullets.
 
 ## Printing a QR sign
 

@@ -75,6 +75,9 @@ const stocks = STOCKS.map((s) => ({
           <span class="lb-tools" data-for="f-sub">
             <button type="button" data-cmd="bold" title="Bold (⌘B)" aria-label="Bold"><b>B</b></button>
             <button type="button" data-cmd="italic" title="Italic (⌘I)" aria-label="Italic"><i>I</i></button>
+            <button type="button" data-cmd="code" title="Code" aria-label="Code">&lt;&gt;</button>
+            <button type="button" data-cmd="insertUnorderedList" title="Bullets" aria-label="Bullet list">&bull;</button>
+            <button type="button" data-cmd="insertOrderedList" title="Numbered list" aria-label="Numbered list">1.</button>
           </span>
         </span>
         <div
@@ -86,7 +89,17 @@ const stocks = STOCKS.map((s) => ({
           aria-label="Subtitle"
           data-placeholder="Certification required"></div>
       </div>
-      <p class="lb-note">Subtitle takes Enter for a new line, ⌘B / ⌘I for bold and italic.</p>
+      <p class="lb-note">Enter for a new line. ⌘B / ⌘I for bold and italic.</p>
+
+      <fieldset class="lb-field">
+        <legend>Align</legend>
+        <div class="lb-seg" id="f-align">
+          <button type="button" data-align="auto" aria-pressed="true">Auto</button>
+          <button type="button" data-align="left" aria-pressed="false">Left</button>
+          <button type="button" data-align="center" aria-pressed="false">Centre</button>
+        </div>
+        <p class="lb-note" id="align-note"></p>
+      </fieldset>
 
 
       <label class="lb-field">
@@ -280,6 +293,43 @@ const stocks = STOCKS.map((s) => ({
     font-weight: 400;
     line-height: 1.25;
     text-wrap: pretty;
+  }
+
+  /* Markers drawn by hand rather than list-style. Two reasons: the gap after a
+     native marker is not controllable and comes out far too wide at label
+     sizes, and a marker inside the text flow is the only kind that survives
+     being centred - a hanging indent needs a left edge to hang from. */
+  .lb-subtitle ul,
+  .lb-subtitle ol {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .lb-subtitle ol {
+    counter-reset: lb-item;
+  }
+  .lb-subtitle li {
+    margin-top: 0.18em;
+  }
+  .lb-subtitle li:first-child {
+    margin-top: 0;
+  }
+  .lb-subtitle ul li::before {
+    content: '\2022';
+    margin-right: 0.45em;
+  }
+  .lb-subtitle ol li::before {
+    counter-increment: lb-item;
+    content: counter(lb-item) '.';
+    margin-right: 0.4em;
+    font-variant-numeric: tabular-nums;
+  }
+  /* System monospace: always present, prints fine, and nothing to self-host. */
+  .lb-subtitle code,
+  .lb-rich code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    /* monospace runs wide and tall against Lato at the same nominal size */
+    font-size: 0.92em;
   }
 
   .lb-qr {
@@ -558,6 +608,20 @@ const stocks = STOCKS.map((s) => ({
     white-space: pre-wrap;
     overflow-wrap: anywhere;
   }
+  .lb-rich ul,
+  .lb-rich ol {
+    list-style-position: inside;
+    padding: 0;
+    margin: 0;
+  }
+  .lb-rich li::marker {
+    color: #a3a3a3;
+  }
+  .lb-rich code {
+    padding: 0 0.15em;
+    background: #f1f1f1;
+    border-radius: 0.15rem;
+  }
   .lb-rich:empty::before {
     content: attr(data-placeholder);
     color: #a3a3a3;
@@ -586,8 +650,9 @@ const stocks = STOCKS.map((s) => ({
     margin-left: auto;
   }
   .lb-tools button {
-    width: 1.5rem;
+    min-width: 1.5rem;
     height: 1.5rem;
+    padding: 0 0.2rem;
     display: grid;
     place-items: center;
     border: 1px solid #d4d4d4;
