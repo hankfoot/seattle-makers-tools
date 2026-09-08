@@ -70,26 +70,13 @@ const stocks = STOCKS.map((s) => ({
       </label>
 
       <div class="lb-field">
-        <span class="lb-legend">
-          Subtitle <i>optional</i>
-          <span class="lb-tools" data-for="f-sub">
-            <button type="button" data-cmd="bold" title="Bold (⌘B)" aria-label="Bold"><b>B</b></button>
-            <button type="button" data-cmd="italic" title="Italic (⌘I)" aria-label="Italic"><i>I</i></button>
-            <button type="button" data-cmd="code" title="Code" aria-label="Code">&lt;&gt;</button>
-            <button type="button" data-cmd="insertUnorderedList" title="Bullets" aria-label="Bullet list">&bull;</button>
-            <button type="button" data-cmd="insertOrderedList" title="Numbered list" aria-label="Numbered list">1.</button>
-          </span>
-        </span>
-        <div
-          id="f-sub"
-          class="lb-rich"
-          contenteditable="true"
-          role="textbox"
-          aria-multiline="true"
-          aria-label="Subtitle"
-          data-placeholder="Certification required"></div>
+        <span>Subtitle <i>optional</i></span>
+        {/* Quill mounts here and supplies its own toolbar. */}
+        <div class="lb-editor-shell">
+          <div id="f-sub-toolbar"></div>
+          <div id="f-sub"></div>
+        </div>
       </div>
-      <p class="lb-note">Enter for a new line. ⌘B / ⌘I for bold and italic.</p>
 
       <fieldset class="lb-field">
         <legend>Align</legend>
@@ -213,7 +200,7 @@ const stocks = STOCKS.map((s) => ({
   .lb-inner {
     width: 100%;
     height: 100%;
-    padding: var(--pad);
+    padding: var(--pad-y) var(--pad-x);
     display: flex;
     align-items: flex-start;
     justify-content: center;
@@ -587,7 +574,7 @@ const stocks = STOCKS.map((s) => ({
     color: #a3a3a3;
   }
   .lb-field input[type='text'],
-  .lb-rich {
+  .lb-editor-shell {
     width: 100%;
     padding: 0.55rem 0.7rem;
     border: 1px solid #d4d4d4;
@@ -596,84 +583,77 @@ const stocks = STOCKS.map((s) => ({
     font: inherit;
     font-size: 0.95rem;
   }
-  .lb-field input[type='text']:focus,
-  .lb-rich:focus {
+  .lb-field input[type='text']:focus {
     outline: 2px solid var(--color-sm-green);
     outline-offset: -1px;
     border-color: transparent;
   }
-  .lb-rich {
-    min-height: 2.6rem;
-    line-height: 1.35;
-    white-space: pre-wrap;
-    overflow-wrap: anywhere;
-  }
-  .lb-rich ul,
-  .lb-rich ol {
-    list-style-position: inside;
+
+  /* ---------------------------------------------------- the subtitle editor */
+
+  /* Quill's own chrome, restyled to sit inside the tool rather than next to it.
+     The shell carries the border so the toolbar and the writing area read as
+     one field. */
+  .lb-editor-shell {
     padding: 0;
-    margin: 0;
+    overflow: hidden;
   }
-  .lb-rich li::marker {
+  .lb-editor-shell:focus-within {
+    outline: 2px solid var(--color-sm-green);
+    outline-offset: -1px;
+    border-color: transparent;
+  }
+  #f-sub-toolbar.ql-toolbar.ql-snow {
+    border: 0;
+    border-bottom: 1px solid #e5e5e5;
+    padding: 0.3rem 0.35rem;
+    background: #fafafa;
+    font-family: inherit;
+  }
+  .ql-snow.ql-toolbar button {
+    width: 1.75rem;
+    height: 1.65rem;
+    border-radius: 0.25rem;
+  }
+  .ql-snow.ql-toolbar button:hover {
+    background: rgb(16 115 60 / 0.09);
+  }
+  .ql-snow.ql-toolbar button:hover .ql-stroke,
+  .ql-snow.ql-toolbar button.ql-active .ql-stroke {
+    stroke: var(--color-sm-green);
+  }
+  .ql-snow.ql-toolbar button:hover .ql-fill,
+  .ql-snow.ql-toolbar button.ql-active .ql-fill {
+    fill: var(--color-sm-green);
+  }
+  .ql-snow.ql-toolbar button.ql-active {
+    background: rgb(16 115 60 / 0.13);
+  }
+  #f-sub.ql-container.ql-snow {
+    border: 0;
+    font-family: inherit;
+    font-size: 0.95rem;
+  }
+  #f-sub .ql-editor {
+    min-height: 4.2rem;
+    padding: 0.55rem 0.7rem;
+    line-height: 1.4;
+  }
+  #f-sub .ql-editor.ql-blank::before {
+    left: 0.7rem;
+    right: 0.7rem;
+    font-style: normal;
     color: #a3a3a3;
   }
-  .lb-rich code {
+  #f-sub .ql-editor ol,
+  #f-sub .ql-editor ul {
+    padding-left: 0.4rem;
+  }
+  #f-sub .ql-editor code {
     padding: 0 0.15em;
     background: #f1f1f1;
     border-radius: 0.15rem;
-  }
-  .lb-rich:empty::before {
-    content: attr(data-placeholder);
-    color: #a3a3a3;
-  }
-
-  .lb-legend {
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-    font-size: 0.72rem;
-    font-weight: 900;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: #404040;
-  }
-  .lb-legend i {
-    font-style: normal;
-    font-weight: 700;
-    text-transform: none;
-    letter-spacing: 0;
-    color: #a3a3a3;
-  }
-  .lb-tools {
-    display: flex;
-    gap: 0.2rem;
-    margin-left: auto;
-  }
-  .lb-tools button {
-    min-width: 1.5rem;
-    height: 1.5rem;
-    padding: 0 0.2rem;
-    display: grid;
-    place-items: center;
-    border: 1px solid #d4d4d4;
-    border-radius: 0.25rem;
-    background: #fff;
-    font-size: 0.78rem;
-    line-height: 1;
-    color: #404040;
-    cursor: pointer;
-    transition:
-      border-color 120ms ease,
-      background-color 120ms ease,
-      color 120ms ease;
-  }
-  .lb-tools button:hover {
-    border-color: var(--color-sm-green);
-  }
-  .lb-tools button[aria-pressed='true'] {
-    border-color: var(--color-sm-green);
-    background: var(--color-sm-green);
-    color: #fff;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   }
 
   .lb-seg {

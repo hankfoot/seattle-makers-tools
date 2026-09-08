@@ -5,6 +5,8 @@
  * Everything is placed in absolute inches from the page corner - see
  * labelSheets.ts for why the numbers are not rounded.
  */
+import Quill from 'quill';
+import 'quill/dist/quill.snow.css';
 import { SHEETS, byId, perSheet, type LabelSheet } from '../data/labelSheets';
 import {
   encode,
@@ -27,7 +29,51 @@ const fStock = $('f-stock');
 const fDir = $('f-dir');
 const fDirWrap = $('f-dir-wrap');
 const fTitle = $<HTMLInputElement>('f-title');
-const fSub = $('f-sub');
+/* Built before Quill is constructed, because its toolbar module scans the
+   container exactly once at that moment - buttons added afterwards get no
+   handlers, and every format silently does nothing. Built in script rather
+   than markup so the button set and the format list cannot drift apart. */
+const TOOLBAR = [
+  ['bold', 'Bold'],
+  ['italic', 'Italic'],
+  ['code', 'Code'],
+  ['list', 'Numbered list', 'ordered'],
+  ['list', 'Bullet list', 'bullet'],
+] as const;
+const toolbarHost = $('f-sub-toolbar');
+toolbarHost.append(
+  ...TOOLBAR.map(([fmt, label, value]) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = `ql-${fmt}`;
+    if (value) b.value = value;
+    b.title = label;
+    b.setAttribute('aria-label', label);
+    return b;
+  }),
+);
+
+/**
+ * Quill rather than a hand-rolled contenteditable. The old one worked, but its
+ * whole UI was five 1.5rem buttons labelled B / I / <> / bullet / 1., which told
+ * you nothing about what state the caret was in. Quill brings a real toolbar
+ * with active states, and takes the deprecated execCommand plumbing - selection
+ * handling, list nesting, paste - with it.
+ *
+ * Formats are restricted to exactly what a label can carry, so the editor
+ * cannot offer anything clean() would strip back out.
+ */
+const quill = new Quill('#f-sub', {
+  theme: 'snow',
+  placeholder: 'Certification required',
+  formats: ['bold', 'italic', 'code', 'list'],
+  modules: {
+    toolbar: {
+      container: '#f-sub-toolbar',
+      handlers: {},
+    },
+  },
+});
 const fUrl = $<HTMLInputElement>('f-url');
 const fUrlNote = $('f-url-note');
 const fAlign = $('f-align');
@@ -88,7 +134,6 @@ let gridSheet: LabelSheet = byId('4x2.5-h');
 /** The sheet whose proportions the *content* is laid out in. */
 let contentSheet: LabelSheet = byId('4x2.5-h');
 let upright = false;
-let sheet: LabelSheet = byId('4x2.5-h');
 /**
  * Which die-cut positions get printed, by index.
  *
@@ -120,6 +165,14 @@ function clean(root: Node): string {
   const box = doc.body;
   box.append(doc.importNode(root, true));
 
+  // Quill's semantic HTML uses non-breaking spaces between words. Left in, a
+  // subtitle would refuse to wrap and just overflow the label.
+  const denbsp = (n: Node) => {
+    if (n.nodeType === 3) n.nodeValue = n.nodeValue!.replace(/\u00a0/g, ' ');
+    else n.childNodes.forEach(denbsp);
+  };
+  denbsp(box);
+
   const walk = (node: Element) => {
     if (DROP.has(node.tagName)) {
       node.remove();
@@ -142,6 +195,13 @@ function clean(root: Node): string {
 }
 
 /** Text with no characters in it, even if it carries <br> or empty tags. */
+/** Parse a string of HTML in a detached element - never runs scripts. */
+function htmlToNode(html: string): Node {
+  const d = document.createElement('div');
+  d.innerHTML = html;
+  return d;
+}
+
 function isBlank(html: string): boolean {
   const d = document.createElement('div');
   d.innerHTML = html;
@@ -160,7 +220,20 @@ function isBlank(html: string): boolean {
  * floor, not a constant - the small stock is protected, the large stock breathes.
  */
 const PAD_MIN = 0.1;
-const padFor = (s: LabelSheet) => Math.max(PAD_MIN, Math.min(s.size.w, s.size.h) * 0.06);
+
+/**
+ * Per axis, not one value off the short side.
+ *
+ * Driving both margins from `min(w, h)` gave a wide label narrow *side* margins
+ * - 0.15in on a 4in-wide 4x2.5 - which is what made the code and the words look
+ * jammed against the edges. A margin should be proportional to the dimension it
+ * sits on: side margins from the width, top and bottom from the height. The
+ * 0.1in registration floor still applies to both.
+ */
+const padFor = (s: LabelSheet) => ({
+  x: Math.max(PAD_MIN, s.size.w * 0.06),
+  y: Math.max(PAD_MIN, s.size.h * 0.06),
+});
 
 /**
  * One ratio between title and copy, everywhere.
@@ -201,11 +274,13 @@ const flowFor = (s: LabelSheet) => (s.size.w / s.size.h >= 1.35 ? 'row' : 'colum
 function qrInchesFor(s: LabelSheet, hasText: boolean) {
   const pad = padFor(s);
   if (flowFor(s) === 'row') {
-    const box = s.size.h - pad * 2;
-    return hasText ? Math.min(box, s.size.w * 0.34) : Math.min(box, s.size.w - pad * 2);
+    // beside the words: height-bound
+    const box = s.size.h - pad.y * 2;
+    return hasText ? Math.min(box, s.size.w * 0.34) : Math.min(box, s.size.w - pad.x * 2);
   }
-  const box = s.size.w - pad * 2;
-  return hasText ? Math.min(box, s.size.h * 0.46) : Math.min(box, s.size.h - pad * 2);
+  // above the words: width-bound
+  const box = s.size.w - pad.x * 2;
+  return hasText ? Math.min(box, s.size.h * 0.46) : Math.min(box, s.size.h - pad.y * 2);
 }
 
 /* --------------------------------------------------------------- preview */
@@ -273,7 +348,10 @@ async function render(): Promise<void> {
   selectSheet();
 
   const titleText = fTitle.value.trim();
-  const subHtml = clean(fSub);
+  // getSemanticHTML, not root.innerHTML: Quill marks bullet lists as
+  // <ol data-list="bullet"> internally and leans on CSS to draw them, which
+  // would print every bullet as a number. The semantic form gives real ul/ol.
+  const subHtml = clean(htmlToNode(quill.getSemanticHTML()));
   const titleBlank = titleText === '';
   const subBlank = isBlank(subHtml);
   const url = normalizeUrl(fUrl.value);
@@ -324,7 +402,8 @@ async function render(): Promise<void> {
   alignNote.textContent =
     alignMode === 'auto' ? `Auto chose ${resolvedAlign === 'left' ? 'left' : 'centre'}.` : '';
   proto.dataset.rot = upright ? '1' : '0';
-  proto.style.setProperty('--pad', `${pad}in`);
+  proto.style.setProperty('--pad-x', `${pad.x}in`);
+  proto.style.setProperty('--pad-y', `${pad.y}in`);
   proto.style.setProperty('--gap', `${gap}in`);
   proto.style.setProperty('--title', `${tpt}pt`);
   proto.style.setProperty('--sub', `${spt}pt`);
@@ -352,7 +431,8 @@ async function render(): Promise<void> {
     // way - the white it needs comes from the padding rather than the image.
     const modules = modulesFrom(svg);
     const quiet = modules ? (qrIn * 4) / modules : 0;
-    proto.style.setProperty('--quiet-pull', `${Math.min(quiet, pad)}in`);
+    // capped at the side margin, which is the edge the code sits against
+    proto.style.setProperty('--quiet-pull', `${Math.min(quiet, pad.x)}in`);
   }
   const titleNode = proto.querySelector<HTMLElement>('.lb-title')!;
   const subNode = proto.querySelector<HTMLElement>('.lb-subtitle')!;
@@ -539,26 +619,10 @@ fNone.addEventListener('click', () => {
   void render();
 });
 
-for (const el of [fTitle, fSub, fUrl]) {
+for (const el of [fTitle, fUrl]) {
   el.addEventListener('input', () => void render());
 }
-
-/* --------------------------------------------------------- rich editing */
-
-/** Light up B / I when the caret sits inside bold or italic text. */
-function syncTools(): void {
-  for (const tools of document.querySelectorAll<HTMLElement>('.lb-tools')) {
-    const field = document.getElementById(tools.dataset.for!);
-    const anchor = document.getSelection()?.anchorNode ?? null;
-    const inside = Boolean(field && anchor && field.contains(anchor));
-    for (const b of tools.querySelectorAll('button')) {
-      const cmd = b.dataset.cmd!;
-      const on =
-        inside && (cmd === 'code' ? inCode(field!) : document.queryCommandState(cmd));
-      b.setAttribute('aria-pressed', String(on));
-    }
-  }
-}
+quill.on('text-change', () => void render());
 
 fAlign.addEventListener('click', (e) => {
   const b = (e.target as HTMLElement).closest<HTMLButtonElement>('button[data-align]');
@@ -570,106 +634,6 @@ fAlign.addEventListener('click', (e) => {
   void render();
 });
 
-/**
- * No execCommand for inline code, so wrap the selection by hand - and unwrap it
- * again when the caret is already inside one, so the button toggles like the
- * others rather than nesting <code> inside <code>.
- */
-function toggleCode(field: HTMLElement): void {
-  const sel = document.getSelection();
-  if (!sel || !sel.rangeCount) return;
-
-  let node: Node | null = sel.anchorNode;
-  while (node && node !== field) {
-    if (node.nodeType === 1 && (node as Element).tagName === 'CODE') {
-      const el = node as Element;
-      const parent = el.parentNode!;
-      while (el.firstChild) parent.insertBefore(el.firstChild, el);
-      parent.removeChild(el);
-      return;
-    }
-    node = node.parentNode;
-  }
-
-  const range = sel.getRangeAt(0);
-  if (range.collapsed) return;
-  const code = document.createElement('code');
-  code.append(range.extractContents());
-  range.insertNode(code);
-  sel.removeAllRanges();
-  const after = document.createRange();
-  after.selectNodeContents(code);
-  sel.addRange(after);
-}
-
-/** Whether the caret sits inside a <code> within this field. */
-function inCode(field: HTMLElement): boolean {
-  let node: Node | null = document.getSelection()?.anchorNode ?? null;
-  while (node && node !== field) {
-    if (node.nodeType === 1 && (node as Element).tagName === 'CODE') return true;
-    node = node.parentNode;
-  }
-  return false;
-}
-
-function runCmd(field: HTMLElement, cmd: string): void {
-  if (cmd === 'code') toggleCode(field);
-  else document.execCommand(cmd);
-}
-
-for (const tools of document.querySelectorAll<HTMLElement>('.lb-tools')) {
-  const field = $(tools.dataset.for!);
-  // Keep the caret where it is: focus must not leave the field on mousedown,
-  // or the command has no selection to act on.
-  tools.addEventListener('mousedown', (e) => e.preventDefault());
-  tools.addEventListener('click', (e) => {
-    const b = (e.target as HTMLElement).closest<HTMLButtonElement>('button[data-cmd]');
-    if (!b) return;
-    field.focus();
-    // execCommand is deprecated but remains the only one-liner that toggles
-    // bold/italic and lists across a selection, and it works in every browser
-    // this tool will run in. Whatever it produces goes through clean() anyway.
-    runCmd(field, b.dataset.cmd!);
-    void render();
-    syncTools();
-  });
-}
-
-document.addEventListener('selectionchange', syncTools);
-
-for (const field of [fSub]) {
-  field.addEventListener('keydown', (e) => {
-    if ((e.metaKey || e.ctrlKey) && (e.key === 'b' || e.key === 'i')) {
-      e.preventDefault();
-      runCmd(field, e.key === 'b' ? 'bold' : 'italic');
-      void render();
-      syncTools();
-      return;
-    }
-    if (e.key === 'Enter') {
-      // Inside a list, Enter is the list's own job - it opens the next item.
-      if (document.queryCommandState('insertUnorderedList') ||
-          document.queryCommandState('insertOrderedList')) {
-        setTimeout(() => void render(), 0);
-        return;
-      }
-      // A plain <br>, not the <div> or <p> contenteditable would otherwise
-      // insert - clean() would have to unwrap those back into breaks anyway.
-      e.preventDefault();
-      document.execCommand('insertLineBreak');
-      void render();
-    }
-  });
-  // Paste as plain text. clean() would strip the markup regardless; doing it
-  // here stops the editor briefly showing styling that is about to vanish.
-  field.addEventListener('paste', (e) => {
-    e.preventDefault();
-    document.execCommand('insertText', false, e.clipboardData?.getData('text/plain') ?? '');
-  });
-}
-fPrint.addEventListener('click', () => window.print());
-
-addEventListener('resize', fit);
 new ResizeObserver(fit).observe(host);
 
 /* ---------------------------------------------------------------- prefill */
@@ -697,11 +661,12 @@ const qSub = q.get('sub');
 if (qSub !== null) {
   // Interpreted as markup so a bookmarked label keeps its bullets and code,
   // then put through the same clean() as anything typed - which allows only
-  // b/i/br/code/ul/ol/li and deletes script and style outright. Parsing happens
-  // in a detached element, which never runs scripts.
-  const holder = document.createElement('div');
-  holder.innerHTML = qSub;
-  fSub.innerHTML = clean(holder);
+  // b/i/br/code/ul/ol/li and deletes script and style outright. Parsed in a
+  // detached element, which never runs scripts.
+  //
+  // Fed through Quill's clipboard rather than assigned to its DOM, so the
+  // editor's own model is what ends up holding the content.
+  quill.setContents(quill.clipboard.convert({ html: clean(htmlToNode(qSub)) }), 'silent');
 }
 const qUrl = q.get('url');
 if (qUrl !== null) fUrl.value = qUrl;

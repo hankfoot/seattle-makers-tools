@@ -213,8 +213,8 @@ and sometimes between jobs. Unlike the sign tool these pages are full-bleed by
 necessity — the die-cut is where it is, so the page cannot carry a safety
 margin, and anything other than true size puts the ink between the labels.
 
-The **subtitle** takes bold, italics, inline code, bullet and numbered lists, and
-line breaks — ⌘B / ⌘I, Enter for a new line. The title is plain text by design.
+The **subtitle** is a small rich-text editor — bold, italics, inline code, bullet
+and numbered lists. The title is plain text by design.
 
 Alignment defaults to **Auto**: centred, except when a code sits beside the words
 on a wide label, where everything goes left so the label reads as one object.

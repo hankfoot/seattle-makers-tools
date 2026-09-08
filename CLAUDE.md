@@ -202,11 +202,29 @@ item without it, the text box sizes to its own content, so scrollWidth can never
 exceed clientWidth, the auto-fit has nothing to measure, and the words run off
 the label.
 
-**Label padding is a 0.1in floor that scales up.** 0.1in is the registration
+**The subtitle editor is Quill**, restricted to bold / italic / code / lists -
+exactly what `clean()` allows, so it cannot offer a format that would be
+stripped back out. Two traps, both of which fail silently:
+
+- **Build the toolbar buttons before constructing Quill.** Its toolbar module
+  scans the container once, at construction; buttons appended afterwards get no
+  handlers and every format quietly does nothing.
+- **Read `getSemanticHTML()`, not `root.innerHTML`.** Quill marks bullet lists
+  as `<ol data-list="bullet">` internally and draws them with CSS, so the raw
+  DOM would print every bullet as a number. The semantic form also emits
+  non-breaking spaces between words, which `clean()` converts back - left in, a
+  subtitle refuses to wrap and just overflows the label.
+
+**Label padding is a 0.1in floor that scales up, per axis.** 0.1in is the registration
 allowance - protection against the sheet feeding slightly out of true - and that
 error is the same size on a 4x1 strip as on an 8x5 board, so it must never scale
-below it. Above the floor it is an optical margin and does scale, because 0.1in
-on an 8x5 board looks like the words are falling off the edge.
+below it. Above the floor it is an optical margin and does scale.
+
+It scales *per axis*: side margins from the width, top and bottom from the
+height. Driving both from `min(w, h)` gave a wide label narrow side margins -
+0.15in on a 4in-wide 4x2.5 - which is what made the code and the words look
+jammed against the edges. The trade is a narrower text column, so a two-word
+title may now wrap where it did not.
 
 **Everything on a label hangs off one left margin**, in both flows, so the code,
 title and subtitle start on the same vertical line. Titles use `text-wrap:
