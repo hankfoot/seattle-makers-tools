@@ -20,9 +20,10 @@ const MM_ERROR = 0.5;
 
 const PX_PER_IN = 96;
 /* The preview shows the whole sheet, so it scales on the paper, not the
-   printable area inside it. */
-const PAPER_W_IN = 8.5;
-const PAPER_H_IN = 11;
+   printable area inside it. Half prints as two portrait pieces on a landscape
+   sheet, which is what a half-page flyer actually is. */
+const LANDSCAPE: Record<Size, boolean> = { full: false, half: true, card: false };
+const PAPER = { portrait: { w: 8.5, h: 11 }, landscape: { w: 11, h: 8.5 } };
 
 const $ = <T extends HTMLElement>(id: string): T => {
   const el = document.getElementById(id);
@@ -44,7 +45,15 @@ const fPrint = $<HTMLButtonElement>('f-print');
 const warn = $<HTMLParagraphElement>('warn');
 const host = $('preview-host');
 const sheet = $('sheet');
+const paper = $('paper');
+const page = $('page');
+const pvPaper = $('pv-paper');
 const pvCount = $('pv-count');
+
+/* @page cannot be selected by class, so the orientation is swapped by
+   rewriting the rule. Chrome honours the last one declared. */
+const pageRule = document.createElement('style');
+document.head.append(pageRule);
 const pvZoom = $('pv-zoom');
 const tpl = $<HTMLTemplateElement>('piece-tpl');
 
@@ -74,10 +83,20 @@ function normalizeUrl(raw: string): string {
  * its unscaled layout box.
  */
 function fit(): void {
-  const scale = Math.min(1, host.clientWidth / (PAPER_W_IN * PX_PER_IN));
+  const { w, h } = PAPER[LANDSCAPE[size] ? 'landscape' : 'portrait'];
+  const scale = Math.min(1, host.clientWidth / (w * PX_PER_IN));
   host.style.setProperty('--preview-scale', String(scale));
-  host.style.height = `${PAPER_H_IN * PX_PER_IN * scale}px`;
+  host.style.height = `${h * PX_PER_IN * scale}px`;
   pvZoom.textContent = `${Math.round(scale * 100)}%`;
+}
+
+function applyOrientation(): void {
+  const orient = LANDSCAPE[size] ? 'landscape' : 'portrait';
+  paper.dataset.orient = orient;
+  page.dataset.orient = orient;
+  pageRule.textContent = `@page { size: letter ${orient}; margin: 0.5in; }`;
+  const { w, h } = PAPER[orient];
+  pvPaper.textContent = `Letter \u00b7 ${w} \u00d7 ${h}in`;
 }
 
 /** Modules across the code, read back off the SVG the encoder just produced. */
@@ -112,6 +131,7 @@ async function render(): Promise<void> {
   }
 
   const n = copies === 'fill' ? FILL[size] : 1;
+  applyOrientation();
   sheet.dataset.size = size;
   sheet.dataset.copies = copies === 'fill' ? String(n) : '1';
   sheet.dataset.cut = fCut.checked ? 'on' : 'off';
@@ -151,7 +171,7 @@ async function render(): Promise<void> {
   } else {
     qrSlot.classList.add('is-empty');
   }
-  piece.querySelector<HTMLElement>('.p-eyebrow')!.textContent = eyebrow;
+  piece.querySelector<HTMLElement>('.p-eyetext')!.textContent = eyebrow;
   piece.querySelector<HTMLElement>('.p-title')!.textContent = title;
   piece.querySelector<HTMLElement>('.p-desc')!.textContent = desc;
   piece.querySelector<HTMLElement>('.p-url')!.textContent =

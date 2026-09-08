@@ -66,7 +66,7 @@ import Base from '../layouts/Base.astro';
         <legend>Size</legend>
         <div class="qr-seg" id="f-size">
           <button type="button" data-size="full" aria-pressed="true">Full page<i>7.25 × 10in</i></button>
-          <button type="button" data-size="half" aria-pressed="false">Half<i>7.25 × 4.75in</i></button>
+          <button type="button" data-size="half" aria-pressed="false">Half<i>5 × 7.25in</i></button>
           <button type="button" data-size="card" aria-pressed="false">Card<i>3.625 × 5in</i></button>
         </div>
       </fieldset>
@@ -100,13 +100,13 @@ import Base from '../layouts/Base.astro';
     {/* -------------------------------------------------------- preview --- */}
     <div class="qr-preview">
       <div class="pv-bar no-print">
-        <span class="pv-paper">Letter &middot; 8.5 &times; 11in</span>
+        <span id="pv-paper" class="pv-paper">Letter &middot; 8.5 &times; 11in</span>
         <span id="pv-count" class="pv-count">1 sign</span>
         <span id="pv-zoom" class="pv-zoom">100%</span>
       </div>
       <div id="preview-host">
-        <div id="paper">
-          <div id="page">
+        <div id="paper" data-orient="portrait">
+          <div id="page" data-orient="portrait">
             <div id="sheet" data-size="full" data-copies="1" data-cut="off"></div>
           </div>
         </div>
@@ -119,7 +119,9 @@ import Base from '../layouts/Base.astro';
   <template id="piece-tpl">
     <div class="piece">
       <div class="p-head">
-        <p class="p-eyebrow"></p>
+        <p class="p-eyebrow">
+          <i class="p-eyerule"></i><span class="p-eyetext"></span><i class="p-eyerule"></i>
+        </p>
         <p class="p-title"></p>
       </div>
       <div class="p-body">
@@ -128,7 +130,7 @@ import Base from '../layouts/Base.astro';
       </div>
       <div class="p-foot">
         <span class="p-url"></span>
-        <span class="p-mark">seattle makers</span>
+        <img class="p-mark" src="/brand/wordmark-black.png" alt="Seattle Makers" />
       </div>
     </div>
   </template>
@@ -150,14 +152,22 @@ import Base from '../layouts/Base.astro';
     margin: 0.5in;
   }
 
+  /* Held inside the printable area of BOTH letter and A4 in each orientation,
+     so nothing ever triggers a printer's shrink-to-fit:
+       portrait  - A4 is 7.27in wide at 0.5in margins, so the grid is 7.25in
+       landscape - A4 is 7.27in tall at 0.5in margins, so the grid is 7.25in */
   #page {
-    /* 7.5in of content box, but the grid is held to 7.25in so an A4 printer
-       (7.27in printable at these margins) never triggers shrink-to-fit. */
-    width: 7.25in;
-    height: 10in;
     background: #fff;
     color: #000;
     overflow: hidden;
+  }
+  #page[data-orient='portrait'] {
+    width: 7.25in;
+    height: 10in;
+  }
+  #page[data-orient='landscape'] {
+    width: 10in;
+    height: 7.25in;
   }
 
   #sheet {
@@ -171,17 +181,22 @@ import Base from '../layouts/Base.astro';
 
   #sheet[data-size='full'] {
     --piece-w: 7.25in; --piece-h: 10in;   --qr: 5.5in;
-    --eyebrow: 13pt; --title: 46pt; --desc: 17pt; --url: 11pt; --mark: 11pt;
-    --track: 0.34em; --gap: 0.30in; --pad: 0.5in; --rule: 0.9pt;
+    --eyebrow: 12pt; --title: 52pt; --desc: 16pt; --url: 10.5pt; --markh: 0.32in;
+    --track: 0.36em; --gap: 0.32in; --pad: 0.55in; --rule: 0.9pt;
     grid-template-columns: auto;
     gap: 0;
   }
+  /* Two portrait half-letters side by side on a landscape sheet - the standard
+     half-page flyer. Cutting the sheet once down the middle yields both. */
   #sheet[data-size='half'] {
-    --piece-w: 7.25in; --piece-h: 4.75in; --qr: 3in;
-    --eyebrow: 9pt; --title: 27pt; --desc: 12.5pt; --url: 8.5pt; --mark: 8.5pt;
-    --track: 0.30em; --gap: 0.16in; --pad: 0.34in; --rule: 0.7pt;
+    --piece-w: 5in; --piece-h: 7.25in;    --qr: 3in;
+    --eyebrow: 8.5pt; --title: 26pt; --desc: 12pt; --url: 8pt; --markh: 0.24in;
+    --track: 0.30em; --gap: 0.17in; --pad: 0.38in; --rule: 0.7pt;
+    grid-template-columns: repeat(2, auto);
+    gap: 0;
+  }
+  #sheet[data-size='half'][data-copies='1'] {
     grid-template-columns: auto;
-    gap: 0.5in;
   }
   /* 2x2 tiles the 7.25 x 10in grid exactly, with no gutter: adjacent cut lines
      land on top of each other, which is what you want when trimming a stack.
@@ -189,8 +204,8 @@ import Base from '../layouts/Base.astro';
      and the grid silently squashes the cards rather than overflowing. */
   #sheet[data-size='card'] {
     --piece-w: 3.625in; --piece-h: 5in;   --qr: 2.25in;
-    --eyebrow: 6.5pt; --title: 16pt; --desc: 9pt; --url: 6.5pt; --mark: 6.5pt;
-    --track: 0.26em; --gap: 0.11in; --pad: 0.26in; --rule: 0.6pt;
+    --eyebrow: 6pt; --title: 17pt; --desc: 8.5pt; --url: 6pt; --markh: 0.155in;
+    --track: 0.24em; --gap: 0.12in; --pad: 0.28in; --rule: 0.6pt;
     grid-template-columns: repeat(2, auto);
     gap: 0;
   }
@@ -229,25 +244,45 @@ import Base from '../layouts/Base.astro';
     gap: var(--gap);
   }
 
+  /* The eyebrow sits ON its rule, with the line breaking either side of it.
+     Built from two flex-grown borders rather than a white knockout, because a
+     knockout depends on background printing - which is off by default, and
+     would print the rule straight through the words. */
   .p-eyebrow {
-    margin-bottom: calc(var(--gap) * 0.6);
+    display: flex;
+    align-items: center;
+    gap: 0.85em;
+    margin-bottom: calc(var(--gap) * 0.55);
+    font-family: var(--font-sans);
     font-size: var(--eyebrow);
     font-weight: 700;
     line-height: 1;
     text-transform: uppercase;
     /* the tracking is the whole effect; without it this is just small text */
     letter-spacing: var(--track);
+  }
+  .p-eyerule {
+    flex: 1;
+    border-top: var(--rule) solid #000;
+  }
+  .p-eyetext {
+    flex: none;
     /* letter-spacing adds a trailing space that breaks optical centring */
     text-indent: var(--track);
   }
+
+  /* Fraunces against Lato: a display serif with real character carrying the
+     title, the grotesque handling everything functional. One rule below only -
+     the eyebrow's line already closes the masthead at the top. */
   .p-title {
-    padding: calc(var(--gap) * 0.5) 0;
-    border-top: var(--rule) solid #000;
+    padding-bottom: calc(var(--gap) * 0.55);
     border-bottom: var(--rule) solid #000;
+    font-family: 'Fraunces', 'Iowan Old Style', Georgia, serif;
     font-size: var(--title);
     font-weight: 900;
-    line-height: 1.02;
-    letter-spacing: -0.02em;
+    font-variation-settings: 'SOFT' 0, 'WONK' 0, 'opsz' 144;
+    line-height: 0.98;
+    letter-spacing: -0.018em;
     /* Evens the line lengths instead of filling greedily, which is what stops a
        two-word title from breaking as one long line and one orphan. */
     text-wrap: balance;
@@ -281,25 +316,27 @@ import Base from '../layouts/Base.astro';
     text-align: left;
     font-weight: 700;
   }
+  /* The seattlemakers.org logo, reproduced in one colour. */
   .p-mark {
     margin-left: auto;
     flex: none;
-    font-size: var(--mark);
-    font-weight: 900;
-    letter-spacing: -0.02em;
-    white-space: nowrap;
+    height: var(--markh);
+    width: auto;
+    display: block;
   }
 
-  .p-eyebrow:empty,
   .p-title:empty,
   .p-desc:empty,
   .p-url:empty {
     display: none;
   }
-  /* With no title there is nothing for the rules to bracket. */
-  .p-title:empty + .p-eyebrow,
-  .p-head:has(.p-title:empty) .p-eyebrow {
-    margin-bottom: 0;
+  /* Hide the whole eyebrow row, rules included, when there is no eyebrow text. */
+  .p-eyebrow:has(.p-eyetext:empty) {
+    display: none;
+  }
+  /* Nothing left in the masthead for a rule to close off. */
+  .p-title:empty {
+    border-bottom: 0;
   }
 
   .p-qr {
@@ -342,6 +379,43 @@ import Base from '../layouts/Base.astro';
       shape-rendering: geometricPrecision;
     }
 
+    /* A faint dot grid, the scale of a cutting mat. Atmosphere for the tool
+       without competing with the sheet, which is the only thing here that
+       should read as paper. */
+    body.qr-page {
+      background-color: var(--color-sm-mist);
+      background-image: radial-gradient(circle at 1px 1px, rgb(0 0 0 / 0.055) 1px, transparent 0);
+      background-size: 22px 22px;
+    }
+
+    @keyframes qr-rise {
+      from {
+        opacity: 0;
+        transform: translateY(9px);
+      }
+    }
+    /* One orchestrated load rather than scattered micro-interactions. */
+    .qr-editor > *,
+    .qr-preview > * {
+      animation: qr-rise 0.55s cubic-bezier(0.2, 0.75, 0.3, 1) backwards;
+    }
+    .qr-editor > *:nth-child(1) { animation-delay: 0.02s; }
+    .qr-editor > *:nth-child(2) { animation-delay: 0.06s; }
+    .qr-editor > *:nth-child(3) { animation-delay: 0.10s; }
+    .qr-editor > *:nth-child(4) { animation-delay: 0.14s; }
+    .qr-editor > *:nth-child(5) { animation-delay: 0.18s; }
+    .qr-editor > *:nth-child(6) { animation-delay: 0.22s; }
+    .qr-editor > *:nth-child(n + 7) { animation-delay: 0.26s; }
+    .qr-preview > *:nth-child(1) { animation-delay: 0.12s; }
+    .qr-preview > *:nth-child(2) { animation-delay: 0.18s; }
+
+    @media (prefers-reduced-motion: reduce) {
+      .qr-editor > *,
+      .qr-preview > * {
+        animation: none;
+      }
+    }
+
     .qr-layout {
       display: flex;
       align-items: flex-start;
@@ -372,9 +446,6 @@ import Base from '../layouts/Base.astro';
        so the margin you get is the margin you see. #page sits inside it at its
        true position: 0.5in down, and centred in the 7.5in content box. */
     #paper {
-      width: 8.5in;
-      height: 11in;
-      padding: 0.5in 0.625in;
       background: #fff;
       border-radius: 2px;
       box-shadow:
@@ -386,6 +457,18 @@ import Base from '../layouts/Base.astro';
          size, so the script sets #preview-host's height. */
       transform: scale(var(--preview-scale, 1));
       transform-origin: top left;
+    }
+    /* Padding is the real 0.5in @page margin plus the slack left by holding the
+       grid to 7.25in for A4 safety, split evenly. */
+    #paper[data-orient='portrait'] {
+      width: 8.5in;
+      height: 11in;
+      padding: 0.5in 0.625in;
+    }
+    #paper[data-orient='landscape'] {
+      width: 11in;
+      height: 8.5in;
+      padding: 0.625in 0.5in;
     }
     /* Where the printable area begins. Faint on purpose - it is a guide, and it
        must never read as something that prints. */
@@ -448,12 +531,15 @@ import Base from '../layouts/Base.astro';
     letter-spacing: -0.02em;
     color: #b0b0b0;
   }
+  /* Same face the sheet prints in, so the tool looks like what it makes. */
   .qr-editor h1 {
-    margin-top: 0.6rem;
-    font-size: 2.5rem;
+    margin-top: 0.55rem;
+    font-family: 'Fraunces', 'Iowan Old Style', Georgia, serif;
+    font-size: 2.7rem;
     font-weight: 900;
-    line-height: 1;
-    letter-spacing: -0.03em;
+    font-variation-settings: 'SOFT' 0, 'WONK' 0, 'opsz' 144;
+    line-height: 0.95;
+    letter-spacing: -0.02em;
   }
   .qr-editor h1 span {
     color: var(--color-sm-green);
@@ -540,8 +626,19 @@ import Base from '../layouts/Base.astro';
     font-size: 0.68rem;
     color: #a3a3a3;
   }
-  .qr-seg button:hover {
+  .qr-seg button {
+    transition:
+      border-color 140ms ease,
+      background-color 140ms ease,
+      color 140ms ease,
+      transform 140ms ease;
+  }
+  .qr-seg button:hover:not(:disabled) {
     border-color: var(--color-sm-green);
+    transform: translateY(-1px);
+  }
+  .qr-seg button:active:not(:disabled) {
+    transform: translateY(0);
   }
   .qr-seg button[aria-pressed='true'] {
     border-color: var(--color-sm-green);
@@ -604,8 +701,20 @@ import Base from '../layouts/Base.astro';
     font-weight: 900;
     cursor: pointer;
   }
+  .qr-print {
+    transition:
+      background-color 140ms ease,
+      box-shadow 140ms ease,
+      transform 140ms ease;
+  }
   .qr-print:hover:not(:disabled) {
     background: var(--color-sm-green-dark);
+    box-shadow: 0 6px 18px rgb(16 115 60 / 0.28);
+    transform: translateY(-1px);
+  }
+  .qr-print:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: none;
   }
   .qr-print:disabled {
     background: #d4d4d4;
@@ -664,8 +773,12 @@ import Base from '../layouts/Base.astro';
       transform: none !important;
       box-shadow: none !important;
       /* The grid is 7.25in inside a 7.5in content box (A4 safety); without this
-         the whole 0.25in of slack lands on the right edge. */
+         the whole 0.25in of slack lands on one edge. Portrait has the slack
+         across the width, landscape down the height. */
       margin: 0 auto !important;
+    }
+    #page[data-orient='landscape'] {
+      margin: 0.125in auto !important;
     }
   }
 </style>

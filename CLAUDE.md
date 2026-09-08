@@ -53,6 +53,16 @@ Done:
 - `?url=&title=&desc=&size=&copies=&cut=&showurl=` prefills the form. Not
   persistence: it makes one sign reproducible and is what lets the print
   verification run headless.
+- Half prints as **two portrait half-letters on a landscape sheet** - what a
+  half-page flyer actually is. `@page` cannot be selected by class, so `qr.ts`
+  rewrites the rule to swap `size: letter portrait|landscape`.
+- Title face is **Fraunces** (self-hosted variable woff2, latin subset), paired
+  with Lato for everything functional. Declared in global.css but referenced
+  only by /qr, so the reel never fetches it.
+- The footer mark is the seattlemakers.org logo. The site serves it at 149x46,
+  which prints at ~150dpi; `public/brand/wordmark.png` is the identical artwork
+  at 2048x634, so `wordmark-black.png` is generated from that by keeping its
+  alpha and forcing every visible pixel to pure K.
 - The sheet is an editorial layout: masthead (tracked small-caps eyebrow over a
   title ruled above and below), code + description in the middle band, imprint
   line at the foot. Black only, on purpose - it photocopies, and the hierarchy
@@ -160,6 +170,12 @@ the space between masthead and imprint, but it must not *shrink*: a shrinking
 band silently absorbs text that does not fit, which would defeat the
 `scrollHeight > clientHeight` overflow check and print a clipped card with no
 warning.
+
+**The eyebrow rule is two flex-grown borders, not a white knockout.** Sitting
+text on a rule is normally done by painting the background colour over the line;
+that fails here because Chrome does not print backgrounds by default, so the
+rule would print straight through the words. Borders are foreground and always
+print.
 
 **`text-wrap: balance` on the title and description** is what stops a card
 description breaking as one full line plus a one-word orphan. Chrome honours it

@@ -23,6 +23,17 @@
   font-display: block;
 }
 
+/* Display face for printed signage only. Declared here but never referenced by
+   the reel, so the browser only fetches it on /qr - a font-face rule alone
+   downloads nothing. Variable across the weight range in one file. */
+@font-face {
+  font-family: 'Fraunces';
+  src: url('/fonts/fraunces.woff2') format('woff2');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: block;
+}
+
 @theme {
   /* Sampled from the wordmark in the brand deck. */
   --color-sm-green: #10733c;
