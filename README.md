@@ -5,6 +5,7 @@ Small web tools for Seattle Makers, all on one static site.
 | Tool | Path | What it does |
 | --- | --- | --- |
 | Slideshow | `/slideshow` | A looping reel of studio photos and upcoming classes, for running full-screen at markets and tabling events. |
+| Labels | `/labels` | Designs one label — title, subtitle, optional QR — and prints it onto the Label Station's sheets, skipping positions already peeled. |
 | QR signs | `/qr` | Turns a link into a printable sign — title above the code, description below — at full page, half or card size. |
 
 Astro + Tailwind v4, static output. Every asset is local — once the page has
@@ -181,6 +182,38 @@ which in that frame would read as a picture of the class itself.
 Each card also carries its next few occurrences in the markup, and the browser
 reveals the first one still in the future. That way a build from a fortnight ago
 still shows a real date instead of advertising a class that already ran.
+
+## Printing labels
+
+`/labels` prints onto the Label Station's stock. Pick a sheet, type a title and
+subtitle, optionally add a link for a QR, then click any position on the sheet
+preview to switch it off — leave out labels that have already been peeled.
+
+| Stock | Label | Per sheet | Sheet |
+| --- | --- | --- | --- |
+| 8 × 5in | 8 × 5in / 5 × 8in | 2 | portrait / landscape |
+| 4 × 2.5in | 4 × 2.5in / 2.5 × 4in | 8 | portrait / landscape |
+| 4 × 1in | 4 × 1in | 20 | portrait |
+| 2.5 × 1.56in | 2.5 × 1.56in / 1.56 × 2.5in | 18 | portrait / landscape |
+
+**"Across" and "Upright" are the same physical sheet.** They put ink on exactly
+the same die-cut rectangles — only the printing turns 90°. So a sheet is never
+wasted by picking the wrong one; pick whichever suits the words.
+
+**In the print dialog: Margins → None, Scale → 100.** Unlike the sign tool,
+these pages are full-bleed by necessity — the die-cut is where it is, so the
+page cannot carry a safety margin. Anything other than true size puts the ink
+between the labels.
+
+Type sizes itself to the label and shrinks to fit, so a long title stays on the
+label instead of breaking mid-word. Two things to watch:
+
+- **A QR on the 4 × 1in or 2.5 × 1.56in stock is tight.** Those labels cannot
+  hold a code much over 0.6mm per module with a normal URL, and the tool warns
+  below 0.8mm. Use a short link, or a bigger label.
+- **Nothing is saved.** To keep a sheet, bookmark it —
+  `?stock=&dir=&title=&sub=&url=&off=` fills the form, and `off=` takes the
+  listed positions (1-based) out of the run.
 
 ## Printing a QR sign
 

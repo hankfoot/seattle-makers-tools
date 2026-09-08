@@ -92,6 +92,37 @@ Next:
 
 ## Implementation notes
 
+**The label geometry was measured, not guessed.** `src/data/labelSheets.ts`
+carries numbers read out of the LibreOffice templates: page size and margins
+from `styles.xml`, label size and gutters from the table column/row sequences in
+`content.xml`. Do not round them - 2.5x1.56 stock is really 1.5632in tall.
+Parsing trap: the column and row sequences **alternate label cells with gutter
+cells**, so a naive count says 5 across when it is 3, and the 2.5x1.56 vertical
+has columns of 1.5618in and 1.5597in - a 0.002in difference that a
+widest-value heuristic mistakes for a gutter. Cluster with a tolerance.
+
+**Horizontal and Vertical are the same physical sheet.** The 8x5 portrait layout
+(1 across, 2 down) and the 5x8 landscape layout (2 across, 1 down) put ink on
+identical die-cut rectangles; only the content turns. That is why each pair has
+the same count, and why picking the wrong one cannot waste a sheet.
+
+**The label page is `@page { margin: 0 }` and absolutely positioned**, unlike
+/qr which is laid out inside the page's content box. A die-cut does not move, so
+the grid is placed in absolute inches from the physical page corner. The cost is
+that the sheet is full-bleed and Chrome's "fit to printable area" would ruin it,
+hence the explicit Margins: None / Scale: 100 instruction in the UI.
+
+**Label type auto-fits by measuring the title, not its wrapper.** A wrapper that
+has already wrapped reports no overflow, so the first version of this shrank
+nothing and "Woodshop" printed as "Woodsho / p". `.lb-title` therefore sets
+`overflow-wrap: normal` so an oversized title genuinely overflows, and the
+script steps the size down until it does not.
+
+**`render()` in labels.ts takes a generation ticket.** It awaits the encoder, so
+two renders can be in flight and the slower can land last - typing across three
+fields quickly was enough to leave a stale QR on a label whose link had been
+cleared.
+
 **The event scrape is the fragile part.** There is no usable API - WP REST and
 `/wp-json/` 401, `?ical=1` returns HTML, and `/events/feed/` carries post-publish
 dates rather than event dates. The calendar page is the only public source of

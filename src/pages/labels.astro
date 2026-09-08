@@ -1,0 +1,588 @@
+---
+import Base from '../layouts/Base.astro';
+import { SHEETS, STOCKS, perSheet } from '../data/labelSheets';
+
+/**
+ * Label sheets.
+ *
+ * The sheet is positioned absolutely from the physical page corner, in inches,
+ * because the die-cut does not move: a label has to land exactly where the
+ * template puts it. That means `@page { margin: 0 }` and no reliance on flow
+ * layout anywhere inside the page.
+ */
+const stocks = STOCKS.map((s) => ({
+  stock: s,
+  variants: SHEETS.filter((x) => x.stock === s),
+}));
+---
+
+<Base
+  title="Labels — Seattle Makers"
+  description="Design a label and print it onto the Label Station's sheets."
+  bodyClass="lb-page"
+>
+  <div class="lb-layout">
+    <aside class="no-print lb-editor">
+      <header class="lb-head">
+        <a href="/" class="lb-back">← tools</a>
+        <p class="lb-eyebrow">seattle makers</p>
+        <h1>labels</h1>
+        <p class="lb-sub">One design, printed onto the sheet you choose.</p>
+      </header>
+
+      <h2 class="lb-group">Sheet</h2>
+
+      <fieldset class="lb-field">
+        <legend>Stock</legend>
+        <div class="lb-seg lb-seg-wrap" id="f-stock">
+          {
+            stocks.map(({ stock, variants }) => (
+              <button type="button" data-stock={stock} aria-pressed={stock === '4x2.5'}>
+                {stock.replace('x', ' × ')}in
+                <i>{perSheet(variants[0]!)} per sheet</i>
+              </button>
+            ))
+          }
+        </div>
+      </fieldset>
+
+      <fieldset class="lb-field" id="f-dir-wrap">
+        <legend>Content runs</legend>
+        <div class="lb-seg" id="f-dir">
+          <button type="button" data-dir="horizontal" aria-pressed="true">Across<i>wide label</i></button>
+          <button type="button" data-dir="vertical" aria-pressed="false">Upright<i>tall label</i></button>
+        </div>
+        <p class="lb-note">Same physical sheet either way — only the printing turns.</p>
+      </fieldset>
+
+      <h2 class="lb-group">Label</h2>
+
+      <label class="lb-field">
+        <span>Title</span>
+        <input id="f-title" type="text" maxlength="40" value="Woodshop" placeholder="Woodshop" />
+      </label>
+
+      <label class="lb-field">
+        <span>Subtitle <i>optional</i></span>
+        <input id="f-sub" type="text" maxlength="80" placeholder="Certification required" />
+      </label>
+
+      <label class="lb-field">
+        <span>QR link <i>optional</i></span>
+        <input
+          id="f-url"
+          type="text"
+          inputmode="url"
+          autocomplete="off"
+          spellcheck="false"
+          placeholder="seattlemakers.org/interest"
+        />
+      </label>
+      <p id="f-url-note" class="lb-note" hidden></p>
+
+      <p id="warn" class="lb-warn" hidden></p>
+
+      <h2 class="lb-group">Positions</h2>
+      <p class="lb-note">
+        Click a label on the sheet to switch it off — leave out any that have already been
+        peeled.
+      </p>
+      <div class="lb-picks">
+        <button type="button" id="f-all" class="lb-mini">All</button>
+        <button type="button" id="f-none" class="lb-mini">None</button>
+        <span id="f-count" class="lb-count">—</span>
+      </div>
+
+      <button id="f-print" type="button" class="lb-print">Print</button>
+      <p class="lb-hint">
+        In the print dialog: uncheck <b>Headers and footers</b>, set <b>Margins</b> to <b>None</b>, and set <b>Scale</b> to <b>100</b>. The labels only line up at true size.
+      </p>
+    </aside>
+
+    <div class="lb-preview">
+      <div class="lb-bar no-print">
+        <span id="pv-sheet" class="pv-sheet">—</span>
+        <span id="pv-label" class="pv-label">—</span>
+        <span id="pv-zoom" class="pv-zoom">100%</span>
+      </div>
+      <div id="preview-host">
+        <div id="page"><div id="grid"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <template id="label-tpl">
+    <div class="lb-cell">
+      <div class="lb-inner">
+        <div class="lb-qr"></div>
+        <div class="lb-text">
+          <p class="lb-title"></p>
+          <p class="lb-subtitle"></p>
+        </div>
+      </div>
+    </div>
+  </template>
+</Base>
+
+{/* Global, not scoped: the QR svg is injected with innerHTML and cloned, so it
+    never receives Astro's scoped-style attribute. */}
+<style is:global>
+  /* ================================================== the physical sheet === */
+
+  /* Margin 0, because the grid is positioned from the page corner in absolute
+     inches. Anything else would put the ink somewhere the die-cut is not. */
+  @page {
+    size: letter portrait;
+    margin: 0;
+  }
+
+  #page {
+    position: relative;
+    width: var(--page-w, 8.5in);
+    height: var(--page-h, 11in);
+    background: #fff;
+    color: #000;
+    overflow: hidden;
+  }
+
+  #grid {
+    position: absolute;
+    inset: 0;
+  }
+
+  .lb-cell {
+    position: absolute;
+    overflow: hidden;
+  }
+  .lb-inner {
+    width: 100%;
+    height: 100%;
+    padding: var(--pad);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--gap);
+    text-align: center;
+    overflow: hidden;
+    overflow-wrap: break-word;
+  }
+  /* A wide label reads better with the code beside the words; a tall one stacks. */
+  .lb-cell[data-flow='row'] .lb-inner {
+    flex-direction: row;
+    text-align: left;
+  }
+  .lb-cell[data-flow='column'] .lb-inner {
+    flex-direction: column;
+  }
+  .lb-cell[data-flow='row'] .lb-text {
+    text-align: left;
+  }
+
+  .lb-text {
+    min-width: 0;
+  }
+  /* Never break a title mid-word. That makes an oversized title *overflow*
+     instead of silently hyphenating itself, which is what the script measures
+     to decide how far to shrink. */
+  .lb-title {
+    overflow-wrap: normal;
+    font-size: var(--title);
+    font-weight: 900;
+    line-height: 1.02;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+  .lb-subtitle {
+    margin-top: 0.28em;
+    font-size: var(--sub);
+    font-weight: 400;
+    line-height: 1.25;
+    text-wrap: balance;
+  }
+  .lb-title:empty,
+  .lb-subtitle:empty {
+    display: none;
+  }
+
+  .lb-qr {
+    flex: none;
+    width: var(--qr);
+    height: var(--qr);
+  }
+  .lb-qr:empty {
+    display: none;
+  }
+  .lb-qr svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* ========================================================= screen only === */
+
+  @media screen {
+    /* crispEdges is baked into the encoder's svg. Right at 600dpi, wrong in a
+       scaled preview where it makes module rows look uneven. */
+    .lb-qr svg {
+      shape-rendering: geometricPrecision;
+    }
+
+    body.lb-page {
+      background-color: var(--color-sm-mist);
+      background-image: radial-gradient(circle at 1px 1px, rgb(0 0 0 / 0.055) 1px, transparent 0);
+      background-size: 22px 22px;
+    }
+
+    .lb-layout {
+      display: flex;
+      align-items: flex-start;
+      gap: 2rem;
+      max-width: 84rem;
+      margin: 0 auto;
+      padding: 2rem 1.5rem 4rem;
+    }
+    @media (max-width: 66rem) {
+      .lb-layout {
+        flex-direction: column;
+      }
+      .lb-editor {
+        position: static !important;
+        width: 100% !important;
+      }
+    }
+
+    .lb-preview {
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+    #preview-host {
+      position: relative;
+    }
+    #page {
+      transform: scale(var(--preview-scale, 1));
+      transform-origin: top left;
+      border-radius: 2px;
+      box-shadow:
+        0 1px 2px rgb(0 0 0 / 0.16),
+        0 12px 34px rgb(0 0 0 / 0.13);
+    }
+
+    /* Every die-cut position is outlined so the sheet reads as a sheet, and the
+       switched-off ones stay visible as places you could still use. */
+    .lb-cell {
+      outline: 1px dashed rgb(0 0 0 / 0.22);
+      cursor: pointer;
+      transition: background-color 120ms ease;
+    }
+    .lb-cell:hover {
+      background: rgb(16 115 60 / 0.07);
+    }
+    .lb-cell[data-on='0'] {
+      background: rgb(0 0 0 / 0.035);
+    }
+    .lb-cell[data-on='0']:hover {
+      background: rgb(16 115 60 / 0.07);
+    }
+    .lb-cell[data-on='0']::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(to bottom right, transparent calc(50% - 0.5px), rgb(0 0 0 / 0.14) 50%, transparent calc(50% + 0.5px));
+    }
+
+    .lb-bar {
+      display: flex;
+      align-items: baseline;
+      gap: 0.6rem;
+      margin-bottom: 0.7rem;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: #8a8a8a;
+    }
+    .pv-label {
+      color: var(--color-sm-green);
+    }
+    .pv-zoom {
+      margin-left: auto;
+      font-variant-numeric: tabular-nums;
+    }
+  }
+
+  /* ============================================================== editor === */
+
+  .lb-editor {
+    position: sticky;
+    top: 2rem;
+    flex: 0 0 22rem;
+    width: 22rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .lb-back {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--color-sm-green);
+  }
+  .lb-back:hover {
+    text-decoration: underline;
+  }
+  .lb-head {
+    padding-bottom: 1.1rem;
+    border-bottom: 4px solid var(--color-sm-green);
+  }
+  .lb-eyebrow {
+    margin-top: 0.9rem;
+    font-size: 1.05rem;
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    color: #b0b0b0;
+  }
+  .lb-editor h1 {
+    margin-top: 0.55rem;
+    font-family: 'Fraunces', 'Iowan Old Style', Georgia, serif;
+    font-size: 2.7rem;
+    font-weight: 900;
+    font-variation-settings: 'SOFT' 0, 'WONK' 0, 'opsz' 144;
+    line-height: 0.95;
+    letter-spacing: -0.02em;
+    color: var(--color-sm-green);
+  }
+  .lb-sub {
+    margin-top: 0.3rem;
+    font-size: 0.9rem;
+    color: #525252;
+  }
+
+  .lb-group {
+    margin-top: 0.4rem;
+    font-size: 0.68rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #a3a3a3;
+  }
+  .lb-group + .lb-field,
+  .lb-group + .lb-note {
+    margin-top: -0.4rem;
+  }
+
+  .lb-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+  .lb-field > span,
+  .lb-field > legend {
+    font-size: 0.72rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #404040;
+  }
+  .lb-field > span i,
+  .lb-field > legend i {
+    font-style: normal;
+    font-weight: 700;
+    text-transform: none;
+    letter-spacing: 0;
+    color: #a3a3a3;
+  }
+  .lb-field input[type='text'] {
+    width: 100%;
+    padding: 0.55rem 0.7rem;
+    border: 1px solid #d4d4d4;
+    border-radius: 0.4rem;
+    background: #fff;
+    font: inherit;
+    font-size: 0.95rem;
+  }
+  .lb-field input[type='text']:focus {
+    outline: 2px solid var(--color-sm-green);
+    outline-offset: -1px;
+    border-color: transparent;
+  }
+
+  .lb-seg {
+    display: flex;
+    gap: 0.35rem;
+  }
+  .lb-seg-wrap {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .lb-seg button {
+    flex: 1 1 0;
+    min-width: 6.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    padding: 0.5rem 0.4rem;
+    border: 1px solid #d4d4d4;
+    border-radius: 0.4rem;
+    background: #fff;
+    font: inherit;
+    font-size: 0.82rem;
+    font-weight: 700;
+    line-height: 1.15;
+    cursor: pointer;
+    transition:
+      border-color 140ms ease,
+      background-color 140ms ease,
+      color 140ms ease,
+      transform 140ms ease;
+  }
+  .lb-seg button i {
+    font-style: normal;
+    font-weight: 400;
+    font-size: 0.68rem;
+    color: #a3a3a3;
+  }
+  .lb-seg button:hover:not(:disabled) {
+    border-color: var(--color-sm-green);
+    transform: translateY(-1px);
+  }
+  .lb-seg button[aria-pressed='true'] {
+    border-color: var(--color-sm-green);
+    background: var(--color-sm-green);
+    color: #fff;
+  }
+  .lb-seg button[aria-pressed='true'] i {
+    color: rgb(255 255 255 / 0.75);
+  }
+  .lb-seg button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .lb-picks {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .lb-mini {
+    padding: 0.3rem 0.7rem;
+    border: 1px solid #d4d4d4;
+    border-radius: 0.4rem;
+    background: #fff;
+    font: inherit;
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .lb-mini:hover {
+    border-color: var(--color-sm-green);
+  }
+  .lb-count {
+    margin-left: auto;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #737373;
+  }
+
+  .lb-note,
+  .lb-warn {
+    font-size: 0.78rem;
+    line-height: 1.35;
+  }
+  .lb-note {
+    margin-top: -0.4rem;
+    color: #737373;
+  }
+  .lb-warn {
+    padding: 0.5rem 0.65rem;
+    border-radius: 0.4rem;
+    background: #fef3c7;
+    color: #713f12;
+  }
+  .lb-warn[data-level='error'] {
+    background: #fee2e2;
+    color: #7f1d1d;
+  }
+
+  .lb-print {
+    padding: 0.75rem;
+    border: 0;
+    border-radius: 0.4rem;
+    background: var(--color-sm-green);
+    color: #fff;
+    font: inherit;
+    font-size: 1rem;
+    font-weight: 900;
+    cursor: pointer;
+    transition:
+      background-color 140ms ease,
+      box-shadow 140ms ease,
+      transform 140ms ease;
+  }
+  .lb-print:hover:not(:disabled) {
+    background: var(--color-sm-green-dark);
+    box-shadow: 0 6px 18px rgb(16 115 60 / 0.28);
+    transform: translateY(-1px);
+  }
+  .lb-print:disabled {
+    background: #d4d4d4;
+    cursor: not-allowed;
+  }
+  .lb-hint {
+    font-size: 0.75rem;
+    line-height: 1.4;
+    color: #737373;
+  }
+
+  /* =============================================================== print === */
+
+  @media print {
+    .no-print,
+    astro-dev-toolbar {
+      display: none !important;
+    }
+
+    /* global.css paints html with the brand ink, which prints as a solid black
+       page when "Background graphics" is on; Base.astro's min-h-screen is 100vh
+       in print and emits a blank second page. */
+    html,
+    body.lb-page {
+      background: #fff !important;
+      color: #000 !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      min-height: 0 !important;
+      height: auto !important;
+    }
+    .lb-layout {
+      display: block !important;
+      max-width: none !important;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+    #preview-host {
+      width: auto !important;
+      height: auto !important;
+    }
+    #page {
+      transform: none !important;
+      box-shadow: none !important;
+      border-radius: 0 !important;
+    }
+    /* Guides and the switched-off positions are screen affordances. */
+    .lb-cell {
+      outline: none !important;
+      background: none !important;
+    }
+    .lb-cell::after {
+      display: none !important;
+    }
+    .lb-cell[data-on='0'] {
+      visibility: hidden !important;
+    }
+  }
+</style>
+
+<script>
+  import '../scripts/labels';
+</script>
