@@ -258,7 +258,14 @@ const TITLE_TO_SUB = 1.8;
  * The gap between code and words does still scale - unlike the padding it is a
  * composition choice, and a big label wants more air there than a small one.
  */
-const TITLE_MIN = 14;
+/**
+ * The floor is what the 4x1 strip actually prints at - it is the only stock
+ * whose proportional size lands under it. 14pt left that label using a quarter
+ * of its usable height with a title alone, because the size follows the short
+ * side and a 4x1's short side is 1in, ignoring the 4in of width sitting there.
+ * 20pt fills it properly and still leaves room for a subtitle and a code.
+ */
+const TITLE_MIN = 20;
 const TITLE_MAX = 54;
 
 function scaleFor(s: LabelSheet) {

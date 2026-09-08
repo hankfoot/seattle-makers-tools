@@ -183,6 +183,12 @@ calibrated for the whole label is too assertive for what is left. The
 readability clamp still wins: applying the reduction after the clamp pushed the
 4x1 strip to 11.9pt, under the 14pt floor the clamp exists to hold.
 
+**`TITLE_MIN` is the 4x1 strip's real size, not a safety net.** It is the only
+stock whose proportional size lands under the floor, because the size follows
+the short side and a 4x1's short side is 1in - which ignores the 4in of width
+sitting next to it. At 14pt that label used a quarter of its usable height with
+a title alone; 20pt fills it and still leaves room for a subtitle and a code.
+
 **One ratio between label title and copy (1.8), never two clamps.** Clamping the
 two sizes independently let the clamps decide the relationship - it came out at
 2.7x on the 8x5 board and 2.1x on the 4x1 strip, so the same words looked
