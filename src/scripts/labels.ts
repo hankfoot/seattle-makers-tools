@@ -26,8 +26,8 @@ const $ = <T extends HTMLElement>(id: string): T => {
 const fStock = $('f-stock');
 const fDir = $('f-dir');
 const fDirWrap = $('f-dir-wrap');
-const fTitle = $<HTMLInputElement>('f-title');
-const fSub = $<HTMLInputElement>('f-sub');
+const fTitle = $('f-title');
+const fSub = $('f-sub');
 const fUrl = $<HTMLInputElement>('f-url');
 const fUrlNote = $('f-url-note');
 const fAll = $('f-all');
@@ -53,43 +53,110 @@ let sheet: LabelSheet = byId('4x2.5-h');
 /** Positions still on the physical sheet, by index. Keyed per sheet id. */
 let on = new Set<number>();
 
+/* ------------------------------------------------------------ rich text */
+
+/** The only markup a label may carry. Everything else is unwrapped. */
+const KEEP = new Set(['B', 'STRONG', 'I', 'EM', 'BR']);
+
+/**
+ * Elements whose *contents* go too. Unwrapping these would keep their text -
+ * a pasted <script> would quietly turn into label copy reading "bad()".
+ */
+const DROP = new Set(['SCRIPT', 'STYLE', 'NOSCRIPT', 'TEMPLATE', 'TITLE', 'HEAD']);
+
+/**
+ * contenteditable will happily accept a pasted table, a font tag or a styled
+ * span. Strip it back to bold, italic and line breaks - both so the label
+ * renders predictably and so nothing unexpected reaches innerHTML.
+ */
+function clean(root: Node): string {
+  const doc = document.implementation.createHTMLDocument('');
+  const box = doc.body;
+  box.append(doc.importNode(root, true));
+
+  const walk = (node: Element) => {
+    if (DROP.has(node.tagName)) {
+      node.remove();
+      return;
+    }
+    for (const child of [...node.children]) walk(child);
+    if (KEEP.has(node.tagName)) {
+      for (const a of [...node.attributes]) node.removeAttribute(a.name);
+      return;
+    }
+    // A block element ends a line; unwrapping it would run text together.
+    const block = getComputedStyle(node).display !== 'inline';
+    const parent = node.parentNode!;
+    if (block && node.previousSibling) parent.insertBefore(doc.createElement('br'), node);
+    while (node.firstChild) parent.insertBefore(node.firstChild, node);
+    parent.removeChild(node);
+  };
+  for (const child of [...box.children]) walk(child);
+  return box.innerHTML;
+}
+
+/** Text with no characters in it, even if it carries <br> or empty tags. */
+function isBlank(html: string): boolean {
+  const d = document.createElement('div');
+  d.innerHTML = html;
+  return d.textContent!.trim() === '';
+}
+
 /* ------------------------------------------------------------------ type */
 
 /**
- * One padding value for every stock. It is a registration allowance, not a
- * composition choice: what it protects against is the sheet feeding a fraction
- * of an inch out of true, and that error is the same size on a 4x1 strip as on
- * an 8x5 board. Scaling it with the label - as this did at first, 0.06in to
- * 0.12in - gave the smallest labels the least protection, which is backwards.
+ * 0.1in is the registration floor - the allowance for the sheet feeding
+ * slightly out of true, which is the same physical error on a 4x1 strip as on
+ * an 8x5 board, so it must never scale below this.
+ *
+ * Above the floor it is an optical margin, and that one does scale: 0.1in on an
+ * 8x5 board looks like the words are falling off the edge. So the rule is a
+ * floor, not a constant - the small stock is protected, the large stock breathes.
  */
-const PAD = 0.1;
+const PAD_MIN = 0.1;
+const padFor = (s: LabelSheet) => Math.max(PAD_MIN, Math.min(s.size.w, s.size.h) * 0.06);
 
 /**
- * Type scales off the label's short side, so a 4x1 strip and an 8x5 board both
- * end up with something proportionate. The clamps stop the biggest stock from
- * turning into a billboard and the smallest from going unreadable.
+ * One ratio between title and copy, everywhere.
+ *
+ * This used to clamp the two sizes independently - title to 12..60pt, subtitle
+ * to 7..22pt - which meant the clamps, not the design, decided the
+ * relationship: it came out at 2.7x on the 8x5 board and 2.1x on the 4x1 strip,
+ * so the same words looked differently balanced on every stock.
+ *
+ * Now only the title is clamped and the subtitle is always derived from it, so
+ * the ratio is fixed no matter what the auto-fit does afterwards - it scales
+ * both together. 1.8 keeps the title clearly dominant without the copy dropping
+ * to a size nobody reads.
+ */
+const TITLE_TO_SUB = 1.8;
+
+/**
+ * Title size follows the label's short side. The clamps stop an 8x5 board
+ * becoming a billboard and a 4x1 strip becoming unreadable; between them the
+ * size is proportional.
  *
  * The gap between code and words does still scale - unlike the padding it is a
  * composition choice, and a big label wants more air there than a small one.
  */
 function scaleFor(s: LabelSheet) {
   const short = Math.min(s.size.w, s.size.h);
-  const title = Math.min(60, Math.max(12, short * 72 * 0.2));
-  const sub = Math.min(22, Math.max(7, title * 0.42));
+  const title = Math.min(54, Math.max(14, short * 72 * 0.17));
   const gap = Math.max(0.06, short * 0.07);
-  return { pad: PAD, title, sub, gap };
+  return { pad: padFor(s), title, sub: title / TITLE_TO_SUB, gap };
 }
 
 /** Wide labels put the code beside the words; tall ones stack it above. */
 const flowFor = (s: LabelSheet) => (s.size.w / s.size.h >= 1.35 ? 'row' : 'column');
 
 function qrInchesFor(s: LabelSheet, hasText: boolean) {
+  const pad = padFor(s);
   if (flowFor(s) === 'row') {
-    const box = s.size.h - PAD * 2;
-    return hasText ? Math.min(box, s.size.w * 0.34) : Math.min(box, s.size.w - PAD * 2);
+    const box = s.size.h - pad * 2;
+    return hasText ? Math.min(box, s.size.w * 0.34) : Math.min(box, s.size.w - pad * 2);
   }
-  const box = s.size.w - PAD * 2;
-  return hasText ? Math.min(box, s.size.h * 0.46) : Math.min(box, s.size.h - PAD * 2);
+  const box = s.size.w - pad * 2;
+  return hasText ? Math.min(box, s.size.h * 0.46) : Math.min(box, s.size.h - pad * 2);
 }
 
 /* --------------------------------------------------------------- preview */
@@ -147,10 +214,12 @@ async function render(): Promise<void> {
   const mine = ++generation;
   selectSheet();
 
-  const title = fTitle.value.trim();
-  const sub = fSub.value.trim();
+  const titleHtml = clean(fTitle);
+  const subHtml = clean(fSub);
+  const titleBlank = isBlank(titleHtml);
+  const subBlank = isBlank(subHtml);
   const url = normalizeUrl(fUrl.value);
-  const hasText = Boolean(title || sub);
+  const hasText = !titleBlank || !subBlank;
 
   if (url && url !== fUrl.value.trim()) {
     fUrlNote.hidden = false;
@@ -192,29 +261,65 @@ async function render(): Promise<void> {
   // Safe: the link reaches the output only as path geometry, and the colours
   // are our own literals. Title and subtitle go through textContent.
   if (svg) proto.querySelector<HTMLElement>('.lb-qr')!.innerHTML = svg;
-  proto.querySelector<HTMLElement>('.lb-title')!.textContent = title;
-  proto.querySelector<HTMLElement>('.lb-subtitle')!.textContent = sub;
+  const titleNode = proto.querySelector<HTMLElement>('.lb-title')!;
+  const subNode = proto.querySelector<HTMLElement>('.lb-subtitle')!;
+  // Already through clean(): b / i / br only, no attributes.
+  titleNode.innerHTML = titleHtml;
+  subNode.innerHTML = subHtml;
+  titleNode.classList.toggle('is-empty', titleBlank);
+  subNode.classList.toggle('is-empty', subBlank);
 
   // Fit the type to the box it actually has. Scaling off the label's short side
   // alone is not enough: a QR takes a third of the width, so "Woodshop" at the
   // nominal size would break mid-word on a 4x2.5. Measure one real label and
   // step the size down until it fits, then clone that.
+  //
+  // Binary search on one scale factor rather than stepping down in fixed
+  // percentages: it lands within ~0.02% of the largest size that fits, in a
+  // fixed 12 reflows, instead of overshooting by up to a whole step. Both sizes
+  // move together so the title/subtitle relationship never drifts.
   grid.replaceChildren(proto);
-  let pt = tpt;
-  const titleEl = proto.querySelector<HTMLElement>('.lb-title')!;
   const innerEl = proto.querySelector<HTMLElement>('.lb-inner')!;
-  // Measure the title, not its wrapper: a wrapper that has already wrapped
-  // reports no overflow at all, which is why the first attempt at this did
-  // nothing and "Woodshop" printed as "Woodsho / p".
-  const overflows = () =>
-    titleEl.scrollWidth > titleEl.clientWidth + 1 ||
-    innerEl.scrollHeight > innerEl.clientHeight + 1;
-  for (let guard = 0; guard < 24 && pt > 6 && overflows(); guard++) {
-    pt *= 0.94;
-    proto.style.setProperty('--title', `${pt}pt`);
-    proto.style.setProperty('--sub', `${Math.min(22, Math.max(6, pt * 0.42))}pt`);
+  const textEl = proto.querySelector<HTMLElement>('.lb-text')!;
+
+  const apply = (k: number) => {
+    proto.style.setProperty('--title', `${tpt * k}pt`);
+    proto.style.setProperty('--sub', `${spt * k}pt`);
+  };
+  // Width is measured on the two text nodes, because a wrapper that has already
+  // wrapped reports no overflow - that mistake once printed "Woodsho / p".
+  // Height is measured on the row, which is what actually runs out of room.
+  const fits = (k: number) => {
+    apply(k);
+    // Exactly equal, no tolerance either way. A `+ 1` slack absorbed a real
+    // overflow (130 in a 129 box passed as "fits"); a `- 1` demand can never be
+    // met, because text that fits reports scrollWidth === clientWidth, so
+    // everything collapsed to the 6pt floor. Glyph side bearings get their room
+    // from --ink-slack in the stylesheet instead, which is a layout inset
+    // rather than a fudged comparison.
+    return (
+      titleNode.scrollWidth <= titleNode.clientWidth &&
+      subNode.scrollWidth <= subNode.clientWidth &&
+      textEl.scrollHeight <= textEl.clientHeight + 1 &&
+      innerEl.scrollHeight <= innerEl.clientHeight + 1
+    );
+  };
+
+  // Never below 6pt - past that it is unreadable, and shrinking further only
+  // hides the fact that the copy does not belong on this label.
+  const floor = Math.min(1, 6 / tpt);
+  let k = 1;
+  if (!fits(1)) {
+    let lo = floor;
+    let hi = 1;
+    for (let i = 0; i < 12; i++) {
+      const mid = (lo + hi) / 2;
+      if (fits(mid)) lo = mid;
+      else hi = mid;
+    }
+    k = lo;
   }
-  const shrunk = pt < tpt - 0.01;
+  const overflowing = !fits(k);
 
   grid.replaceChildren();
   const total = perSheet(sheet);
@@ -252,8 +357,11 @@ async function render(): Promise<void> {
 
   // Only complain once the auto-fit has run out of room; shrinking on its own
   // is normal and not worth a warning.
-  if (!problem && shrunk && overflows()) {
-    problem = { msg: 'The text is too long for this label - it will be cut off.', level: 'warn' };
+  if (!problem && overflowing) {
+    problem = {
+      msg: 'Even at the smallest readable size this copy does not fit - it will be cut off.',
+      level: 'warn',
+    };
   }
 
   setWarning(problem?.msg ?? '', problem?.level ?? null);
@@ -310,6 +418,68 @@ fNone.addEventListener('click', () => {
 for (const el of [fTitle, fSub, fUrl]) {
   el.addEventListener('input', () => void render());
 }
+
+/* --------------------------------------------------------- rich editing */
+
+/** Light up B / I when the caret sits inside bold or italic text. */
+function syncTools(): void {
+  for (const tools of document.querySelectorAll<HTMLElement>('.lb-tools')) {
+    const field = document.getElementById(tools.dataset.for!);
+    const anchor = document.getSelection()?.anchorNode ?? null;
+    const inside = Boolean(field && anchor && field.contains(anchor));
+    for (const b of tools.querySelectorAll('button')) {
+      b.setAttribute(
+        'aria-pressed',
+        String(inside && document.queryCommandState(b.dataset.cmd!)),
+      );
+    }
+  }
+}
+
+for (const tools of document.querySelectorAll<HTMLElement>('.lb-tools')) {
+  const field = $(tools.dataset.for!);
+  // Keep the caret where it is: focus must not leave the field on mousedown,
+  // or the command has no selection to act on.
+  tools.addEventListener('mousedown', (e) => e.preventDefault());
+  tools.addEventListener('click', (e) => {
+    const b = (e.target as HTMLElement).closest<HTMLButtonElement>('button[data-cmd]');
+    if (!b) return;
+    field.focus();
+    // execCommand is deprecated but remains the only one-liner that toggles
+    // bold/italic across a selection, and it works in every browser this tool
+    // will run in. Whatever it produces is put through clean() anyway.
+    document.execCommand(b.dataset.cmd!);
+    void render();
+    syncTools();
+  });
+}
+
+document.addEventListener('selectionchange', syncTools);
+
+for (const field of [fTitle, fSub]) {
+  field.addEventListener('keydown', (e) => {
+    if ((e.metaKey || e.ctrlKey) && (e.key === 'b' || e.key === 'i')) {
+      e.preventDefault();
+      document.execCommand(e.key === 'b' ? 'bold' : 'italic');
+      void render();
+      syncTools();
+      return;
+    }
+    if (e.key === 'Enter') {
+      // A plain <br>, not the <div> or <p> contenteditable would otherwise
+      // insert - clean() would have to unwrap those back into breaks anyway.
+      e.preventDefault();
+      document.execCommand('insertLineBreak');
+      void render();
+    }
+  });
+  // Paste as plain text. clean() would strip the markup regardless; doing it
+  // here stops the editor briefly showing styling that is about to vanish.
+  field.addEventListener('paste', (e) => {
+    e.preventDefault();
+    document.execCommand('insertText', false, e.clipboardData?.getData('text/plain') ?? '');
+  });
+}
 fPrint.addEventListener('click', () => window.print());
 
 addEventListener('resize', fit);
@@ -330,11 +500,12 @@ if (qDir === 'horizontal' || qDir === 'vertical') direction = qDir;
 for (const [key, el] of [
   ['title', fTitle],
   ['sub', fSub],
-  ['url', fUrl],
 ] as const) {
   const v = q.get(key);
-  if (v !== null) el.value = v;
+  if (v !== null) el.textContent = v;
 }
+const qUrl = q.get('url');
+if (qUrl !== null) fUrl.value = qUrl;
 
 /* Start with every position live, then drop the ones named by ?off= - a sheet
    you have already peeled from is worth being able to bookmark. Applied after

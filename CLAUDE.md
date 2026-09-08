@@ -112,12 +112,30 @@ the grid is placed in absolute inches from the physical page corner. The cost is
 that the sheet is full-bleed and Chrome's "fit to printable area" would ruin it,
 hence the explicit Margins: None / Scale: 100 instruction in the UI.
 
-**Label padding is one constant (0.1in), not a proportion.** It is a
-registration allowance - protection against the sheet feeding slightly out of
-true - and that error is the same size on a 4x1 strip as on an 8x5 board. The
-first version scaled it with the label (0.06in to 0.12in), which gave the
-smallest labels the least protection: backwards. The gap between code and words
-*does* still scale, because that one is composition rather than tolerance.
+**One ratio between label title and copy (1.8), never two clamps.** Clamping the
+two sizes independently let the clamps decide the relationship - it came out at
+2.7x on the 8x5 board and 2.1x on the 4x1 strip, so the same words looked
+differently balanced on every stock. Only the title is clamped now; the subtitle
+is derived, so the ratio survives whatever the auto-fit does.
+
+**The auto-fit's width test must be exactly `scrollWidth <= clientWidth`.** Both
+fudges have been tried and both failed loudly: `+ 1` absorbed a real overflow
+(130 in a 129 box passed as "fits", and ink printed into the margin), and `- 1`
+can never be satisfied at all, because text that fits reports the two as equal -
+that collapsed every label to the 6pt floor. Glyph side bearings get their room
+from a 0.02in inset on `.lb-text` instead: a layout allowance, not a fudged
+comparison.
+
+**`.lb-text` needs `width: 100%`, and it is load-bearing.** As a column-flow flex
+item without it, the text box sizes to its own content, so scrollWidth can never
+exceed clientWidth, the auto-fit has nothing to measure, and the words run off
+the label.
+
+**Label padding is a 0.1in floor that scales up.** 0.1in is the registration
+allowance - protection against the sheet feeding slightly out of true - and that
+error is the same size on a 4x1 strip as on an 8x5 board, so it must never scale
+below it. Above the floor it is an optical margin and does scale, because 0.1in
+on an 8x5 board looks like the words are falling off the edge.
 
 **Everything on a label hangs off one left margin**, in both flows, so the code,
 title and subtitle start on the same vertical line. Titles use `text-wrap:
@@ -127,8 +145,18 @@ ragged against a hard left edge.
 **Label type auto-fits by measuring the title, not its wrapper.** A wrapper that
 has already wrapped reports no overflow, so the first version of this shrank
 nothing and "Woodshop" printed as "Woodsho / p". `.lb-title` therefore sets
-`overflow-wrap: normal` so an oversized title genuinely overflows, and the
-script steps the size down until it does not.
+`overflow-wrap: normal` so an oversized title genuinely overflows. The search is
+a binary search on a single scale factor over 12 reflows, rather than fixed
+percentage steps: it lands on the largest size that fits instead of overshooting
+by up to a whole step, and scaling one factor keeps the title/copy ratio intact.
+
+**Label copy is rich text, sanitised to `b` / `i` / `br`.** `clean()` unwraps
+everything else, turning block elements into line breaks so text does not run
+together, and *deletes* `script`/`style` and friends outright - unwrapping those
+would keep their text, so a pasted script tag became label copy reading "bad()".
+Paste is forced to plain text as well. `execCommand` is deprecated but remains
+the only one-liner that toggles bold/italic over a selection; its output goes
+through `clean()` regardless, so its quirks cannot reach the label.
 
 **`render()` in labels.ts takes a generation ticket.** It awaits the encoder, so
 two renders can be in flight and the slower can land last - typing across three

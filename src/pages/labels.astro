@@ -57,15 +57,42 @@ const stocks = STOCKS.map((s) => ({
 
       <h2 class="lb-group">Label</h2>
 
-      <label class="lb-field">
-        <span>Title</span>
-        <input id="f-title" type="text" maxlength="40" value="Woodshop" placeholder="Woodshop" />
-      </label>
+      <div class="lb-field">
+        <span class="lb-legend">
+          Title
+          <span class="lb-tools" data-for="f-title">
+            <button type="button" data-cmd="bold" title="Bold (⌘B)" aria-label="Bold"><b>B</b></button>
+            <button type="button" data-cmd="italic" title="Italic (⌘I)" aria-label="Italic"><i>I</i></button>
+          </span>
+        </span>
+        <div
+          id="f-title"
+          class="lb-rich"
+          contenteditable="true"
+          role="textbox"
+          aria-multiline="true"
+          aria-label="Title"
+          data-placeholder="Woodshop">Woodshop</div>
+      </div>
 
-      <label class="lb-field">
-        <span>Subtitle <i>optional</i></span>
-        <input id="f-sub" type="text" maxlength="80" placeholder="Certification required" />
-      </label>
+      <div class="lb-field">
+        <span class="lb-legend">
+          Subtitle <i>optional</i>
+          <span class="lb-tools" data-for="f-sub">
+            <button type="button" data-cmd="bold" title="Bold (⌘B)" aria-label="Bold"><b>B</b></button>
+            <button type="button" data-cmd="italic" title="Italic (⌘I)" aria-label="Italic"><i>I</i></button>
+          </span>
+        </span>
+        <div
+          id="f-sub"
+          class="lb-rich"
+          contenteditable="true"
+          role="textbox"
+          aria-multiline="true"
+          aria-label="Subtitle"
+          data-placeholder="Certification required"></div>
+      </div>
+      <p class="lb-note">Enter for a new line. ⌘B / ⌘I for bold and italic.</p>
 
       <label class="lb-field">
         <span>QR link <i>optional</i></span>
@@ -178,10 +205,30 @@ const stocks = STOCKS.map((s) => ({
     flex-direction: column;
   }
 
+  /* width:100% is load-bearing, not decoration. Without it, a column-flow flex
+     item sizes to its own content, so the title box grows to the text's natural
+     width and scrollWidth can never exceed clientWidth - the auto-fit then has
+     nothing to measure and the words run off the label. */
   .lb-text {
-    min-width: 0;
+    flex: 1 1 auto;
     width: 100%;
+    min-width: 0;
+    /* Glyphs paint a little wider than the advance width scrollWidth measures,
+       so a line that "fits" can still lay a few thousandths of an inch of ink
+       past its box. This inset gives the side bearings somewhere to go. */
+    padding-right: 0.02in;
     text-align: left;
+  }
+  /* Typed newlines are real newlines on the label. */
+  .lb-title,
+  .lb-subtitle {
+    white-space: pre-wrap;
+  }
+  /* :empty misses a field holding only a <br>, so emptiness is decided in the
+     script and flagged with a class. */
+  .lb-title.is-empty,
+  .lb-subtitle.is-empty {
+    display: none;
   }
   /* Never break a title mid-word. That makes an oversized title *overflow*
      instead of silently hyphenating itself, which is what the script measures
@@ -202,10 +249,6 @@ const stocks = STOCKS.map((s) => ({
     font-weight: 400;
     line-height: 1.25;
     text-wrap: pretty;
-  }
-  .lb-title:empty,
-  .lb-subtitle:empty {
-    display: none;
   }
 
   .lb-qr {
@@ -396,7 +439,8 @@ const stocks = STOCKS.map((s) => ({
     letter-spacing: 0;
     color: #a3a3a3;
   }
-  .lb-field input[type='text'] {
+  .lb-field input[type='text'],
+  .lb-rich {
     width: 100%;
     padding: 0.55rem 0.7rem;
     border: 1px solid #d4d4d4;
@@ -405,10 +449,69 @@ const stocks = STOCKS.map((s) => ({
     font: inherit;
     font-size: 0.95rem;
   }
-  .lb-field input[type='text']:focus {
+  .lb-field input[type='text']:focus,
+  .lb-rich:focus {
     outline: 2px solid var(--color-sm-green);
     outline-offset: -1px;
     border-color: transparent;
+  }
+  .lb-rich {
+    min-height: 2.6rem;
+    line-height: 1.35;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+  .lb-rich:empty::before {
+    content: attr(data-placeholder);
+    color: #a3a3a3;
+  }
+
+  .lb-legend {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.72rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #404040;
+  }
+  .lb-legend i {
+    font-style: normal;
+    font-weight: 700;
+    text-transform: none;
+    letter-spacing: 0;
+    color: #a3a3a3;
+  }
+  .lb-tools {
+    display: flex;
+    gap: 0.2rem;
+    margin-left: auto;
+  }
+  .lb-tools button {
+    width: 1.5rem;
+    height: 1.5rem;
+    display: grid;
+    place-items: center;
+    border: 1px solid #d4d4d4;
+    border-radius: 0.25rem;
+    background: #fff;
+    font-size: 0.78rem;
+    line-height: 1;
+    color: #404040;
+    cursor: pointer;
+    transition:
+      border-color 120ms ease,
+      background-color 120ms ease,
+      color 120ms ease;
+  }
+  .lb-tools button:hover {
+    border-color: var(--color-sm-green);
+  }
+  .lb-tools button[aria-pressed='true'] {
+    border-color: var(--color-sm-green);
+    background: var(--color-sm-green);
+    color: #fff;
   }
 
   .lb-seg {
