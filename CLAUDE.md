@@ -189,6 +189,21 @@ the short side and a 4x1's short side is 1in - which ignores the 4in of width
 sitting next to it. At 14pt that label used a quarter of its usable height with
 a title alone; 20pt fills it and still leaves room for a subtitle and a code.
 
+**Height is measured against the text's own budget, and `scrollHeight` cannot do
+it.** Two traps here, both found on the small stock:
+
+- `scrollHeight` reports overflow *downwards only*. The content is vertically
+  centred, so when it is too tall it spills equally above and below and
+  scrollHeight under-reports by half - a 2.5x1.56 sat at 102% of its usable
+  height, eating into the padding, and still passed. Compute the content height
+  from the flex layout instead, with `offset*` (rotated labels make
+  `getBoundingClientRect` the axis-aligned box of the transform).
+- The `FILL_MAX` target applies to the **words**, never to the words plus the
+  code. On a 4x1 the code is sized to exactly the usable height, so a target
+  under 100% could not be met however small the type went - the search ran to
+  its floor and printed a 5pt title. Shrinking text cannot shrink a fixed-size
+  code, so the code has no business being in that test.
+
 **Title and copy are fitted separately on width, together on height.** One
 shared scale factor used to do both, which meant a long title dragged the
 subtitle down with it - lengthening a title took "Certification required" from

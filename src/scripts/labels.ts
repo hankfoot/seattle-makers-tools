@@ -258,6 +258,17 @@ const TITLE_TO_SUB = 1.8;
 const MIN_LEAD = 1.2;
 
 /**
+ * How much of a label's usable height the content may occupy.
+ *
+ * Fitting exactly is not the same as looking right: content that reaches the
+ * padding on both sides reads as crammed even though nothing is clipped, which
+ * is how the 2.5x1.56 ended up looking heavy while technically fitting. The
+ * remainder is breathing room, and only labels that are genuinely full ever
+ * feel it - an 8x5 with the same copy sits near 45% and does not move.
+ */
+const FILL_MAX = 0.88;
+
+/**
  * Title size follows the label's short side. The clamps stop an 8x5 board
  * becoming a billboard and a 4x1 strip becoming unreadable; between them the
  * size is proportional.
@@ -482,13 +493,46 @@ async function render(): Promise<void> {
   const titleWidthFits = () => titleNode.scrollWidth <= titleNode.clientWidth;
   const subWidthFits = () => subNode.scrollWidth <= subNode.clientWidth;
 
-  // Height is only ever measured on .lb-inner, which has the label's real
-  // height. .lb-text is a shrink-to-fit flex item - its clientHeight IS its
-  // content height, so the two differ only by sub-pixel rounding, and that
-  // difference grows with the font size until it trips any tolerance. Testing
-  // it dropped an 8x5 title from 54pt to 9.7pt whenever there was no subtitle,
-  // because the subtitle happened to round the discrepancy away.
-  const heightFits = () => innerEl.scrollHeight <= innerEl.clientHeight + 1;
+  /**
+   * Content height against the height actually available, worked out from the
+   * flex layout rather than read off scrollHeight.
+   *
+   * scrollHeight only reports overflow *downwards*. The content here is
+   * vertically centred, so when it is too tall it spills equally above and
+   * below and scrollHeight under-reports by half - a 2.5x1.56 sat at 102% of
+   * its usable height, eating into the padding, and still passed.
+   *
+   * offset* rather than getBoundingClientRect, because upright labels are
+   * rotated and the rect would be the axis-aligned box of the transform.
+   */
+  const textEl = proto.querySelector<HTMLElement>('.lb-text')!;
+  const padY = parseFloat(getComputedStyle(innerEl).paddingTop);
+  const usableH = innerEl.offsetHeight - padY * 2;
+  const qrPx = svg ? qrIn * 96 : 0;
+  const gapPx = gap * 96;
+
+  /**
+   * Height the words may occupy. Beside the code they get the whole label;
+   * stacked under it they get what the code and the gap leave.
+   */
+  const textBudget = () => {
+    if (flow === 'row') return usableH;
+    const g = qrPx && textEl.offsetHeight ? gapPx : 0;
+    return Math.max(0, usableH - qrPx - g);
+  };
+
+  /**
+   * The fill target applies to the WORDS, not to the code.
+   *
+   * Measuring the two together was wrong: on a 4x1 the code is sized to exactly
+   * the usable height, so a target below 100% could never be met no matter how
+   * small the type went - the search ran to its floor and printed a 5pt title.
+   * Shrinking text cannot shrink a fixed-size code, so the code has no business
+   * being in the test.
+   */
+  const heightFits = () => textEl.offsetHeight <= textBudget() * FILL_MAX + 1;
+  /** Does it fit at all - the question the clipping warning asks. */
+  const heightClips = () => textEl.offsetHeight > textBudget() + 1;
 
   /**
    * How many lines the title is currently taking. Smaller type means more
@@ -553,7 +597,9 @@ async function render(): Promise<void> {
     setSub(ks * both);
   }
 
-  const overflowing = !(titleWidthFits() && subWidthFits() && heightFits());
+  // The warning is about *clipping*, so it asks the real question - does this
+  // fit at all - not the roomier one the fit aims for.
+  const overflowing = !titleWidthFits() || !subWidthFits() || heightClips();
 
   grid.replaceChildren();
   const total = perSheet(gridSheet);
