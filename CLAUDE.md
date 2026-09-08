@@ -53,6 +53,11 @@ Done:
 - `?url=&title=&desc=&size=&copies=&cut=&showurl=` prefills the form. Not
   persistence: it makes one sign reproducible and is what lets the print
   verification run headless.
+- Editor chrome echoes the index page (lowercase lockup, 4px green rule) and
+  the preview shows the whole 8.5 x 11in sheet rather than just the printable
+  area, so the margin you get is the margin you see. The dashed printable-area
+  guide and the empty-state wording are `@media screen` only - verified by
+  printing with cut lines off and confirming the boundary rows are pure white.
 - `npm run check` now actually runs; `@astrojs/check` and `typescript` were
   never installed, so the script had only ever prompted to install them. It
   reports 8 pre-existing errors in the slideshow (a `status` global collision,

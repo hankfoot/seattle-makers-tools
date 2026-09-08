@@ -19,8 +19,10 @@ const MM_WARN = 0.8;
 const MM_ERROR = 0.5;
 
 const PX_PER_IN = 96;
-const PAGE_W_IN = 7.25;
-const PAGE_H_IN = 10;
+/* The preview shows the whole sheet, so it scales on the paper, not the
+   printable area inside it. */
+const PAPER_W_IN = 8.5;
+const PAPER_H_IN = 11;
 
 const $ = <T extends HTMLElement>(id: string): T => {
   const el = document.getElementById(id);
@@ -41,6 +43,8 @@ const fPrint = $<HTMLButtonElement>('f-print');
 const warn = $<HTMLParagraphElement>('warn');
 const host = $('preview-host');
 const sheet = $('sheet');
+const pvCount = $('pv-count');
+const pvZoom = $('pv-zoom');
 const tpl = $<HTMLTemplateElement>('piece-tpl');
 
 let size: Size = 'full';
@@ -69,9 +73,10 @@ function normalizeUrl(raw: string): string {
  * its unscaled layout box.
  */
 function fit(): void {
-  const scale = Math.min(1, host.clientWidth / (PAGE_W_IN * PX_PER_IN));
+  const scale = Math.min(1, host.clientWidth / (PAPER_W_IN * PX_PER_IN));
   host.style.setProperty('--preview-scale', String(scale));
-  host.style.height = `${PAGE_H_IN * PX_PER_IN * scale}px`;
+  host.style.height = `${PAPER_H_IN * PX_PER_IN * scale}px`;
+  pvZoom.textContent = `${Math.round(scale * 100)}%`;
 }
 
 /** Modules across the code, read back off the SVG the encoder just produced. */
@@ -186,6 +191,9 @@ async function render(): Promise<void> {
       problem = { msg: 'That does not look like a valid link, but it will still encode.', level: 'warn' };
     }
   }
+
+  const noun = size === 'card' ? 'card' : 'sign';
+  pvCount.textContent = n === 1 ? `1 ${noun}` : `${n} ${noun}s`;
 
   setWarning(problem?.msg ?? '', problem?.level ?? null);
   fPrint.disabled = !svg;
