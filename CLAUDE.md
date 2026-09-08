@@ -150,6 +150,15 @@ a binary search on a single scale factor over 12 reflows, rather than fixed
 percentage steps: it lands on the largest size that fits instead of overshooting
 by up to a whole step, and scaling one factor keeps the title/copy ratio intact.
 
+**The label fit is line-aware, not just size-aware.** A QR takes a third of a
+wide label, and the title was being *wrapped* into what was left rather than
+sized for it: "Laser Cutter" came out as two big lines beside the code while the
+plain version sat happily on one. Shrinking type fits more characters per line,
+so line count is searchable - the fit asks first for the title to take only the
+lines the copy asked for (one, plus any typed breaks), accepts that unless it
+costs more than a third of the size, then allows one extra line, then just fits
+the box. On a 4x2.5 that trades 7% of the type size for one line instead of two.
+
 **Label copy is rich text, sanitised to `b` / `i` / `br`.** `clean()` unwraps
 everything else, turning block elements into line breaks so text does not run
 together, and *deletes* `script`/`style` and friends outright - unwrapping those

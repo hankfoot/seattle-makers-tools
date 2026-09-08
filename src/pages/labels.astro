@@ -94,6 +94,14 @@ const stocks = STOCKS.map((s) => ({
       </div>
       <p class="lb-note">Enter for a new line. ⌘B / ⌘I for bold and italic.</p>
 
+      <fieldset class="lb-field">
+        <legend>Align</legend>
+        <div class="lb-seg" id="f-align">
+          <button type="button" data-align="left" aria-pressed="true">Left</button>
+          <button type="button" data-align="center" aria-pressed="false">Centre</button>
+        </div>
+      </fieldset>
+
       <label class="lb-field">
         <span>QR link <i>optional</i></span>
         <input
@@ -180,6 +188,18 @@ const stocks = STOCKS.map((s) => ({
   .lb-cell {
     position: absolute;
     overflow: hidden;
+  }
+  /* Left by default: the code, title and subtitle all start on the same
+     vertical line, at every size and in both flows. Centring moves all three
+     together rather than just the words. */
+  .lb-cell[data-align='center'] .lb-inner {
+    align-items: center;
+  }
+  .lb-cell[data-align='center'][data-flow='row'] .lb-inner {
+    justify-content: flex-start;
+  }
+  .lb-cell[data-align='center'] .lb-text {
+    text-align: center;
   }
   /* Everything hangs off one left margin, at every size and in both flows: the
      code, the title and the subtitle all start on the same vertical line. */

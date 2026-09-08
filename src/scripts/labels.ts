@@ -30,6 +30,7 @@ const fTitle = $('f-title');
 const fSub = $('f-sub');
 const fUrl = $<HTMLInputElement>('f-url');
 const fUrlNote = $('f-url-note');
+const fAlign = $('f-align');
 const fAll = $('f-all');
 const fNone = $('f-none');
 const fCount = $('f-count');
@@ -49,6 +50,7 @@ document.head.append(pageRule);
 
 let stock = '4x2.5';
 let direction: 'horizontal' | 'vertical' = 'horizontal';
+let align: 'left' | 'center' = 'left';
 let sheet: LabelSheet = byId('4x2.5-h');
 /** Positions still on the physical sheet, by index. Keyed per sheet id. */
 let on = new Set<number>();
@@ -251,6 +253,7 @@ async function render(): Promise<void> {
   // Build one label, then clone it into every switched-on position.
   const proto = tpl.content.firstElementChild!.cloneNode(true) as HTMLElement;
   proto.dataset.flow = flowFor(sheet);
+  proto.dataset.align = align;
   proto.style.setProperty('--pad', `${pad}in`);
   proto.style.setProperty('--gap', `${gap}in`);
   proto.style.setProperty('--title', `${tpt}pt`);
@@ -308,16 +311,42 @@ async function render(): Promise<void> {
   // Never below 6pt - past that it is unreadable, and shrinking further only
   // hides the fact that the copy does not belong on this label.
   const floor = Math.min(1, 6 / tpt);
-  let k = 1;
-  if (!fits(1)) {
+
+  /**
+   * How many lines the title is currently taking. Smaller type means more
+   * characters per line, so this falls as the scale falls - which is what lets
+   * it be searched on.
+   */
+  const titleLines = () => {
+    const lh = parseFloat(getComputedStyle(titleNode).lineHeight);
+    return lh > 0 ? Math.round(titleNode.scrollHeight / lh) : 1;
+  };
+  /** Lines the copy actually asked for: one, plus any typed line breaks. */
+  const wanted = titleNode.querySelectorAll('br').length + 1;
+
+  const search = (ok: (k: number) => boolean) => {
+    if (ok(1)) return 1;
     let lo = floor;
     let hi = 1;
     for (let i = 0; i < 12; i++) {
       const mid = (lo + hi) / 2;
-      if (fits(mid)) lo = mid;
+      if (ok(mid)) lo = mid;
       else hi = mid;
     }
-    k = lo;
+    return lo;
+  };
+
+  // A QR takes a third of a wide label, and the title was being wrapped into
+  // what was left rather than sized for it - "Laser Cutter" came out as two
+  // big lines beside the code while the plain version sat happily on one.
+  //
+  // So the search is tiered: first ask for the title to take only the lines the
+  // copy asked for, and accept that unless it costs more than a third of the
+  // size. Otherwise allow one extra line, then give up and just fit the box.
+  let k = search((n) => fits(n) && titleLines() <= wanted);
+  if (k < 0.66) {
+    const relaxed = search((n) => fits(n) && titleLines() <= wanted + 1);
+    k = Math.max(k, relaxed >= 0.5 ? relaxed : search(fits));
   }
   const overflowing = !fits(k);
 
@@ -404,6 +433,16 @@ grid.addEventListener('click', (e) => {
   pvLabel.textContent = `${sheet.label} · ${on.size} of ${total}`;
   fCount.textContent = `${on.size} of ${total}`;
   fPrint.disabled = on.size === 0;
+});
+
+fAlign.addEventListener('click', (e) => {
+  const b = (e.target as HTMLElement).closest<HTMLButtonElement>('button[data-align]');
+  if (!b) return;
+  align = b.dataset.align as 'left' | 'center';
+  for (const o of fAlign.querySelectorAll('button')) {
+    o.setAttribute('aria-pressed', String(o === b));
+  }
+  void render();
 });
 
 fAll.addEventListener('click', () => {
@@ -497,6 +536,13 @@ if (qStock && SHEETS.some((s) => s.stock === qStock)) {
 }
 const qDir = q.get('dir');
 if (qDir === 'horizontal' || qDir === 'vertical') direction = qDir;
+const qAlign = q.get('align');
+if (qAlign === 'left' || qAlign === 'center') {
+  align = qAlign;
+  for (const o of fAlign.querySelectorAll('button')) {
+    o.setAttribute('aria-pressed', String(o.dataset.align === align));
+  }
+}
 for (const [key, el] of [
   ['title', fTitle],
   ['sub', fSub],
