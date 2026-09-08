@@ -665,6 +665,12 @@ fAlign.addEventListener('click', (e) => {
   void render();
 });
 
+fPrint.addEventListener('click', () => window.print());
+
+/* Both, deliberately. The window listener is the one that always fires; the
+   observer additionally catches the host changing width without the window
+   doing so. fit() is idempotent, so double-firing is free. */
+addEventListener('resize', fit);
 new ResizeObserver(fit).observe(host);
 
 /* ---------------------------------------------------------------- prefill */

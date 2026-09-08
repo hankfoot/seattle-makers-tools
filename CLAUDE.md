@@ -439,6 +439,25 @@ older than the last one needs the continuation token in `data[2]`.
 hole in it. `slideshow.ts` warms the current and next slide, then the whole reel
 in the background.
 
+## Verifying
+
+Printing is checked headlessly with Chrome's `--print-to-pdf`, then the PDF is
+rasterised and measured - sheet size and orientation, ink inside every die-cut
+rectangle, nothing in a margin, codes decoded one cell at a time. That catches
+geometry, and it is worth trusting.
+
+**It does not touch the Print button.** It loads a URL and prints the page, so
+the button, its disabled state and every other control are invisible to it - a
+commit once removed the click handler outright and every print check still
+passed. Click the thing as well. Stubbing `window.print` makes that safe to
+automate:
+
+```js
+let called = 0; const real = window.print; window.print = () => { called++; };
+document.getElementById('f-print').click();
+window.print = real;
+```
+
 ## Logging what you learn
 
 When something comes up that passes **"will this be useful to me in the future?"**, run **`/log`** — it routes the finding onto wiki and project pages in the vault.
