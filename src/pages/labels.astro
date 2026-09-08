@@ -83,7 +83,7 @@ const stocks = STOCKS.map((s) => ({
         <div class="lb-seg" id="f-align">
           <button type="button" data-align="auto" aria-pressed="true">Auto</button>
           <button type="button" data-align="left" aria-pressed="false">Left</button>
-          <button type="button" data-align="center" aria-pressed="false">Centre</button>
+          <button type="button" data-align="center" aria-pressed="false">Center</button>
         </div>
         <p class="lb-note" id="align-note"></p>
       </fieldset>
@@ -212,15 +212,15 @@ const stocks = STOCKS.map((s) => ({
   /* A wide label reads better with the code beside the words; a tall one stacks. */
   .lb-cell[data-flow='row'] .lb-inner {
     flex-direction: row;
-    /* Vertically centred as a pair, but still flush left. */
+    /* Vertically centered as a pair, but still flush left. */
     align-items: center;
   }
   .lb-cell[data-flow='column'] .lb-inner {
     flex-direction: column;
   }
   /* In a column the main axis is vertical, so a growing text box eats all the
-     leftover height and pins the code to the top - which read as "not centred".
-     The pair should size to its content and let justify-content centre it. */
+     leftover height and pins the code to the top - which read as "not centered".
+     The pair should size to its content and let justify-content center it. */
   .lb-cell[data-flow='column'] .lb-text {
     flex: 0 0 auto;
   }
@@ -285,7 +285,7 @@ const stocks = STOCKS.map((s) => ({
   /* Markers drawn by hand rather than list-style. Two reasons: the gap after a
      native marker is not controllable and comes out far too wide at label
      sizes, and a marker inside the text flow is the only kind that survives
-     being centred - a hanging indent needs a left edge to hang from. */
+     being centered - a hanging indent needs a left edge to hang from. */
   .lb-subtitle ul,
   .lb-subtitle ol {
     list-style: none;

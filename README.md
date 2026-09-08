@@ -216,9 +216,9 @@ margin, and anything other than true size puts the ink between the labels.
 The **subtitle** is a small rich-text editor — bold, italics, inline code, bullet
 and numbered lists. The title is plain text by design.
 
-Alignment defaults to **Auto**: centred, except when a code sits beside the words
+Alignment defaults to **Auto**: centered, except when a code sits beside the words
 on a wide label, where everything goes left so the label reads as one object.
-Override it with Left or Centre — a checklist usually wants Left whatever the
+Override it with Left or Center — a checklist usually wants Left whatever the
 code is doing. Type also starts a notch smaller when there is a code to share the
 room with. Type sizes itself to the label and shrinks to fit, so a long title stays on
 the label instead of breaking mid-word, and the title-to-copy ratio stays the

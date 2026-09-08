@@ -47,7 +47,7 @@ QR sign generator (`/qr`) is built and verified against a print-to-PDF.
 
 Done:
 - Link + title + description -> a printable sheet at full page (7.25 x 10in),
-  half (7.25 x 4.75in) or card (3.625 x 5in), one centred or tiled to fill the
+  half (7.25 x 4.75in) or card (3.625 x 5in), one centered or tiled to fill the
   sheet (2 halves, 4 cards) with cut lines.
 - Browser print only - no PNG/SVG/PDF export, no persistence, no backend.
 - `?url=&title=&desc=&size=&copies=&cut=&showurl=` prefills the form. Not
@@ -114,7 +114,7 @@ orientation rather than two. A `w x h` content box rotated 90deg occupies
 
 **A column-flow label must not let `.lb-text` grow.** In a column the main axis
 is vertical, so `flex: 1 1 auto` makes the text box swallow all the leftover
-height and pin the code to the top - which reads as "not centred" while
+height and pin the code to the top - which reads as "not centered" while
 `justify-content: center` is sitting right there looking correct. `flex: 0 0
 auto` lets the pair size to its content so centring works.
 
@@ -170,11 +170,11 @@ upright does not silently spring back to a setting the previous sheet could not
 honour.
 
 **Label alignment defaults from the content but can be overridden.** Auto reads
-best for a title-and-subtitle label: centre everywhere except a code sitting
-*beside* the words, where a centred column drifts away from the code and the
+best for a title-and-subtitle label: center everywhere except a code sitting
+*beside* the words, where a centered column drifts away from the code and the
 label stops looking like one object. But auto cannot know the copy is a
 checklist, which wants a left edge whatever the code is doing - so Auto is the
-default, not the verdict, and Left/Centre override it. The control reports what
+default, not the verdict, and Left/Center override it. The control reports what
 auto resolved to, so it never looks like nothing happened.
 
 **Type starts 15% smaller when there is a code**, because the code takes about a
@@ -193,7 +193,7 @@ a title alone; 20pt fills it and still leaves room for a subtitle and a code.
 it.** Two traps here, both found on the small stock:
 
 - `scrollHeight` reports overflow *downwards only*. The content is vertically
-  centred, so when it is too tall it spills equally above and below and
+  centered, so when it is too tall it spills equally above and below and
   scrollHeight under-reports by half - a 2.5x1.56 sat at 102% of its usable
   height, eating into the padding, and still passed. Compute the content height
   from the flex layout instead, with `offset*` (rotated labels make
@@ -316,7 +316,7 @@ assume the title wants exactly one line.
 
 **List markers on a label are drawn by hand, not by `list-style`.** The gap after
 a native marker is not controllable and comes out far too wide at label sizes,
-and a marker outside the text flow cannot be centred - a hanging indent needs a
+and a marker outside the text flow cannot be centered - a hanging indent needs a
 left edge to hang from. `li::before` with a counter for ordered lists solves
 both.
 

@@ -97,8 +97,8 @@ document.head.append(pageRule);
 let stock = '4x2.5';
 let direction: 'horizontal' | 'vertical' = 'horizontal';
 /**
- * Alignment is derived, not chosen. Centre reads best in every case except one:
- * a code sitting *beside* the words, where a centred column drifts away from
+ * Alignment is derived, not chosen. Center reads best in every case except one:
+ * a code sitting *beside* the words, where a centered column drifts away from
  * the code and the label stops looking like one thing. That is exactly the
  * row-flow-with-a-code case, so it is the only one that goes left.
  */
@@ -425,7 +425,7 @@ async function render(): Promise<void> {
   const resolvedAlign = alignMode === 'auto' ? autoAlign(flow, hasQr) : alignMode;
   proto.dataset.align = resolvedAlign;
   alignNote.textContent =
-    alignMode === 'auto' ? `Auto chose ${resolvedAlign === 'left' ? 'left' : 'centre'}.` : '';
+    alignMode === 'auto' ? `Auto chose ${resolvedAlign === 'left' ? 'left' : 'center'}.` : '';
   proto.dataset.rot = upright ? '1' : '0';
   proto.style.setProperty('--pad-x', `${pad.x}in`);
   proto.style.setProperty('--pad-y', `${pad.y}in`);
@@ -498,7 +498,7 @@ async function render(): Promise<void> {
    * flex layout rather than read off scrollHeight.
    *
    * scrollHeight only reports overflow *downwards*. The content here is
-   * vertically centred, so when it is too tall it spills equally above and
+   * vertically centered, so when it is too tall it spills equally above and
    * below and scrollHeight under-reports by half - a 2.5x1.56 sat at 102% of
    * its usable height, eating into the padding, and still passed.
    *
