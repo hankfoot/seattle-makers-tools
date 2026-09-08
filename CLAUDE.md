@@ -152,6 +152,23 @@ you can still picture what would land there; hover washes green either way. All
 of it, numbers included, is `@media screen` - verified by printing a partial
 sheet and confirming every skipped cell is pure white.
 
+**Align the code's ink, not its box.** The encoder bakes a 4-module quiet zone
+*inside* the image, so a QR box flush against the padding puts its visible ink
+another quiet zone further in - 0.29in on an 8x5, which made the left margin
+roughly double the right and the gap to the words read 0.64in against the 0.35in
+declared. `--quiet-pull` drags the box out by the quiet zone so the ink lands on
+the padding line. It is capped at the padding, because past that the box would
+hang over the label edge; the quiet zone stays satisfied either way, sourced
+from the label's own white rather than from inside the image. Short links are
+the stress case, not long ones - fewer modules means bigger modules means a
+wider quiet zone in inches.
+
+**Stock with no upright variant *becomes* Across, it does not merely display as
+Across.** The control stays visible and greys out rather than disappearing, and
+the forced value is written into state so moving on to a stock that does offer
+upright does not silently spring back to a setting the previous sheet could not
+honour.
+
 **Label alignment is derived, not chosen.** Centre reads best everywhere except
 one case: a code sitting *beside* the words, where a centred column drifts away
 from the code and the label stops looking like one object. That is exactly

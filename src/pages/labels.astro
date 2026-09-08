@@ -287,6 +287,12 @@ const stocks = STOCKS.map((s) => ({
     width: var(--qr);
     height: var(--qr);
   }
+  /* Row flow puts the code against the label's left margin, so that is the edge
+     where its built-in quiet zone shows up as a doubled gap. Pull the box out
+     by the quiet zone so the ink lands on the padding line. */
+  .lb-cell[data-flow='row'] .lb-qr {
+    margin-left: calc(var(--quiet-pull, 0in) * -1);
+  }
   .lb-qr:empty {
     display: none;
   }
@@ -655,6 +661,11 @@ const stocks = STOCKS.map((s) => ({
   .lb-seg button:disabled {
     opacity: 0.4;
     cursor: not-allowed;
+  }
+  /* The stock offers no upright variant. The control stays put and greys out
+     rather than disappearing. */
+  .lb-field.is-limited legend {
+    color: #a3a3a3;
   }
 
   .lb-picks {

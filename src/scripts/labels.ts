@@ -227,7 +227,11 @@ function selectSheet(): void {
   const vs = variants();
   const horiz = vs.find((s) => s.direction === 'horizontal') ?? vs[0]!;
   const vert = vs.find((s) => s.direction === 'vertical');
-  upright = direction === 'vertical' && Boolean(vert);
+  // Stock with no upright variant does not just *display* as Across, it
+  // *becomes* Across - so switching on to a stock that does offer it does not
+  // silently spring back to a setting the last sheet could not honour.
+  if (!vert) direction = 'horizontal';
+  upright = direction === 'vertical';
   contentSheet = upright ? vert! : horiz;
 
   if (horiz !== gridSheet) {
@@ -240,9 +244,11 @@ function selectSheet(): void {
     const d = b.dataset.dir as 'horizontal' | 'vertical';
     const exists = d === 'horizontal' || Boolean(vert);
     b.disabled = !exists;
-    b.setAttribute('aria-pressed', String(exists && d === (upright ? 'vertical' : 'horizontal')));
+    b.setAttribute('aria-pressed', String(exists && d === direction));
   }
-  fDirWrap.hidden = !vert;
+  // Shown always, greyed when the stock has no upright variant. Hiding it made
+  // the control vanish and reappear as you moved between stocks.
+  fDirWrap.classList.toggle('is-limited', !vert);
 }
 
 /**
@@ -320,7 +326,22 @@ async function render(): Promise<void> {
   proto.style.setProperty('--rot-h', `${contentSheet.size.h}in`);
   // Safe: the link reaches the output only as path geometry, and the colours
   // are our own literals. Title and subtitle go through textContent.
-  if (svg) proto.querySelector<HTMLElement>('.lb-qr')!.innerHTML = svg;
+  if (svg) {
+    const slot = proto.querySelector<HTMLElement>('.lb-qr')!;
+    slot.innerHTML = svg;
+    // The encoder bakes a 4-module quiet zone inside the image, so the code's
+    // *ink* sits inset from its own box - 0.29in on an 8x5. Left as-is the
+    // visible left margin is padding plus quiet zone, about twice the right,
+    // and the gap to the words reads far wider than the one declared. Pulling
+    // the box out by the quiet zone lines the ink up with the padding instead.
+    //
+    // Capped at the padding, because the quiet zone still has to be white: past
+    // that the code would hang over the label edge. It stays satisfied either
+    // way - the white it needs comes from the padding rather than the image.
+    const modules = modulesFrom(svg);
+    const quiet = modules ? (qrIn * 4) / modules : 0;
+    proto.style.setProperty('--quiet-pull', `${Math.min(quiet, pad)}in`);
+  }
   const titleNode = proto.querySelector<HTMLElement>('.lb-title')!;
   const subNode = proto.querySelector<HTMLElement>('.lb-subtitle')!;
   titleNode.textContent = titleText;
