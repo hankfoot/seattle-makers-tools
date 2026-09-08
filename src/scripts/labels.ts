@@ -51,6 +51,22 @@ document.head.append(pageRule);
 let stock = '4x2.5';
 let direction: 'horizontal' | 'vertical' = 'horizontal';
 let align: 'left' | 'center' = 'left';
+
+/**
+ * The sheet is ALWAYS the portrait one, because the paper always is - the
+ * die-cut does not move when you change what you print on it. Rotating the
+ * landscape template 90 degrees clockwise lands on exactly the same rectangles
+ * (checked against all three: 8x5 to the thousandth, the others within 0.009in,
+ * which is the template author's own rounding).
+ *
+ * So "Upright" no longer means a landscape page. It means the same portrait
+ * sheet with the content turned inside each label - which is what the physical
+ * sheet actually looks like, and leaves one feed orientation instead of two.
+ */
+let gridSheet: LabelSheet = byId('4x2.5-h');
+/** The sheet whose proportions the *content* is laid out in. */
+let contentSheet: LabelSheet = byId('4x2.5-h');
+let upright = false;
 let sheet: LabelSheet = byId('4x2.5-h');
 /** Positions still on the physical sheet, by index. Keyed per sheet id. */
 let on = new Set<number>();
@@ -164,9 +180,9 @@ function qrInchesFor(s: LabelSheet, hasText: boolean) {
 /* --------------------------------------------------------------- preview */
 
 function fit(): void {
-  const scale = Math.min(1, host.clientWidth / (sheet.page.w * PX_PER_IN));
+  const scale = Math.min(1, host.clientWidth / (gridSheet.page.w * PX_PER_IN));
   host.style.setProperty('--preview-scale', String(scale));
-  host.style.height = `${sheet.page.h * PX_PER_IN * scale}px`;
+  host.style.height = `${gridSheet.page.h * PX_PER_IN * scale}px`;
   pvZoom.textContent = `${Math.round(scale * 100)}%`;
 }
 
@@ -188,20 +204,24 @@ function variants(): LabelSheet[] {
 
 function selectSheet(): void {
   const vs = variants();
-  const found = vs.find((s) => s.direction === direction) ?? vs[0]!;
-  if (found !== sheet) {
-    sheet = found;
+  const horiz = vs.find((s) => s.direction === 'horizontal') ?? vs[0]!;
+  const vert = vs.find((s) => s.direction === 'vertical');
+  upright = direction === 'vertical' && Boolean(vert);
+  contentSheet = upright ? vert! : horiz;
+
+  if (horiz !== gridSheet) {
+    gridSheet = horiz;
     // Positions do not carry across stock - a 20-up sheet's index 14 means
     // nothing on a 2-up sheet. Start fresh, all on.
-    on = new Set(Array.from({ length: perSheet(sheet) }, (_, i) => i));
+    on = new Set(Array.from({ length: perSheet(gridSheet) }, (_, i) => i));
   }
   for (const b of fDir.querySelectorAll('button')) {
     const d = b.dataset.dir as 'horizontal' | 'vertical';
-    const exists = vs.some((s) => s.direction === d);
+    const exists = d === 'horizontal' || Boolean(vert);
     b.disabled = !exists;
-    b.setAttribute('aria-pressed', String(exists && d === sheet.direction));
+    b.setAttribute('aria-pressed', String(exists && d === (upright ? 'vertical' : 'horizontal')));
   }
-  fDirWrap.hidden = vs.length < 2;
+  fDirWrap.hidden = !vert;
 }
 
 /**
@@ -230,13 +250,15 @@ async function render(): Promise<void> {
     fUrlNote.hidden = true;
   }
 
-  const orient = sheet.orient;
-  pageRule.textContent = `@page { size: letter ${orient}; margin: 0; }`;
-  page.style.setProperty('--page-w', `${sheet.page.w}in`);
-  page.style.setProperty('--page-h', `${sheet.page.h}in`);
+  // Always portrait: the paper is.
+  pageRule.textContent = `@page { size: letter portrait; margin: 0; }`;
+  page.dataset.orient = gridSheet.orient;
+  page.style.setProperty('--page-w', `${gridSheet.page.w}in`);
+  page.style.setProperty('--page-h', `${gridSheet.page.h}in`);
 
-  const { pad, title: tpt, sub: spt, gap } = scaleFor(sheet);
-  const qrIn = qrInchesFor(sheet, hasText);
+  // Type and composition follow the *reading* orientation, not the die-cut.
+  const { pad, title: tpt, sub: spt, gap } = scaleFor(contentSheet);
+  const qrIn = qrInchesFor(contentSheet, hasText);
 
   let svg = '';
   let problem: { msg: string; level: 'warn' | 'error' } | null = null;
@@ -252,15 +274,21 @@ async function render(): Promise<void> {
 
   // Build one label, then clone it into every switched-on position.
   const proto = tpl.content.firstElementChild!.cloneNode(true) as HTMLElement;
-  proto.dataset.flow = flowFor(sheet);
+  proto.dataset.flow = flowFor(contentSheet);
   proto.dataset.align = align;
+  proto.dataset.rot = upright ? '1' : '0';
   proto.style.setProperty('--pad', `${pad}in`);
   proto.style.setProperty('--gap', `${gap}in`);
   proto.style.setProperty('--title', `${tpt}pt`);
   proto.style.setProperty('--sub', `${spt}pt`);
   proto.style.setProperty('--qr', `${qrIn}in`);
-  proto.style.width = `${sheet.size.w}in`;
-  proto.style.height = `${sheet.size.h}in`;
+  // The cell is the die-cut rectangle; the content box inside it is the reading
+  // orientation, turned 90 degrees when upright. A w x h box rotated a quarter
+  // turn occupies h x w, which is exactly the rectangle it sits in.
+  proto.style.width = `${gridSheet.size.w}in`;
+  proto.style.height = `${gridSheet.size.h}in`;
+  proto.style.setProperty('--rot-w', `${contentSheet.size.w}in`);
+  proto.style.setProperty('--rot-h', `${contentSheet.size.h}in`);
   // Safe: the link reaches the output only as path geometry, and the colours
   // are our own literals. Title and subtitle go through textContent.
   if (svg) proto.querySelector<HTMLElement>('.lb-qr')!.innerHTML = svg;
@@ -355,13 +383,13 @@ async function render(): Promise<void> {
   const overflowing = !fits(k);
 
   grid.replaceChildren();
-  const total = perSheet(sheet);
+  const total = perSheet(gridSheet);
   for (let i = 0; i < total; i++) {
-    const c = i % sheet.cols;
-    const r = Math.floor(i / sheet.cols);
+    const c = i % gridSheet.cols;
+    const r = Math.floor(i / gridSheet.cols);
     const cell = proto.cloneNode(true) as HTMLElement;
-    cell.style.left = `${sheet.origin.x + c * (sheet.size.w + sheet.gutter.x)}in`;
-    cell.style.top = `${sheet.origin.y + r * (sheet.size.h + sheet.gutter.y)}in`;
+    cell.style.left = `${gridSheet.origin.x + c * (gridSheet.size.w + gridSheet.gutter.x)}in`;
+    cell.style.top = `${gridSheet.origin.y + r * (gridSheet.size.h + gridSheet.gutter.y)}in`;
     cell.dataset.on = on.has(i) ? '1' : '0';
     cell.dataset.i = String(i);
     grid.append(cell);
@@ -399,8 +427,8 @@ async function render(): Promise<void> {
 
   setWarning(problem?.msg ?? '', problem?.level ?? null);
 
-  pvSheet.textContent = `${sheet.page.w} × ${sheet.page.h}in ${orient}`;
-  pvLabel.textContent = `${sheet.label} · ${on.size} of ${total}`;
+  pvSheet.textContent = `${gridSheet.page.w} × ${gridSheet.page.h}in portrait`;
+  pvLabel.textContent = `${contentSheet.label} · ${on.size} of ${total}`;
   fCount.textContent = `${on.size} of ${total}`;
   fPrint.disabled = on.size === 0 || (!hasText && !svg);
   fit();
@@ -433,8 +461,8 @@ grid.addEventListener('click', (e) => {
   if (on.has(i)) on.delete(i);
   else on.add(i);
   cell.dataset.on = on.has(i) ? '1' : '0';
-  const total = perSheet(sheet);
-  pvLabel.textContent = `${sheet.label} · ${on.size} of ${total}`;
+  const total = perSheet(gridSheet);
+  pvLabel.textContent = `${contentSheet.label} · ${on.size} of ${total}`;
   fCount.textContent = `${on.size} of ${total}`;
   fPrint.disabled = on.size === 0;
 });
@@ -450,7 +478,7 @@ fAlign.addEventListener('click', (e) => {
 });
 
 fAll.addEventListener('click', () => {
-  on = new Set(Array.from({ length: perSheet(sheet) }, (_, i) => i));
+  on = new Set(Array.from({ length: perSheet(gridSheet) }, (_, i) => i));
   void render();
 });
 fNone.addEventListener('click', () => {

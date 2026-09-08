@@ -196,9 +196,11 @@ preview to switch it off — leave out labels that have already been peeled.
 | 4 × 1in | 4 × 1in | 20 | portrait |
 | 2.5 × 1.56in | 2.5 × 1.56in / 1.56 × 2.5in | 18 | portrait / landscape |
 
-**"Across" and "Upright" are the same physical sheet.** They put ink on exactly
-the same die-cut rectangles — only the printing turns 90°. So a sheet is never
-wasted by picking the wrong one; pick whichever suits the words.
+**"Across" and "Upright" are the same physical sheet**, and both print portrait.
+They put ink on exactly the same die-cut rectangles — Upright just turns the
+words a quarter turn inside each label. So a sheet is never wasted by picking
+the wrong one, the preview always matches the sheet in your hand, and every job
+feeds the same way.
 
 **In the print dialog: Margins → None, Scale → 100.** Unlike the sign tool,
 these pages are full-bleed by necessity — the die-cut is where it is, so the

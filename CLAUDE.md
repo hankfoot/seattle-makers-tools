@@ -101,6 +101,28 @@ cells**, so a naive count says 5 across when it is 3, and the 2.5x1.56 vertical
 has columns of 1.5618in and 1.5597in - a 0.002in difference that a
 widest-value heuristic mistakes for a gutter. Cluster with a tolerance.
 
+**Every label sheet prints portrait, including Upright.** The paper is portrait
+and the die-cut does not move, so Upright is the same portrait sheet with the
+content turned a quarter turn inside each label - not a landscape page. Checked
+before relying on it: rotating each landscape template 90 degrees clockwise
+lands on the same rectangles as its portrait counterpart (8x5 exact, the others
+within 0.009in, which is the template author's own rounding). Clockwise is also
+what makes the words read the same way the landscape template does. The win is
+that the preview always looks like the sheet in your hand and there is one feed
+orientation rather than two. A `w x h` content box rotated 90deg occupies
+`h x w`, which is exactly the die-cut rectangle, so the two can never disagree.
+
+**A column-flow label must not let `.lb-text` grow.** In a column the main axis
+is vertical, so `flex: 1 1 auto` makes the text box swallow all the leftover
+height and pin the code to the top - which reads as "not centred" while
+`justify-content: center` is sitting right there looking correct. `flex: 0 0
+auto` lets the pair size to its content so centring works.
+
+**Measuring a rotated element needs `offset*`, not `getBoundingClientRect()`.**
+The latter returns the axis-aligned box of the *transformed* element, which made
+an 8x5 upright label report a 5in-tall content box instead of 8in and its
+centring look like zero.
+
 **Horizontal and Vertical are the same physical sheet.** The 8x5 portrait layout
 (1 across, 2 down) and the 5x8 landscape layout (2 across, 1 down) put ink on
 identical die-cut rectangles; only the content turns. That is why each pair has

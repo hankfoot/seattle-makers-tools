@@ -164,6 +164,7 @@ const stocks = STOCKS.map((s) => ({
   #page {
     position: relative;
     width: var(--page-w, 8.5in);
+    /* the sheet is portrait in every mode; only the content ever turns */
     height: var(--page-h, 11in);
     background: #fff;
     color: #000;
@@ -213,6 +214,24 @@ const stocks = STOCKS.map((s) => ({
   }
   .lb-cell[data-flow='column'] .lb-inner {
     flex-direction: column;
+  }
+  /* In a column the main axis is vertical, so a growing text box eats all the
+     leftover height and pins the code to the top - which read as "not centred".
+     The pair should size to its content and let justify-content centre it. */
+  .lb-cell[data-flow='column'] .lb-text {
+    flex: 0 0 auto;
+  }
+
+  /* Upright: the same die-cut rectangle, with the content turned a quarter turn
+     inside it. A w x h box rotated 90deg occupies h x w, which is the rectangle,
+     so the two always agree. */
+  .lb-cell[data-rot='1'] .lb-inner {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: var(--rot-w);
+    height: var(--rot-h);
+    transform: translate(-50%, -50%) rotate(90deg);
   }
 
   /* width:100% is load-bearing, not decoration. Without it, a column-flow flex
