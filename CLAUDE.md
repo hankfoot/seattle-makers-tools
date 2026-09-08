@@ -118,6 +118,11 @@ height and pin the code to the top - which reads as "not centred" while
 `justify-content: center` is sitting right there looking correct. `flex: 0 0
 auto` lets the pair size to its content so centring works.
 
+**OpenCV's `detectAndDecodeMulti` misses large codes on a full sheet.** Two 3.68in
+codes on an 8x5 upright sheet came back as one, which read as a print defect and
+was not - each decodes perfectly when its own label is cropped out first. Verify
+label QRs one cell at a time.
+
 **Measuring a rotated element needs `offset*`, not `getBoundingClientRect()`.**
 The latter returns the axis-aligned box of the *transformed* element, which made
 an 8x5 upright label report a 5in-tall content box instead of 8in and its
@@ -133,6 +138,18 @@ the same count, and why picking the wrong one cannot waste a sheet.
 the grid is placed in absolute inches from the physical page corner. The cost is
 that the sheet is full-bleed and Chrome's "fit to printable area" would ruin it,
 hence the explicit Margins: None / Scale: 100 instruction in the UI.
+
+**Label alignment is derived, not chosen.** Centre reads best everywhere except
+one case: a code sitting *beside* the words, where a centred column drifts away
+from the code and the label stops looking like one object. That is exactly
+row-flow-with-a-code, so it is the only case that goes left. There is no manual
+control - a toggle here only invites the wrong answer.
+
+**Type starts 15% smaller when there is a code**, because the code takes about a
+third of a wide label's width or a good part of a tall one's height, and type
+calibrated for the whole label is too assertive for what is left. The
+readability clamp still wins: applying the reduction after the clamp pushed the
+4x1 strip to 11.9pt, under the 14pt floor the clamp exists to hold.
 
 **One ratio between label title and copy (1.8), never two clamps.** Clamping the
 two sizes independently let the clamps decide the relationship - it came out at

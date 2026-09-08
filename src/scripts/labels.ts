@@ -30,7 +30,6 @@ const fTitle = $<HTMLInputElement>('f-title');
 const fSub = $('f-sub');
 const fUrl = $<HTMLInputElement>('f-url');
 const fUrlNote = $('f-url-note');
-const fAlign = $('f-align');
 const fAll = $('f-all');
 const fNone = $('f-none');
 const fCount = $('f-count');
@@ -50,7 +49,21 @@ document.head.append(pageRule);
 
 let stock = '4x2.5';
 let direction: 'horizontal' | 'vertical' = 'horizontal';
-let align: 'left' | 'center' = 'left';
+/**
+ * Alignment is derived, not chosen. Centre reads best in every case except one:
+ * a code sitting *beside* the words, where a centred column drifts away from
+ * the code and the label stops looking like one thing. That is exactly the
+ * row-flow-with-a-code case, so it is the only one that goes left.
+ */
+const alignFor = (flow: 'row' | 'column', hasQr: boolean) =>
+  flow === 'row' && hasQr ? 'left' : 'center';
+
+/**
+ * A code takes about a third of a wide label's width, or a good part of a tall
+ * one's height. Type calibrated for the whole label is too assertive for what
+ * is left, so it starts smaller when there is a code to share with.
+ */
+const QR_TYPE_SCALE = 0.85;
 
 /**
  * The sheet is ALWAYS the portrait one, because the paper always is - the
@@ -157,9 +170,12 @@ const TITLE_TO_SUB = 1.8;
  * The gap between code and words does still scale - unlike the padding it is a
  * composition choice, and a big label wants more air there than a small one.
  */
+const TITLE_MIN = 14;
+const TITLE_MAX = 54;
+
 function scaleFor(s: LabelSheet) {
   const short = Math.min(s.size.w, s.size.h);
-  const title = Math.min(54, Math.max(14, short * 72 * 0.17));
+  const title = Math.min(TITLE_MAX, Math.max(TITLE_MIN, short * 72 * 0.17));
   const gap = Math.max(0.06, short * 0.07);
   return { pad: padFor(s), title, sub: title / TITLE_TO_SUB, gap };
 }
@@ -257,8 +273,9 @@ async function render(): Promise<void> {
   page.style.setProperty('--page-h', `${gridSheet.page.h}in`);
 
   // Type and composition follow the *reading* orientation, not the die-cut.
-  const { pad, title: tpt, sub: spt, gap } = scaleFor(contentSheet);
+  const { pad, title: baseTitle, gap } = scaleFor(contentSheet);
   const qrIn = qrInchesFor(contentSheet, hasText);
+  const flow = flowFor(contentSheet);
 
   let svg = '';
   let problem: { msg: string; level: 'warn' | 'error' } | null = null;
@@ -272,10 +289,17 @@ async function render(): Promise<void> {
 
   if (mine !== generation) return;
 
+  const hasQr = Boolean(svg);
+  // The readability floor still wins. Applying the reduction after the clamp
+  // pushed the 4x1 strip to 11.9pt, under the 14pt the clamp exists to hold -
+  // on the smallest stock there is nothing to give back.
+  const tpt = hasQr ? Math.max(TITLE_MIN, baseTitle * QR_TYPE_SCALE) : baseTitle;
+  const spt = tpt / TITLE_TO_SUB;
+
   // Build one label, then clone it into every switched-on position.
   const proto = tpl.content.firstElementChild!.cloneNode(true) as HTMLElement;
-  proto.dataset.flow = flowFor(contentSheet);
-  proto.dataset.align = align;
+  proto.dataset.flow = flow;
+  proto.dataset.align = alignFor(flow, hasQr);
   proto.dataset.rot = upright ? '1' : '0';
   proto.style.setProperty('--pad', `${pad}in`);
   proto.style.setProperty('--gap', `${gap}in`);
@@ -467,16 +491,6 @@ grid.addEventListener('click', (e) => {
   fPrint.disabled = on.size === 0;
 });
 
-fAlign.addEventListener('click', (e) => {
-  const b = (e.target as HTMLElement).closest<HTMLButtonElement>('button[data-align]');
-  if (!b) return;
-  align = b.dataset.align as 'left' | 'center';
-  for (const o of fAlign.querySelectorAll('button')) {
-    o.setAttribute('aria-pressed', String(o === b));
-  }
-  void render();
-});
-
 fAll.addEventListener('click', () => {
   on = new Set(Array.from({ length: perSheet(gridSheet) }, (_, i) => i));
   void render();
@@ -568,13 +582,6 @@ if (qStock && SHEETS.some((s) => s.stock === qStock)) {
 }
 const qDir = q.get('dir');
 if (qDir === 'horizontal' || qDir === 'vertical') direction = qDir;
-const qAlign = q.get('align');
-if (qAlign === 'left' || qAlign === 'center') {
-  align = qAlign;
-  for (const o of fAlign.querySelectorAll('button')) {
-    o.setAttribute('aria-pressed', String(o.dataset.align === align));
-  }
-}
 const qTitle = q.get('title');
 if (qTitle !== null) fTitle.value = qTitle;
 const qSub = q.get('sub');
