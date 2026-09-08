@@ -1,0 +1,501 @@
+---
+import Base from '../layouts/Base.astro';
+
+/**
+ * QR sign generator.
+ *
+ * Everything on the sheet is sized in inches and points. CSS pins those to
+ * 96px/in on screen and to real physical units in print, so this one element is
+ * simultaneously an accurate preview and a true-size print - there is no second
+ * set of measurements anywhere.
+ */
+---
+
+<Base
+  title="QR signs — Seattle Makers"
+  description="Generate a printable QR sign with a title and description."
+  bodyClass="qr-page"
+>
+  <div class="qr-layout">
+    {/* --------------------------------------------------------- editor --- */}
+    <aside class="no-print qr-editor">
+      <header>
+        <a href="/" class="qr-back">← tools</a>
+        <h1>QR <span>signs</span></h1>
+        <p class="qr-sub">Type a link, print a sign.</p>
+      </header>
+
+      <label class="qr-field">
+        <span>Link</span>
+        <input
+          id="f-url"
+          type="text"
+          inputmode="url"
+          autocomplete="off"
+          spellcheck="false"
+          placeholder="seattlemakers.org/interest"
+        />
+      </label>
+      <p id="f-url-note" class="qr-note" hidden></p>
+
+      <label class="qr-field">
+        <span>Title <i>above the code</i></span>
+        <input id="f-title" type="text" maxlength="60" placeholder="Join Seattle Makers" />
+      </label>
+
+      <label class="qr-field">
+        <span>Description <i>below the code</i></span>
+        <textarea
+          id="f-desc"
+          rows="3"
+          maxlength="200"
+          placeholder="Scan to tell us what you'd like to make."></textarea>
+      </label>
+
+      <fieldset class="qr-field">
+        <legend>Size</legend>
+        <div class="qr-seg" id="f-size">
+          <button type="button" data-size="full" aria-pressed="true">Full page<i>7.25 × 10in</i></button>
+          <button type="button" data-size="half" aria-pressed="false">Half<i>7.25 × 4.75in</i></button>
+          <button type="button" data-size="card" aria-pressed="false">Card<i>3.625 × 5in</i></button>
+        </div>
+      </fieldset>
+
+      <fieldset class="qr-field" id="f-copies-wrap">
+        <legend>Copies per sheet</legend>
+        <div class="qr-seg" id="f-copies">
+          <button type="button" data-copies="1" aria-pressed="true">One<i>centered</i></button>
+          <button type="button" data-copies="fill" aria-pressed="false">Fill sheet<i id="fill-n">—</i></button>
+        </div>
+      </fieldset>
+
+      <label class="qr-check">
+        <input id="f-cut" type="checkbox" />
+        <span>Cut lines</span>
+      </label>
+
+      <label class="qr-check">
+        <input id="f-showurl" type="checkbox" checked />
+        <span>Print the link as text</span>
+      </label>
+
+      <p id="warn" class="qr-warn" hidden></p>
+
+      <button id="f-print" type="button" class="qr-print" disabled>Print</button>
+      <p class="qr-hint">
+        In the print dialog: uncheck <b>Headers and footers</b>, and leave <b>Scale</b> at 100%, so the code comes out at true size.
+      </p>
+    </aside>
+
+    {/* -------------------------------------------------------- preview --- */}
+    <div class="qr-preview no-print-chrome">
+      <div id="preview-host">
+        <div id="page">
+          <div id="sheet" data-size="full" data-copies="1" data-cut="off"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {/* The piece is cloned from here by the script. Kept in markup rather than
+      built in JS so the structure is readable next to the CSS that sizes it. */}
+  <template id="piece-tpl">
+    <div class="piece">
+      <p class="p-title"></p>
+      <div class="p-qr"></div>
+      <p class="p-desc"></p>
+      <p class="p-url"></p>
+    </div>
+  </template>
+</Base>
+
+{/* Global, not scoped: Astro's scoped styles add a build-time data attribute
+    that elements created by innerHTML/cloneNode never receive, so a scoped
+    `.p-qr svg` rule would silently fail to match the injected code. */}
+<style is:global>
+  /* ===================================================== the printed page === */
+
+  /* The sheet is the @page *content box*, never a full-bleed 8.5x11. Full bleed
+     loses three ways: printers have a ~0.25in unprintable edge, Chrome's "fit to
+     printable area" silently shrinks anything that overflows (which would
+     destroy true size - the entire point), and a page-height element is the
+     classic cause of a trailing blank page. */
+  @page {
+    size: letter portrait;
+    margin: 0.5in;
+  }
+
+  #page {
+    /* 7.5in of content box, but the grid is held to 7.25in so an A4 printer
+       (7.27in printable at these margins) never triggers shrink-to-fit. */
+    width: 7.25in;
+    height: 10in;
+    background: #fff;
+    color: #000;
+    overflow: hidden;
+  }
+
+  #sheet {
+    width: 100%;
+    height: 100%;
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    align-items: center;
+  }
+
+  #sheet[data-size='full'] {
+    --piece-w: 7.25in; --piece-h: 10in;   --qr: 5.5in;
+    --title: 44pt; --desc: 18pt; --url: 12pt;
+    --gap: 0.30in; --pad: 0.25in;
+    grid-template-columns: auto;
+    gap: 0;
+  }
+  #sheet[data-size='half'] {
+    --piece-w: 7.25in; --piece-h: 4.75in; --qr: 3in;
+    --title: 26pt; --desc: 13pt; --url: 9pt;
+    --gap: 0.18in; --pad: 0.20in;
+    grid-template-columns: auto;
+    gap: 0.5in;
+  }
+  /* 2x2 tiles the 7.25 x 10in grid exactly, with no gutter: adjacent cut lines
+     land on top of each other, which is what you want when trimming a stack.
+     A gutter here would not fit - 2 x 5in plus any gap exceeds the 10in sheet,
+     and the grid silently squashes the cards rather than overflowing. */
+  #sheet[data-size='card'] {
+    --piece-w: 3.625in; --piece-h: 5in;   --qr: 2.25in;
+    --title: 16pt; --desc: 10pt; --url: 7.5pt;
+    --gap: 0.14in; --pad: 0.20in;
+    grid-template-columns: repeat(2, auto);
+    gap: 0;
+  }
+  /* A single card has no second column to sit beside. */
+  #sheet[data-size='card'][data-copies='1'] {
+    grid-template-columns: auto;
+  }
+
+  .piece {
+    width: var(--piece-w);
+    height: var(--piece-h);
+    padding: var(--pad);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--gap);
+    text-align: center;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+    color: #000;
+  }
+  #sheet[data-cut='on'] .piece {
+    outline: 0.5pt dashed #999;
+  }
+
+  .p-title {
+    font-size: var(--title);
+    font-weight: 900;
+    line-height: 1.05;
+    letter-spacing: -0.01em;
+  }
+  .p-desc {
+    font-size: var(--desc);
+    font-weight: 400;
+    line-height: 1.3;
+    max-width: 90%;
+  }
+  .p-url {
+    font-size: var(--url);
+    font-weight: 700;
+    line-height: 1.2;
+    color: #444;
+  }
+  .p-title:empty,
+  .p-desc:empty,
+  .p-url:empty {
+    display: none;
+  }
+
+  .p-qr {
+    width: var(--qr);
+    height: var(--qr);
+    flex: none;
+  }
+  .p-qr svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+  /* Nothing encoded yet. */
+  .p-qr.is-empty {
+    border: 1px dashed #bbb;
+    border-radius: 4px;
+  }
+
+  /* ========================================================= screen only === */
+
+  @media screen {
+    /* qrcode's svg-tag renderer bakes in shape-rendering="crispEdges". That is
+       right at 600dpi and wrong in a scaled-down preview, where it makes module
+       rows visibly uneven - the code reads as corrupt when it is fine. */
+    .p-qr svg {
+      shape-rendering: geometricPrecision;
+    }
+
+    .qr-layout {
+      display: flex;
+      align-items: flex-start;
+      gap: 2rem;
+      max-width: 78rem;
+      margin: 0 auto;
+      padding: 2rem 1.5rem 4rem;
+    }
+    @media (max-width: 62rem) {
+      .qr-layout {
+        flex-direction: column;
+      }
+      .qr-editor {
+        position: static !important;
+        width: 100% !important;
+      }
+    }
+
+    .qr-preview {
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+    #preview-host {
+      position: relative;
+    }
+    /* Geometric scale, not zoom: zoom re-lays-out text at the scaled size, so
+       preview line breaks would diverge from print and it would stop being a
+       preview. The trade is that the scaled box keeps its unscaled layout size,
+       so the script sets #preview-host's height. */
+    #page {
+      transform: scale(var(--preview-scale, 1));
+      transform-origin: top left;
+      box-shadow: 0 1px 3px rgb(0 0 0 / 0.2), 0 10px 30px rgb(0 0 0 / 0.13);
+    }
+  }
+
+  /* ============================================================== editor === */
+
+  .qr-editor {
+    position: sticky;
+    top: 2rem;
+    flex: 0 0 21rem;
+    width: 21rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .qr-back {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--color-sm-green);
+  }
+  .qr-back:hover {
+    text-decoration: underline;
+  }
+  .qr-editor h1 {
+    margin-top: 0.35rem;
+    font-size: 2.25rem;
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: -0.02em;
+  }
+  .qr-editor h1 span {
+    color: var(--color-sm-green);
+  }
+  .qr-sub {
+    margin-top: 0.35rem;
+    font-size: 0.9rem;
+    color: #525252;
+  }
+
+  .qr-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+  .qr-field > span,
+  .qr-field > legend {
+    font-size: 0.72rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #404040;
+  }
+  .qr-field > span i,
+  .qr-field > legend i {
+    font-style: normal;
+    font-weight: 700;
+    text-transform: none;
+    letter-spacing: 0;
+    color: #a3a3a3;
+  }
+  .qr-field input[type='text'],
+  .qr-field textarea {
+    width: 100%;
+    padding: 0.55rem 0.7rem;
+    border: 1px solid #d4d4d4;
+    border-radius: 0.4rem;
+    background: #fff;
+    font: inherit;
+    font-size: 0.95rem;
+    resize: vertical;
+  }
+  .qr-field input[type='text']:focus,
+  .qr-field textarea:focus {
+    outline: 2px solid var(--color-sm-green);
+    outline-offset: -1px;
+    border-color: transparent;
+  }
+
+  .qr-seg {
+    display: flex;
+    gap: 0.35rem;
+  }
+  .qr-seg button {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    padding: 0.5rem 0.4rem;
+    border: 1px solid #d4d4d4;
+    border-radius: 0.4rem;
+    background: #fff;
+    font: inherit;
+    font-size: 0.82rem;
+    font-weight: 700;
+    line-height: 1.15;
+    cursor: pointer;
+  }
+  .qr-seg button i {
+    font-style: normal;
+    font-weight: 400;
+    font-size: 0.68rem;
+    color: #a3a3a3;
+  }
+  .qr-seg button:hover {
+    border-color: var(--color-sm-green);
+  }
+  .qr-seg button[aria-pressed='true'] {
+    border-color: var(--color-sm-green);
+    background: var(--color-sm-green);
+    color: #fff;
+  }
+  .qr-seg button[aria-pressed='true'] i {
+    color: rgb(255 255 255 / 0.75);
+  }
+  .qr-seg button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+  .qr-seg button:disabled:hover {
+    border-color: #d4d4d4;
+  }
+
+  .qr-check {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .qr-check input {
+    width: 1rem;
+    height: 1rem;
+    accent-color: var(--color-sm-green);
+  }
+
+  .qr-note,
+  .qr-warn {
+    margin-top: -0.5rem;
+    font-size: 0.78rem;
+    line-height: 1.35;
+  }
+  .qr-note {
+    color: #737373;
+  }
+  .qr-warn {
+    padding: 0.5rem 0.65rem;
+    border-radius: 0.4rem;
+    background: #fef3c7;
+    color: #713f12;
+  }
+  .qr-warn[data-level='error'] {
+    background: #fee2e2;
+    color: #7f1d1d;
+  }
+
+  .qr-print {
+    padding: 0.75rem;
+    border: 0;
+    border-radius: 0.4rem;
+    background: var(--color-sm-green);
+    color: #fff;
+    font: inherit;
+    font-size: 1rem;
+    font-weight: 900;
+    cursor: pointer;
+  }
+  .qr-print:hover:not(:disabled) {
+    background: var(--color-sm-green-dark);
+  }
+  .qr-print:disabled {
+    background: #d4d4d4;
+    cursor: not-allowed;
+  }
+  .qr-hint {
+    font-size: 0.75rem;
+    line-height: 1.4;
+    color: #737373;
+  }
+
+  /* =============================================================== print === */
+
+  @media print {
+    .no-print,
+    astro-dev-toolbar {
+      display: none !important;
+    }
+
+    /* Two live landmines in this repo. global.css sets html{background:ink},
+       which prints as a solid black page whenever "Background graphics" is
+       ticked; Base.astro puts min-h-screen on body, which is 100vh in print and
+       emits a blank second page. */
+    html,
+    body.qr-page {
+      background: #fff !important;
+      color: #000 !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      min-height: 0 !important;
+      height: auto !important;
+    }
+
+    .qr-layout {
+      display: block !important;
+      max-width: none !important;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+    #preview-host {
+      width: auto !important;
+      height: auto !important;
+    }
+    #page {
+      transform: none !important;
+      box-shadow: none !important;
+      /* The grid is 7.25in inside a 7.5in content box (A4 safety); without this
+         the whole 0.25in of slack lands on the right edge. */
+      margin: 0 auto !important;
+    }
+  }
+</style>
+
+<script>
+  import '../scripts/qr';
+</script>
