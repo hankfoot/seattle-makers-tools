@@ -26,7 +26,7 @@ const $ = <T extends HTMLElement>(id: string): T => {
 const fStock = $('f-stock');
 const fDir = $('f-dir');
 const fDirWrap = $('f-dir-wrap');
-const fTitle = $('f-title');
+const fTitle = $<HTMLInputElement>('f-title');
 const fSub = $('f-sub');
 const fUrl = $<HTMLInputElement>('f-url');
 const fUrlNote = $('f-url-note');
@@ -216,9 +216,9 @@ async function render(): Promise<void> {
   const mine = ++generation;
   selectSheet();
 
-  const titleHtml = clean(fTitle);
+  const titleText = fTitle.value.trim();
   const subHtml = clean(fSub);
-  const titleBlank = isBlank(titleHtml);
+  const titleBlank = titleText === '';
   const subBlank = isBlank(subHtml);
   const url = normalizeUrl(fUrl.value);
   const hasText = !titleBlank || !subBlank;
@@ -266,8 +266,8 @@ async function render(): Promise<void> {
   if (svg) proto.querySelector<HTMLElement>('.lb-qr')!.innerHTML = svg;
   const titleNode = proto.querySelector<HTMLElement>('.lb-title')!;
   const subNode = proto.querySelector<HTMLElement>('.lb-subtitle')!;
+  titleNode.textContent = titleText;
   // Already through clean(): b / i / br only, no attributes.
-  titleNode.innerHTML = titleHtml;
   subNode.innerHTML = subHtml;
   titleNode.classList.toggle('is-empty', titleBlank);
   subNode.classList.toggle('is-empty', subBlank);
@@ -283,7 +283,6 @@ async function render(): Promise<void> {
   // move together so the title/subtitle relationship never drifts.
   grid.replaceChildren(proto);
   const innerEl = proto.querySelector<HTMLElement>('.lb-inner')!;
-  const textEl = proto.querySelector<HTMLElement>('.lb-text')!;
 
   const apply = (k: number) => {
     proto.style.setProperty('--title', `${tpt * k}pt`);
@@ -300,10 +299,15 @@ async function render(): Promise<void> {
     // everything collapsed to the 6pt floor. Glyph side bearings get their room
     // from --ink-slack in the stylesheet instead, which is a layout inset
     // rather than a fudged comparison.
+    // Height is only ever measured on .lb-inner, which has the label's real
+    // height. .lb-text is a shrink-to-fit flex item - its clientHeight IS its
+    // content height, so the two differ only by sub-pixel rounding, and that
+    // difference grows with the font size until it trips any tolerance. Testing
+    // it dropped an 8x5 title from 54pt to 9.7pt whenever there was no
+    // subtitle, because the subtitle happened to round the discrepancy away.
     return (
       titleNode.scrollWidth <= titleNode.clientWidth &&
       subNode.scrollWidth <= subNode.clientWidth &&
-      textEl.scrollHeight <= textEl.clientHeight + 1 &&
       innerEl.scrollHeight <= innerEl.clientHeight + 1
     );
   };
@@ -321,8 +325,8 @@ async function render(): Promise<void> {
     const lh = parseFloat(getComputedStyle(titleNode).lineHeight);
     return lh > 0 ? Math.round(titleNode.scrollHeight / lh) : 1;
   };
-  /** Lines the copy actually asked for: one, plus any typed line breaks. */
-  const wanted = titleNode.querySelectorAll('br').length + 1;
+  /** A title is plain text, so it always wants exactly one line. */
+  const wanted = 1;
 
   const search = (ok: (k: number) => boolean) => {
     if (ok(1)) return 1;
@@ -495,7 +499,7 @@ for (const tools of document.querySelectorAll<HTMLElement>('.lb-tools')) {
 
 document.addEventListener('selectionchange', syncTools);
 
-for (const field of [fTitle, fSub]) {
+for (const field of [fSub]) {
   field.addEventListener('keydown', (e) => {
     if ((e.metaKey || e.ctrlKey) && (e.key === 'b' || e.key === 'i')) {
       e.preventDefault();
@@ -543,13 +547,10 @@ if (qAlign === 'left' || qAlign === 'center') {
     o.setAttribute('aria-pressed', String(o.dataset.align === align));
   }
 }
-for (const [key, el] of [
-  ['title', fTitle],
-  ['sub', fSub],
-] as const) {
-  const v = q.get(key);
-  if (v !== null) el.textContent = v;
-}
+const qTitle = q.get('title');
+if (qTitle !== null) fTitle.value = qTitle;
+const qSub = q.get('sub');
+if (qSub !== null) fSub.textContent = qSub;
 const qUrl = q.get('url');
 if (qUrl !== null) fUrl.value = qUrl;
 

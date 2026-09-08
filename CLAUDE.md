@@ -159,6 +159,19 @@ lines the copy asked for (one, plus any typed breaks), accepts that unless it
 costs more than a third of the size, then allows one extra line, then just fits
 the box. On a 4x2.5 that trades 7% of the type size for one line instead of two.
 
+**Never height-test `.lb-text` in the fit.** It is a shrink-to-fit flex item, so
+its clientHeight *is* its content height and the two differ only by sub-pixel
+rounding - a difference that grows with the font size until it trips any
+tolerance. Testing it dropped an 8x5 title from 54pt to 9.7pt whenever there was
+no subtitle, because a subtitle happened to round the discrepancy away, which
+made it look like a bug about missing subtext. Height belongs to `.lb-inner`,
+which has the label's real height.
+
+**The label title is plain text; only the subtitle is rich.** Bold and italics
+do nothing for a phrase that is already the largest, heaviest thing on the
+label, and a line break only invites the copy to grow. It also means the fit can
+assume the title wants exactly one line.
+
 **Label copy is rich text, sanitised to `b` / `i` / `br`.** `clean()` unwraps
 everything else, turning block elements into line breaks so text does not run
 together, and *deletes* `script`/`style` and friends outright - unwrapping those

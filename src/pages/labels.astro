@@ -57,23 +57,13 @@ const stocks = STOCKS.map((s) => ({
 
       <h2 class="lb-group">Label</h2>
 
-      <div class="lb-field">
-        <span class="lb-legend">
-          Title
-          <span class="lb-tools" data-for="f-title">
-            <button type="button" data-cmd="bold" title="Bold (⌘B)" aria-label="Bold"><b>B</b></button>
-            <button type="button" data-cmd="italic" title="Italic (⌘I)" aria-label="Italic"><i>I</i></button>
-          </span>
-        </span>
-        <div
-          id="f-title"
-          class="lb-rich"
-          contenteditable="true"
-          role="textbox"
-          aria-multiline="true"
-          aria-label="Title"
-          data-placeholder="Woodshop">Woodshop</div>
-      </div>
+      {/* Plain text on purpose. A label title is one short phrase; bold and
+          italics do nothing for it when it is already the largest, heaviest
+          thing on the label, and a line break only invites the copy to grow. */}
+      <label class="lb-field">
+        <span>Title</span>
+        <input id="f-title" type="text" maxlength="60" value="Woodshop" placeholder="Woodshop" />
+      </label>
 
       <div class="lb-field">
         <span class="lb-legend">
@@ -92,7 +82,7 @@ const stocks = STOCKS.map((s) => ({
           aria-label="Subtitle"
           data-placeholder="Certification required"></div>
       </div>
-      <p class="lb-note">Enter for a new line. ⌘B / ⌘I for bold and italic.</p>
+      <p class="lb-note">Subtitle takes Enter for a new line, ⌘B / ⌘I for bold and italic.</p>
 
       <fieldset class="lb-field">
         <legend>Align</legend>
@@ -239,8 +229,7 @@ const stocks = STOCKS.map((s) => ({
     padding-right: 0.02in;
     text-align: left;
   }
-  /* Typed newlines are real newlines on the label. */
-  .lb-title,
+  /* Typed newlines are real newlines on the label - subtitle only. */
   .lb-subtitle {
     white-space: pre-wrap;
   }

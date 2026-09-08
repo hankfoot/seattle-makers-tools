@@ -205,8 +205,8 @@ these pages are full-bleed by necessity — the die-cut is where it is, so the
 page cannot carry a safety margin. Anything other than true size puts the ink
 between the labels.
 
-Title and copy take **bold, italics and line breaks** — ⌘B / ⌘I, Enter for a new
-line — and align left or centred. Type sizes itself to the label and shrinks to fit, so a long title stays on
+The **subtitle** takes bold, italics and line breaks — ⌘B / ⌘I, Enter for a new
+line. The title is plain text by design. Both align left or centred. Type sizes itself to the label and shrinks to fit, so a long title stays on
 the label instead of breaking mid-word, and the title-to-copy ratio stays the
 same (1.8×) on every stock. Two things to watch:
 
