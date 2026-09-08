@@ -184,9 +184,18 @@ still shows a real date instead of advertising a class that already ran.
 
 ## Printing a QR sign
 
-Open `/qr`, type a link, and add a title and description. Everything on the
-sheet is sized in inches, so the preview is the print — what you see is what
-comes out of the printer, at true size.
+Open `/qr`, type a link, and add an eyebrow, title and description. Everything
+on the sheet is sized in inches, so the preview is the print — what you see is
+what comes out of the printer, at true size.
+
+The sheet is laid out as three bands: a masthead (small-caps eyebrow over a
+title ruled top and bottom), the code with its description filling the middle,
+and an imprint line at the foot carrying the link and the Seattle Makers name.
+Every mark is black — the hierarchy comes from size, weight, tracking and white
+space, so it photocopies perfectly and costs nothing extra to print.
+
+Leave a field empty and it disappears cleanly: no title also removes the rules
+that bracket it.
 
 | Size | Piece | Fill sheet |
 | --- | --- | --- |

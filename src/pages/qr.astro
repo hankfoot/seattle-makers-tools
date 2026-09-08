@@ -42,6 +42,11 @@ import Base from '../layouts/Base.astro';
       <p id="f-url-note" class="qr-note" hidden></p>
 
       <label class="qr-field">
+        <span>Eyebrow <i>the small line on top</i></span>
+        <input id="f-eyebrow" type="text" maxlength="24" value="scan to" placeholder="scan to" />
+      </label>
+
+      <label class="qr-field">
         <span>Title <i>above the code</i></span>
         <input id="f-title" type="text" maxlength="60" placeholder="Join Seattle Makers" />
       </label>
@@ -113,10 +118,18 @@ import Base from '../layouts/Base.astro';
       built in JS so the structure is readable next to the CSS that sizes it. */}
   <template id="piece-tpl">
     <div class="piece">
-      <p class="p-title"></p>
-      <div class="p-qr"></div>
-      <p class="p-desc"></p>
-      <p class="p-url"></p>
+      <div class="p-head">
+        <p class="p-eyebrow"></p>
+        <p class="p-title"></p>
+      </div>
+      <div class="p-body">
+        <div class="p-qr"></div>
+        <p class="p-desc"></p>
+      </div>
+      <div class="p-foot">
+        <span class="p-url"></span>
+        <span class="p-mark">seattle makers</span>
+      </div>
     </div>
   </template>
 </Base>
@@ -158,15 +171,15 @@ import Base from '../layouts/Base.astro';
 
   #sheet[data-size='full'] {
     --piece-w: 7.25in; --piece-h: 10in;   --qr: 5.5in;
-    --title: 44pt; --desc: 18pt; --url: 12pt;
-    --gap: 0.30in; --pad: 0.25in;
+    --eyebrow: 13pt; --title: 46pt; --desc: 17pt; --url: 11pt; --mark: 11pt;
+    --track: 0.34em; --gap: 0.30in; --pad: 0.5in; --rule: 0.9pt;
     grid-template-columns: auto;
     gap: 0;
   }
   #sheet[data-size='half'] {
     --piece-w: 7.25in; --piece-h: 4.75in; --qr: 3in;
-    --title: 26pt; --desc: 13pt; --url: 9pt;
-    --gap: 0.18in; --pad: 0.20in;
+    --eyebrow: 9pt; --title: 27pt; --desc: 12.5pt; --url: 8.5pt; --mark: 8.5pt;
+    --track: 0.30em; --gap: 0.16in; --pad: 0.34in; --rule: 0.7pt;
     grid-template-columns: auto;
     gap: 0.5in;
   }
@@ -176,8 +189,8 @@ import Base from '../layouts/Base.astro';
      and the grid silently squashes the cards rather than overflowing. */
   #sheet[data-size='card'] {
     --piece-w: 3.625in; --piece-h: 5in;   --qr: 2.25in;
-    --title: 16pt; --desc: 10pt; --url: 7.5pt;
-    --gap: 0.14in; --pad: 0.20in;
+    --eyebrow: 6.5pt; --title: 16pt; --desc: 9pt; --url: 6.5pt; --mark: 6.5pt;
+    --track: 0.26em; --gap: 0.11in; --pad: 0.26in; --rule: 0.6pt;
     grid-template-columns: repeat(2, auto);
     gap: 0;
   }
@@ -186,15 +199,16 @@ import Base from '../layouts/Base.astro';
     grid-template-columns: auto;
   }
 
+  /* Three bands: masthead at the top, the code and its description filling the
+     middle, an imprint line ruled off at the foot. Everything is black - the
+     hierarchy is carried by size, weight, tracking and air, which is also what
+     keeps it photocopyable. */
   .piece {
     width: var(--piece-w);
     height: var(--piece-h);
     padding: var(--pad);
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: var(--gap);
     text-align: center;
     overflow: hidden;
     overflow-wrap: anywhere;
@@ -204,35 +218,88 @@ import Base from '../layouts/Base.astro';
     outline: 0.5pt dashed #999;
   }
 
+  /* grow but never shrink, so text that does not fit overflows visibly and the
+     script's scrollHeight check can catch it instead of it being squashed */
+  .p-body {
+    flex: 1 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--gap);
+  }
+
+  .p-eyebrow {
+    margin-bottom: calc(var(--gap) * 0.6);
+    font-size: var(--eyebrow);
+    font-weight: 700;
+    line-height: 1;
+    text-transform: uppercase;
+    /* the tracking is the whole effect; without it this is just small text */
+    letter-spacing: var(--track);
+    /* letter-spacing adds a trailing space that breaks optical centring */
+    text-indent: var(--track);
+  }
   .p-title {
+    padding: calc(var(--gap) * 0.5) 0;
+    border-top: var(--rule) solid #000;
+    border-bottom: var(--rule) solid #000;
     font-size: var(--title);
     font-weight: 900;
-    line-height: 1.05;
-    letter-spacing: -0.01em;
+    line-height: 1.02;
+    letter-spacing: -0.02em;
+    /* Evens the line lengths instead of filling greedily, which is what stops a
+       two-word title from breaking as one long line and one orphan. */
+    text-wrap: balance;
   }
   .p-desc {
+    max-width: 26em;
     font-size: var(--desc);
     font-weight: 400;
-    line-height: 1.3;
-    max-width: 90%;
+    line-height: 1.35;
+    text-wrap: balance;
+  }
+
+  .p-foot {
+    display: flex;
+    align-items: baseline;
+    gap: 1em;
+    padding-top: calc(var(--gap) * 0.5);
+    border-top: var(--rule) solid #000;
+    font-size: var(--url);
+    line-height: 1.2;
   }
   /* The printed link is a courtesy for anyone who will not scan; past two lines
      it stops being readable and starts crowding the code. Clamp rather than
-     let a long query string take over the card. */
+     let a long query string take over the piece. */
   .p-url {
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
     overflow: hidden;
-    font-size: var(--url);
+    min-width: 0;
+    text-align: left;
     font-weight: 700;
-    line-height: 1.2;
-    color: #444;
   }
+  .p-mark {
+    margin-left: auto;
+    flex: none;
+    font-size: var(--mark);
+    font-weight: 900;
+    letter-spacing: -0.02em;
+    white-space: nowrap;
+  }
+
+  .p-eyebrow:empty,
   .p-title:empty,
   .p-desc:empty,
   .p-url:empty {
     display: none;
+  }
+  /* With no title there is nothing for the rules to bracket. */
+  .p-title:empty + .p-eyebrow,
+  .p-head:has(.p-title:empty) .p-eyebrow {
+    margin-bottom: 0;
   }
 
   .p-qr {

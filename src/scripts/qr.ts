@@ -32,6 +32,7 @@ const $ = <T extends HTMLElement>(id: string): T => {
 
 const fUrl = $<HTMLInputElement>('f-url');
 const fUrlNote = $<HTMLParagraphElement>('f-url-note');
+const fEyebrow = $<HTMLInputElement>('f-eyebrow');
 const fTitle = $<HTMLInputElement>('f-title');
 const fDesc = $<HTMLTextAreaElement>('f-desc');
 const fSize = $('f-size');
@@ -98,6 +99,7 @@ function setWarning(msg: string, level: 'warn' | 'error' | null): void {
 
 async function render(): Promise<void> {
   const url = normalizeUrl(fUrl.value);
+  const eyebrow = fEyebrow.value.trim();
   const title = fTitle.value.trim();
   const desc = fDesc.value.trim();
 
@@ -149,6 +151,7 @@ async function render(): Promise<void> {
   } else {
     qrSlot.classList.add('is-empty');
   }
+  piece.querySelector<HTMLElement>('.p-eyebrow')!.textContent = eyebrow;
   piece.querySelector<HTMLElement>('.p-title')!.textContent = title;
   piece.querySelector<HTMLElement>('.p-desc')!.textContent = desc;
   piece.querySelector<HTMLElement>('.p-url')!.textContent =
@@ -239,7 +242,7 @@ fCut.addEventListener('change', () => {
   void render();
 });
 
-for (const el of [fUrl, fTitle, fDesc]) {
+for (const el of [fUrl, fEyebrow, fTitle, fDesc]) {
   el.addEventListener('input', () => void render());
 }
 fShowUrl.addEventListener('change', () => void render());
@@ -259,6 +262,7 @@ function applyParams(): void {
     if (v !== null) el.value = v;
   };
   set(fUrl, 'url');
+  set(fEyebrow, 'eyebrow');
   set(fTitle, 'title');
   set(fDesc, 'desc');
 

@@ -53,6 +53,10 @@ Done:
 - `?url=&title=&desc=&size=&copies=&cut=&showurl=` prefills the form. Not
   persistence: it makes one sign reproducible and is what lets the print
   verification run headless.
+- The sheet is an editorial layout: masthead (tracked small-caps eyebrow over a
+  title ruled above and below), code + description in the middle band, imprint
+  line at the foot. Black only, on purpose - it photocopies, and the hierarchy
+  is carried by size, weight, tracking and air rather than colour.
 - Editor chrome echoes the index page (lowercase lockup, 4px green rule) and
   the preview shows the whole 8.5 x 11in sheet rather than just the printable
   area, so the margin you get is the margin you see. The dashed printable-area
@@ -150,6 +154,16 @@ receive, so a scoped `.p-qr svg` rule silently fails to match. The sheet CSS is
 `shape-rendering="crispEdges"`, which is right at 600dpi and wrong in a
 scaled-down preview where it makes module rows look uneven - overridden to
 `geometricPrecision` under `@media screen` only.
+
+**The middle band is `flex: 1 0 auto`, never `1 1 auto`.** It has to grow into
+the space between masthead and imprint, but it must not *shrink*: a shrinking
+band silently absorbs text that does not fit, which would defeat the
+`scrollHeight > clientHeight` overflow check and print a clipped card with no
+warning.
+
+**`text-wrap: balance` on the title and description** is what stops a card
+description breaking as one full line plus a one-word orphan. Chrome honours it
+in print, which is the only renderer that matters here.
 
 **Astro eats whitespace at element boundaries across a line break.** `and leave\n<b>Scale</b>`
 renders as "leaveScale". Keep `<b>` flush against its neighbouring text.
