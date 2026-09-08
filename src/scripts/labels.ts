@@ -77,7 +77,6 @@ const quill = new Quill('#f-sub', {
 const fUrl = $<HTMLInputElement>('f-url');
 const fUrlNote = $('f-url-note');
 const fAlign = $('f-align');
-const alignNote = $('align-note');
 const fAll = $('f-all');
 const fNone = $('f-none');
 const fCount = $('f-count');
@@ -422,10 +421,7 @@ async function render(): Promise<void> {
   // Build one label, then clone it into every switched-on position.
   const proto = tpl.content.firstElementChild!.cloneNode(true) as HTMLElement;
   proto.dataset.flow = flow;
-  const resolvedAlign = alignMode === 'auto' ? autoAlign(flow, hasQr) : alignMode;
-  proto.dataset.align = resolvedAlign;
-  alignNote.textContent =
-    alignMode === 'auto' ? `Auto chose ${resolvedAlign === 'left' ? 'left' : 'center'}.` : '';
+  proto.dataset.align = alignMode === 'auto' ? autoAlign(flow, hasQr) : alignMode;
   proto.dataset.rot = upright ? '1' : '0';
   proto.style.setProperty('--pad-x', `${pad.x}in`);
   proto.style.setProperty('--pad-y', `${pad.y}in`);

@@ -174,8 +174,7 @@ best for a title-and-subtitle label: center everywhere except a code sitting
 *beside* the words, where a centered column drifts away from the code and the
 label stops looking like one object. But auto cannot know the copy is a
 checklist, which wants a left edge whatever the code is doing - so Auto is the
-default, not the verdict, and Left/Center override it. The control reports what
-auto resolved to, so it never looks like nothing happened.
+default, not the verdict, and Left/Center override it.
 
 **Type starts 15% smaller when there is a code**, because the code takes about a
 third of a wide label's width or a good part of a tall one's height, and type
