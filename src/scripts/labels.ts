@@ -81,8 +81,15 @@ let gridSheet: LabelSheet = byId('4x2.5-h');
 let contentSheet: LabelSheet = byId('4x2.5-h');
 let upright = false;
 let sheet: LabelSheet = byId('4x2.5-h');
-/** Positions still on the physical sheet, by index. Keyed per sheet id. */
-let on = new Set<number>();
+/**
+ * Which die-cut positions get printed, by index.
+ *
+ * Starts as a single label, because that is what people actually come here to
+ * do - one tool tag, one bench label. Filling the sheet is the exception, and
+ * it is one click away.
+ */
+const FIRST_ONLY = () => new Set([0]);
+let on = FIRST_ONLY();
 
 /* ------------------------------------------------------------ rich text */
 
@@ -228,8 +235,8 @@ function selectSheet(): void {
   if (horiz !== gridSheet) {
     gridSheet = horiz;
     // Positions do not carry across stock - a 20-up sheet's index 14 means
-    // nothing on a 2-up sheet. Start fresh, all on.
-    on = new Set(Array.from({ length: perSheet(gridSheet) }, (_, i) => i));
+    // nothing on a 2-up sheet. Start over at one label.
+    on = FIRST_ONLY();
   }
   for (const b of fDir.querySelectorAll('button')) {
     const d = b.dataset.dir as 'horizontal' | 'vertical';
@@ -416,6 +423,7 @@ async function render(): Promise<void> {
     cell.style.top = `${gridSheet.origin.y + r * (gridSheet.size.h + gridSheet.gutter.y)}in`;
     cell.dataset.on = on.has(i) ? '1' : '0';
     cell.dataset.i = String(i);
+    cell.querySelector<HTMLElement>('.lb-num')!.textContent = String(i + 1);
     grid.append(cell);
   }
 
@@ -453,7 +461,7 @@ async function render(): Promise<void> {
 
   pvSheet.textContent = `${gridSheet.page.w} × ${gridSheet.page.h}in portrait`;
   pvLabel.textContent = `${contentSheet.label} · ${on.size} of ${total}`;
-  fCount.textContent = `${on.size} of ${total}`;
+  fCount.textContent = on.size === 1 ? '1 label' : `${on.size} of ${total}`;
   fPrint.disabled = on.size === 0 || (!hasText && !svg);
   fit();
 }
@@ -487,7 +495,7 @@ grid.addEventListener('click', (e) => {
   cell.dataset.on = on.has(i) ? '1' : '0';
   const total = perSheet(gridSheet);
   pvLabel.textContent = `${contentSheet.label} · ${on.size} of ${total}`;
-  fCount.textContent = `${on.size} of ${total}`;
+  fCount.textContent = on.size === 1 ? '1 label' : `${on.size} of ${total}`;
   fPrint.disabled = on.size === 0;
 });
 
@@ -589,19 +597,18 @@ if (qSub !== null) fSub.textContent = qSub;
 const qUrl = q.get('url');
 if (qUrl !== null) fUrl.value = qUrl;
 
-/* Start with every position live, then drop the ones named by ?off= - a sheet
-   you have already peeled from is worth being able to bookmark. Applied after
-   the first render, because the sheet (and so the position count) is resolved
-   there. */
-const initialOff = (q.get('off') ?? '')
+/* ?on=3,4,7 names the positions to print, 1-based to match the sheet map. It
+   replaces the old ?off=, which only made sense back when the default was a
+   full sheet. Applied after the first render, because the sheet - and so how
+   many positions exist - is resolved there. */
+const initialOn = (q.get('on') ?? '')
   .split(',')
   .map((v) => Number(v.trim()))
   .filter((v) => Number.isInteger(v) && v >= 1);
 
-on = new Set(Array.from({ length: perSheet(byId('4x2.5-h')) }, (_, i) => i));
 void render().then(() => {
-  if (!initialOff.length) return;
-  // 1-based in the URL: the sheet map reads as label 1..n, not 0..n-1.
-  for (const v of initialOff) on.delete(v - 1);
+  if (!initialOn.length) return;
+  const total = perSheet(gridSheet);
+  on = new Set(initialOn.filter((v) => v <= total).map((v) => v - 1));
   return render();
 });

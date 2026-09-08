@@ -202,6 +202,10 @@ words a quarter turn inside each label. So a sheet is never wasted by picking
 the wrong one, the preview always matches the sheet in your hand, and every job
 feeds the same way.
 
+**One label is printed by default.** Positions are numbered on the preview:
+green with a solid edge means it prints, grey and ghosted means it does not.
+Click to switch a position on or off, or use All / Clear.
+
 **In the print dialog: Margins → None, Scale → 100.** Unlike the sign tool,
 these pages are full-bleed by necessity — the die-cut is where it is, so the
 page cannot carry a safety margin. Anything other than true size puts the ink
@@ -220,8 +224,8 @@ same (1.8×) on every stock. Two things to watch:
   hold a code much over 0.6mm per module with a normal URL, and the tool warns
   below 0.8mm. Use a short link, or a bigger label.
 - **Nothing is saved.** To keep a sheet, bookmark it —
-  `?stock=&dir=&title=&sub=&url=&off=` fills the form, and `off=` takes the
-  listed positions (1-based) out of the run.
+  `?stock=&dir=&title=&sub=&url=&on=` fills the form, and `on=` names the
+  positions to print (1-based, matching the numbers on the preview).
 
 ## Printing a QR sign
 

@@ -52,7 +52,6 @@ const stocks = STOCKS.map((s) => ({
           <button type="button" data-dir="horizontal" aria-pressed="true">Across<i>wide label</i></button>
           <button type="button" data-dir="vertical" aria-pressed="false">Upright<i>tall label</i></button>
         </div>
-        <p class="lb-note">Same physical sheet either way — only the printing turns.</p>
       </fieldset>
 
       <h2 class="lb-group">Label</h2>
@@ -100,14 +99,13 @@ const stocks = STOCKS.map((s) => ({
 
       <p id="warn" class="lb-warn" hidden></p>
 
-      <h2 class="lb-group">Positions</h2>
+      <h2 class="lb-group">Printing</h2>
       <p class="lb-note">
-        Click a label on the sheet to switch it off — leave out any that have already been
-        peeled.
+        Click a position on the sheet to print it. Skip any already peeled off.
       </p>
       <div class="lb-picks">
         <button type="button" id="f-all" class="lb-mini">All</button>
-        <button type="button" id="f-none" class="lb-mini">None</button>
+        <button type="button" id="f-none" class="lb-mini">Clear</button>
         <span id="f-count" class="lb-count">—</span>
       </div>
 
@@ -131,6 +129,7 @@ const stocks = STOCKS.map((s) => ({
 
   <template id="label-tpl">
     <div class="lb-cell">
+      <span class="lb-num no-print" aria-hidden="true"></span>
       <div class="lb-inner">
         <div class="lb-qr"></div>
         <div class="lb-text">
@@ -335,28 +334,59 @@ const stocks = STOCKS.map((s) => ({
         0 12px 34px rgb(0 0 0 / 0.13);
     }
 
-    /* Every die-cut position is outlined so the sheet reads as a sheet, and the
-       switched-off ones stay visible as places you could still use. */
+    /* Three states, and they have to be tellable apart at a glance, because
+       getting this wrong wastes a sheet of stock:
+         printing  - white, solid green edge, content at full strength
+         empty     - grey, dashed edge, content ghosted so you can still picture it
+         hover     - green wash, whichever state it is in */
     .lb-cell {
-      outline: 1px dashed rgb(0 0 0 / 0.22);
       cursor: pointer;
-      transition: background-color 120ms ease;
+      outline: 1px dashed rgb(0 0 0 / 0.2);
+      outline-offset: -1px;
+      transition:
+        background-color 120ms ease,
+        outline-color 120ms ease;
     }
-    .lb-cell:hover {
-      background: rgb(16 115 60 / 0.07);
+    .lb-cell[data-on='1'] {
+      background: #fff;
+      outline: 2px solid var(--color-sm-green);
+      outline-offset: -2px;
     }
     .lb-cell[data-on='0'] {
-      background: rgb(0 0 0 / 0.035);
+      background: rgb(0 0 0 / 0.055);
     }
-    .lb-cell[data-on='0']:hover {
-      background: rgb(16 115 60 / 0.07);
+    /* Ghosted rather than hidden: you can see what would land there. */
+    .lb-cell[data-on='0'] .lb-inner {
+      opacity: 0.13;
     }
-    .lb-cell[data-on='0']::after {
-      content: '';
+    .lb-cell:hover {
+      background: rgb(16 115 60 / 0.1);
+      outline-color: var(--color-sm-green);
+    }
+    .lb-cell[data-on='0']:hover .lb-inner {
+      opacity: 0.3;
+    }
+
+    /* Position number, so the sheet map and the physical sheet can be talked
+       about in the same terms. */
+    .lb-num {
       position: absolute;
-      inset: 0;
-      background:
-        linear-gradient(to bottom right, transparent calc(50% - 0.5px), rgb(0 0 0 / 0.14) 50%, transparent calc(50% + 0.5px));
+      z-index: 1;
+      top: 0;
+      left: 0;
+      min-width: 1.15rem;
+      padding: 0.05rem 0.25rem;
+      font-family: var(--font-sans);
+      font-size: 0.62rem;
+      font-weight: 900;
+      line-height: 1.5;
+      text-align: center;
+      color: #fff;
+      background: rgb(0 0 0 / 0.28);
+      border-bottom-right-radius: 0.25rem;
+    }
+    .lb-cell[data-on='1'] .lb-num {
+      background: var(--color-sm-green);
     }
 
     .lb-bar {

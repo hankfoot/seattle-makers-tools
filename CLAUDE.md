@@ -139,6 +139,19 @@ the grid is placed in absolute inches from the physical page corner. The cost is
 that the sheet is full-bleed and Chrome's "fit to printable area" would ruin it,
 hence the explicit Margins: None / Scale: 100 instruction in the UI.
 
+**One label is the base case, not a full sheet.** People come here to make one
+tool tag or one bench label; filling the sheet is the exception and is one click
+away. The default selection is a single position, and `?on=` names positions to
+print (it replaced `?off=`, which only made sense when the default was a full
+sheet).
+
+**The three position states have to be tellable apart at a glance** - getting it
+wrong wastes a sheet of stock. Printing is white with a solid green edge and a
+green number; not printing is grey and dashed with the content ghosted to 13% so
+you can still picture what would land there; hover washes green either way. All
+of it, numbers included, is `@media screen` - verified by printing a partial
+sheet and confirming every skipped cell is pure white.
+
 **Label alignment is derived, not chosen.** Centre reads best everywhere except
 one case: a code sitting *beside* the words, where a centred column drifts away
 from the code and the label stops looking like one object. That is exactly
