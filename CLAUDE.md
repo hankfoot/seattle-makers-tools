@@ -211,6 +211,12 @@ lines the copy asked for (one, plus any typed breaks), accepts that unless it
 costs more than a third of the size, then allows one extra line, then just fits
 the box. On a 4x2.5 that trades 7% of the type size for one line instead of two.
 
+**Base rules must sit above the breakpoint that overrides them.** `.lb-col` gets
+`display: contents` inside the max-width block so the sheet can be ordered
+between the fields and the Print button, but the desktop `display: flex` was
+written after it in the source - same specificity, later wins, and the reorder
+silently did nothing. Nested media queries do not raise specificity.
+
 **`align-items: flex-start` on a stacked layout overflows the window.** Both tool
 pages are a two-column flex row that becomes a column below a breakpoint. In a
 column container `align-items` governs *width*, so the flex-start inherited from

@@ -206,10 +206,12 @@ feeds the same way.
 green with a solid edge means it prints, grey and ghosted means it does not.
 Click to switch a position on or off, or use All / Clear.
 
-**In the print dialog: Margins → None, Scale → 100.** Unlike the sign tool,
-these pages are full-bleed by necessity — the die-cut is where it is, so the
-page cannot carry a safety margin. Anything other than true size puts the ink
-between the labels.
+**Load the sheet face down, with the top edge towards you** (the Brother
+printers in the space). **Then check the print dialog every time** — no headers
+or footers, margins off, scale at 100%. Browsers reset these between sessions
+and sometimes between jobs. Unlike the sign tool these pages are full-bleed by
+necessity — the die-cut is where it is, so the page cannot carry a safety
+margin, and anything other than true size puts the ink between the labels.
 
 The **subtitle** takes bold, italics and line breaks — ⌘B / ⌘I, Enter for a new
 line. The title is plain text by design.

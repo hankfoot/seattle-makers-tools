@@ -22,7 +22,12 @@ const stocks = STOCKS.map((s) => ({
   bodyClass="lb-page"
 >
   <div class="lb-layout">
-    <aside class="no-print lb-editor">
+    {/* Wrapper so the sidebar reads as one column on a wide screen. Below the
+        breakpoint it becomes display:contents, which drops it out of the box
+        tree and lets the fields, the sheet and the Print button be ordered
+        independently - preview above the button. */}
+    <div class="lb-col no-print">
+      <aside class="lb-editor">
       <header class="lb-head">
         <a href="/" class="lb-back">← tools</a>
         <p class="lb-eyebrow">seattle makers</p>
@@ -109,11 +114,18 @@ const stocks = STOCKS.map((s) => ({
         <span id="f-count" class="lb-count">—</span>
       </div>
 
-      <button id="f-print" type="button" class="lb-print">Print</button>
-      <p class="lb-hint">
-        In the print dialog: uncheck <b>Headers and footers</b>, set <b>Margins</b> to <b>None</b>, and set <b>Scale</b> to <b>100</b>. The labels only line up at true size.
-      </p>
-    </aside>
+      </aside>
+
+      <div class="lb-actions">
+        <button id="f-print" type="button" class="lb-print">Print</button>
+        <p class="lb-hint">
+          Load the sheet <b>face down, top edge towards you</b>.
+        </p>
+        <p class="lb-hint">
+          Check the print dialog each time — no headers or footers, margins off, scale at 100%. The labels only line up at true size.
+        </p>
+      </div>
+    </div>
 
     <div class="lb-preview">
       <div class="lb-bar no-print">
@@ -307,6 +319,20 @@ const stocks = STOCKS.map((s) => ({
       margin: 0 auto;
       padding: 2rem 1.5rem 4rem;
     }
+    .lb-preview {
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+    .lb-col {
+      position: sticky;
+      top: 2rem;
+      flex: 0 0 22rem;
+      width: 22rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
     @media (max-width: 66rem) {
       .lb-layout {
         flex-direction: column;
@@ -316,19 +342,29 @@ const stocks = STOCKS.map((s) => ({
            816px wide inside a 345px window, overflowing instead of scaling. */
         align-items: stretch;
       }
+      /* Out of the box tree, so its children become flex items of .lb-layout
+         and can be ordered around the sheet. */
+      .lb-col {
+        display: contents;
+      }
       .lb-editor {
         position: static !important;
         width: 100% !important;
+        order: 1;
       }
+      /* The sheet belongs above the button you press to commit it to stock. */
       .lb-preview {
         width: 100%;
+        order: 2;
+      }
+      .lb-actions {
+        order: 3;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
       }
     }
 
-    .lb-preview {
-      flex: 1 1 auto;
-      min-width: 0;
-    }
     #preview-host {
       position: relative;
     }
@@ -415,13 +451,14 @@ const stocks = STOCKS.map((s) => ({
   /* ============================================================== editor === */
 
   .lb-editor {
-    position: sticky;
-    top: 2rem;
-    flex: 0 0 22rem;
-    width: 22rem;
     display: flex;
     flex-direction: column;
     gap: 1rem;
+  }
+  .lb-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
   }
   .lb-back {
     font-size: 0.8rem;
