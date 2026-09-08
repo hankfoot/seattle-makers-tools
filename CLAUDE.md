@@ -112,6 +112,18 @@ the grid is placed in absolute inches from the physical page corner. The cost is
 that the sheet is full-bleed and Chrome's "fit to printable area" would ruin it,
 hence the explicit Margins: None / Scale: 100 instruction in the UI.
 
+**Label padding is one constant (0.1in), not a proportion.** It is a
+registration allowance - protection against the sheet feeding slightly out of
+true - and that error is the same size on a 4x1 strip as on an 8x5 board. The
+first version scaled it with the label (0.06in to 0.12in), which gave the
+smallest labels the least protection: backwards. The gap between code and words
+*does* still scale, because that one is composition rather than tolerance.
+
+**Everything on a label hangs off one left margin**, in both flows, so the code,
+title and subtitle start on the same vertical line. Titles use `text-wrap:
+pretty` rather than `balance` - balance evens the line lengths, which reads as
+ragged against a hard left edge.
+
 **Label type auto-fits by measuring the title, not its wrapper.** A wrapper that
 has already wrapped reports no overflow, so the first version of this shrank
 nothing and "Woodshop" printed as "Woodsho / p". `.lb-title` therefore sets

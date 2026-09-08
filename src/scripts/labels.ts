@@ -56,30 +56,40 @@ let on = new Set<number>();
 /* ------------------------------------------------------------------ type */
 
 /**
+ * One padding value for every stock. It is a registration allowance, not a
+ * composition choice: what it protects against is the sheet feeding a fraction
+ * of an inch out of true, and that error is the same size on a 4x1 strip as on
+ * an 8x5 board. Scaling it with the label - as this did at first, 0.06in to
+ * 0.12in - gave the smallest labels the least protection, which is backwards.
+ */
+const PAD = 0.1;
+
+/**
  * Type scales off the label's short side, so a 4x1 strip and an 8x5 board both
  * end up with something proportionate. The clamps stop the biggest stock from
  * turning into a billboard and the smallest from going unreadable.
+ *
+ * The gap between code and words does still scale - unlike the padding it is a
+ * composition choice, and a big label wants more air there than a small one.
  */
 function scaleFor(s: LabelSheet) {
   const short = Math.min(s.size.w, s.size.h);
-  const pad = Math.min(0.12, Math.max(0.05, short * 0.06));
   const title = Math.min(60, Math.max(12, short * 72 * 0.2));
   const sub = Math.min(22, Math.max(7, title * 0.42));
   const gap = Math.max(0.06, short * 0.07);
-  return { pad, title, sub, gap };
+  return { pad: PAD, title, sub, gap };
 }
 
 /** Wide labels put the code beside the words; tall ones stack it above. */
 const flowFor = (s: LabelSheet) => (s.size.w / s.size.h >= 1.35 ? 'row' : 'column');
 
 function qrInchesFor(s: LabelSheet, hasText: boolean) {
-  const { pad } = scaleFor(s);
   if (flowFor(s) === 'row') {
-    const box = s.size.h - pad * 2;
-    return hasText ? Math.min(box, s.size.w * 0.34) : Math.min(box, s.size.w - pad * 2);
+    const box = s.size.h - PAD * 2;
+    return hasText ? Math.min(box, s.size.w * 0.34) : Math.min(box, s.size.w - PAD * 2);
   }
-  const box = s.size.w - pad * 2;
-  return hasText ? Math.min(box, s.size.h * 0.46) : Math.min(box, s.size.h - pad * 2);
+  const box = s.size.w - PAD * 2;
+  return hasText ? Math.min(box, s.size.h * 0.46) : Math.min(box, s.size.h - PAD * 2);
 }
 
 /* --------------------------------------------------------------- preview */
