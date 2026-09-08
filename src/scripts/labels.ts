@@ -41,7 +41,6 @@ const grid = $('grid');
 const tpl = $<HTMLTemplateElement>('label-tpl');
 const pvSheet = $('pv-sheet');
 const pvLabel = $('pv-label');
-const pvZoom = $('pv-zoom');
 
 /* @page cannot be selected by class, so orientation is swapped by rewriting it. */
 const pageRule = document.createElement('style');
@@ -206,7 +205,6 @@ function fit(): void {
   const scale = Math.min(1, host.clientWidth / (gridSheet.page.w * PX_PER_IN));
   host.style.setProperty('--preview-scale', String(scale));
   host.style.height = `${gridSheet.page.h * PX_PER_IN * scale}px`;
-  pvZoom.textContent = `${Math.round(scale * 100)}%`;
 }
 
 function setWarning(msg: string, level: 'warn' | 'error' | null): void {

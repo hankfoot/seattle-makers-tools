@@ -427,10 +427,17 @@ import Base from '../layouts/Base.astro';
     @media (max-width: 62rem) {
       .qr-layout {
         flex-direction: column;
+        /* stretch, not the flex-start inherited above: in a column container
+           align-items governs width, and flex-start would size the preview to
+           its own content and overflow a narrow window rather than scale. */
+        align-items: stretch;
       }
       .qr-editor {
         position: static !important;
         width: 100% !important;
+      }
+      .qr-preview {
+        width: 100%;
       }
     }
 

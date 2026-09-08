@@ -211,6 +211,15 @@ lines the copy asked for (one, plus any typed breaks), accepts that unless it
 costs more than a third of the size, then allows one extra line, then just fits
 the box. On a 4x2.5 that trades 7% of the type size for one line instead of two.
 
+**`align-items: flex-start` on a stacked layout overflows the window.** Both tool
+pages are a two-column flex row that becomes a column below a breakpoint. In a
+column container `align-items` governs *width*, so the flex-start inherited from
+the row layout made the preview size to its own content - 816px of sheet inside
+a 345px window, overflowing sideways instead of scaling. The stacked media query
+has to set `align-items: stretch` and give the preview `width: 100%`. This is
+the same trap as the `.lb-text` note below, one level up: a flex item in a
+column container sizes to content unless told otherwise.
+
 **Never height-test `.lb-text` in the fit.** It is a shrink-to-fit flex item, so
 its clientHeight *is* its content height and the two differ only by sub-pixel
 rounding - a difference that grows with the font size until it trips any

@@ -119,7 +119,6 @@ const stocks = STOCKS.map((s) => ({
       <div class="lb-bar no-print">
         <span id="pv-sheet" class="pv-sheet">—</span>
         <span id="pv-label" class="pv-label">—</span>
-        <span id="pv-zoom" class="pv-zoom">100%</span>
       </div>
       <div id="preview-host">
         <div id="page"><div id="grid"></div></div>
@@ -311,10 +310,18 @@ const stocks = STOCKS.map((s) => ({
     @media (max-width: 66rem) {
       .lb-layout {
         flex-direction: column;
+        /* stretch, not the flex-start inherited from the two-column layout:
+           in a column container align-items governs *width*, and flex-start
+           makes each child size to its own content - which left the preview
+           816px wide inside a 345px window, overflowing instead of scaling. */
+        align-items: stretch;
       }
       .lb-editor {
         position: static !important;
         width: 100% !important;
+      }
+      .lb-preview {
+        width: 100%;
       }
     }
 
@@ -402,10 +409,6 @@ const stocks = STOCKS.map((s) => ({
     }
     .pv-label {
       color: var(--color-sm-green);
-    }
-    .pv-zoom {
-      margin-left: auto;
-      font-variant-numeric: tabular-nums;
     }
   }
 
