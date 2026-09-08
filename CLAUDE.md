@@ -202,6 +202,14 @@ item without it, the text box sizes to its own content, so scrollWidth can never
 exceed clientWidth, the auto-fit has nothing to measure, and the words run off
 the label.
 
+**The shaded code box needs `print-color-adjust: exact`.** Browsers do not print
+backgrounds unless the viewer ticks "Background graphics", so without it the box
+shows on screen and vanishes on paper - the same trap that forced the sign
+tool's eyebrow rule to be built from borders rather than a knockout. It is set
+on the `code` element alone, so the rest of the sheet stays ink-free and
+photocopy-friendly. Checked by printing and looking for the grey block, not by
+assuming.
+
 **The subtitle editor is Quill**, restricted to bold / italic / code / lists -
 exactly what `clean()` allows, so it cannot offer a format that would be
 stripped back out. Two traps, both of which fail silently:

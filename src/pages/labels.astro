@@ -312,11 +312,22 @@ const stocks = STOCKS.map((s) => ({
     font-variant-numeric: tabular-nums;
   }
   /* System monospace: always present, prints fine, and nothing to self-host. */
-  .lb-subtitle code,
-  .lb-rich code {
+  .lb-subtitle code {
     font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
     /* monospace runs wide and tall against Lato at the same nominal size */
     font-size: 0.92em;
+    padding: 0.1em 0.32em;
+    border-radius: 0.3em;
+    background: #e9e9e9;
+    /* Browsers do not print backgrounds unless the viewer ticks "Background
+       graphics", so the box would show on screen and vanish on paper. This
+       forces it for this element only - the rest of the sheet stays ink-free
+       and photocopy-friendly. */
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+    /* so a code span broken across two lines gets a box on each */
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
   }
 
   .lb-qr {
