@@ -251,6 +251,13 @@ const padFor = (s: LabelSheet) => ({
 const TITLE_TO_SUB = 1.8;
 
 /**
+ * How far ahead of the copy the title must stay once the fit has been at it.
+ * Without this a title shrunk hard enough would end up level with - or under -
+ * its own subtitle.
+ */
+const MIN_LEAD = 1.2;
+
+/**
  * Title size follows the label's short side. The clamps stop an 8x5 board
  * becoming a billboard and a 4x1 strip becoming unreadable; between them the
  * size is proportional.
@@ -451,47 +458,37 @@ async function render(): Promise<void> {
 
   // Fit the type to the box it actually has. Scaling off the label's short side
   // alone is not enough: a QR takes a third of the width, so "Woodshop" at the
-  // nominal size would break mid-word on a 4x2.5. Measure one real label and
-  // step the size down until it fits, then clone that.
+  // nominal size would break mid-word on a 4x2.5.
   //
-  // Binary search on one scale factor rather than stepping down in fixed
-  // percentages: it lands within ~0.02% of the largest size that fits, in a
-  // fixed 12 reflows, instead of overshooting by up to a whole step. Both sizes
-  // move together so the title/subtitle relationship never drifts.
+  // Title and copy are fitted SEPARATELY on width, then together on height.
+  // One shared factor used to do both, which meant a long title dragged the
+  // subtitle down with it - lengthening a title took "Certification required"
+  // from 17pt to 12.6pt, though not a word of it had changed. How wide the
+  // title runs says nothing about how big the copy should be; only the height
+  // they share is a joint constraint.
   grid.replaceChildren(proto);
   const innerEl = proto.querySelector<HTMLElement>('.lb-inner')!;
 
-  const apply = (k: number) => {
-    proto.style.setProperty('--title', `${tpt * k}pt`);
-    proto.style.setProperty('--sub', `${spt * k}pt`);
-  };
-  // Width is measured on the two text nodes, because a wrapper that has already
-  // wrapped reports no overflow - that mistake once printed "Woodsho / p".
-  // Height is measured on the row, which is what actually runs out of room.
-  const fits = (k: number) => {
-    apply(k);
-    // Exactly equal, no tolerance either way. A `+ 1` slack absorbed a real
-    // overflow (130 in a 129 box passed as "fits"); a `- 1` demand can never be
-    // met, because text that fits reports scrollWidth === clientWidth, so
-    // everything collapsed to the 6pt floor. Glyph side bearings get their room
-    // from --ink-slack in the stylesheet instead, which is a layout inset
-    // rather than a fudged comparison.
-    // Height is only ever measured on .lb-inner, which has the label's real
-    // height. .lb-text is a shrink-to-fit flex item - its clientHeight IS its
-    // content height, so the two differ only by sub-pixel rounding, and that
-    // difference grows with the font size until it trips any tolerance. Testing
-    // it dropped an 8x5 title from 54pt to 9.7pt whenever there was no
-    // subtitle, because the subtitle happened to round the discrepancy away.
-    return (
-      titleNode.scrollWidth <= titleNode.clientWidth &&
-      subNode.scrollWidth <= subNode.clientWidth &&
-      innerEl.scrollHeight <= innerEl.clientHeight + 1
-    );
-  };
+  const setTitle = (k: number) => proto.style.setProperty('--title', `${tpt * k}pt`);
+  const setSub = (k: number) => proto.style.setProperty('--sub', `${spt * k}pt`);
 
-  // Never below 6pt - past that it is unreadable, and shrinking further only
-  // hides the fact that the copy does not belong on this label.
-  const floor = Math.min(1, 6 / tpt);
+  // Width is measured on the text nodes themselves, because a wrapper that has
+  // already wrapped reports no overflow - that mistake once printed
+  // "Woodsho / p". Exactly equal, no tolerance either way: a `+ 1` slack
+  // absorbed a real overflow (130 in a 129 box passed as "fits"), and a `- 1`
+  // demand can never be met, because text that fits reports scrollWidth ===
+  // clientWidth - that collapsed every label to the floor. Glyph side bearings
+  // get their room from a layout inset on .lb-text instead.
+  const titleWidthFits = () => titleNode.scrollWidth <= titleNode.clientWidth;
+  const subWidthFits = () => subNode.scrollWidth <= subNode.clientWidth;
+
+  // Height is only ever measured on .lb-inner, which has the label's real
+  // height. .lb-text is a shrink-to-fit flex item - its clientHeight IS its
+  // content height, so the two differ only by sub-pixel rounding, and that
+  // difference grows with the font size until it trips any tolerance. Testing
+  // it dropped an 8x5 title from 54pt to 9.7pt whenever there was no subtitle,
+  // because the subtitle happened to round the discrepancy away.
+  const heightFits = () => innerEl.scrollHeight <= innerEl.clientHeight + 1;
 
   /**
    * How many lines the title is currently taking. Smaller type means more
@@ -502,10 +499,13 @@ async function render(): Promise<void> {
     const lh = parseFloat(getComputedStyle(titleNode).lineHeight);
     return lh > 0 ? Math.round(titleNode.scrollHeight / lh) : 1;
   };
-  /** A title is plain text, so it always wants exactly one line. */
-  const wanted = 1;
 
-  const search = (ok: (k: number) => boolean) => {
+  /**
+   * Largest k in [floor, 1] satisfying ok(). Binary search rather than fixed
+   * percentage steps: it lands within ~0.02% of the best fit in 12 reflows,
+   * instead of overshooting by up to a whole step.
+   */
+  const search = (ok: (k: number) => boolean, floor: number) => {
     if (ok(1)) return 1;
     let lo = floor;
     let hi = 1;
@@ -517,19 +517,43 @@ async function render(): Promise<void> {
     return lo;
   };
 
-  // A QR takes a third of a wide label, and the title was being wrapped into
-  // what was left rather than sized for it - "Laser Cutter" came out as two
-  // big lines beside the code while the plain version sat happily on one.
-  //
-  // So the search is tiered: first ask for the title to take only the lines the
-  // copy asked for, and accept that unless it costs more than a third of the
-  // size. Otherwise allow one extra line, then give up and just fit the box.
-  let k = search((n) => fits(n) && titleLines() <= wanted);
-  if (k < 0.66) {
-    const relaxed = search((n) => fits(n) && titleLines() <= wanted + 1);
-    k = Math.max(k, relaxed >= 0.5 ? relaxed : search(fits));
+  // Never below 6pt - past that it is unreadable, and shrinking further only
+  // hides the fact that the copy does not belong on this label.
+  const floorFor = (pt: number) => Math.min(1, 6 / pt);
+
+  // A title is plain text, so it always wants exactly one line. The search is
+  // tiered: ask for one line first, and accept that unless it costs more than a
+  // third of the size; otherwise allow a second line, then just fit the width.
+  let kt = search((k) => (setTitle(k), titleWidthFits() && titleLines() <= 1), floorFor(tpt));
+  if (kt < 0.66) {
+    const relaxed = search(
+      (k) => (setTitle(k), titleWidthFits() && titleLines() <= 2),
+      floorFor(tpt),
+    );
+    kt = Math.max(
+      kt,
+      relaxed >= 0.5 ? relaxed : search((k) => (setTitle(k), titleWidthFits()), floorFor(tpt)),
+    );
   }
-  const overflowing = !fits(k);
+
+  let ks = search((k) => (setSub(k), subWidthFits()), floorFor(spt));
+  // The title still has to read as the title. If it shrank far enough that the
+  // copy would rival it, the copy comes down too - the ratio is a floor here,
+  // not the fixed relationship it is at nominal size.
+  ks = Math.min(ks, (kt * TITLE_TO_SUB) / MIN_LEAD);
+
+  setTitle(kt);
+  setSub(ks);
+
+  // Only now, and only if the two together are too tall, do they scale as one -
+  // height is the constraint they genuinely share.
+  if (!heightFits()) {
+    const both = search((k) => (setTitle(kt * k), setSub(ks * k), heightFits()), 0.25);
+    setTitle(kt * both);
+    setSub(ks * both);
+  }
+
+  const overflowing = !(titleWidthFits() && subWidthFits() && heightFits());
 
   grid.replaceChildren();
   const total = perSheet(gridSheet);

@@ -189,6 +189,15 @@ the short side and a 4x1's short side is 1in - which ignores the 4in of width
 sitting next to it. At 14pt that label used a quarter of its usable height with
 a title alone; 20pt fills it and still leaves room for a subtitle and a code.
 
+**Title and copy are fitted separately on width, together on height.** One
+shared scale factor used to do both, which meant a long title dragged the
+subtitle down with it - lengthening a title took "Certification required" from
+17pt to 12.6pt without a word of it changing. How wide the title runs says
+nothing about how big the copy should be; only the height they share is a joint
+constraint, so that is the only stage where they move as one. `MIN_LEAD` keeps
+the title ahead of the copy when it has shrunk hard, so a badly oversized title
+cannot end up level with its own subtitle.
+
 **One ratio between label title and copy (1.8), never two clamps.** Clamping the
 two sizes independently let the clamps decide the relationship - it came out at
 2.7x on the 8x5 board and 2.1x on the 4x1 strip, so the same words looked
