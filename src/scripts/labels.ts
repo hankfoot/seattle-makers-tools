@@ -585,12 +585,34 @@ async function render(): Promise<void> {
   setTitle(kt);
   setSub(ks);
 
-  // Only now, and only if the two together are too tall, do they scale as one -
-  // height is the constraint they genuinely share.
+  // Height is the one constraint the two share, but sharing it does not mean
+  // splitting the cost. Running out of room is almost always the copy's doing,
+  // so the copy gives way first and the title holds its size - scaling both
+  // together dragged a 20pt title down to 13pt just because the subtitle ran
+  // long, which is the width fault over again in the other direction.
   if (!heightFits()) {
-    const both = search((k) => (setTitle(kt * k), setSub(ks * k), heightFits()), 0.25);
-    setTitle(kt * both);
-    setSub(ks * both);
+    const shrinkSub = search((k) => (setSub(ks * k), heightFits()), Math.min(1, 6 / (spt * ks)));
+    ks *= shrinkSub;
+    setSub(ks);
+
+    // Only when the copy has given all it can does the title come down, and it
+    // comes down on its own. Scaling the pair together here would push the copy
+    // under the 6pt floor to buy height the title could have given up instead.
+    if (!heightFits()) {
+      const shrinkTitle = search(
+        (k) => (setTitle(kt * k), heightFits()),
+        Math.min(1, 6 / tpt),
+      );
+      kt *= shrinkTitle;
+      setTitle(kt);
+
+      // The title may now be level with the copy, so restore its lead.
+      const capped = Math.min(ks, (kt * TITLE_TO_SUB) / MIN_LEAD);
+      if (capped < ks) {
+        ks = capped;
+        setSub(ks);
+      }
+    }
   }
 
   // The warning is about *clipping*, so it asks the real question - does this

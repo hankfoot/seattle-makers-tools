@@ -203,13 +203,20 @@ it.** Two traps here, both found on the small stock:
   its floor and printed a 5pt title. Shrinking text cannot shrink a fixed-size
   code, so the code has no business being in that test.
 
-**Title and copy are fitted separately on width, together on height.** One
-shared scale factor used to do both, which meant a long title dragged the
-subtitle down with it - lengthening a title took "Certification required" from
-17pt to 12.6pt without a word of it changing. How wide the title runs says
-nothing about how big the copy should be; only the height they share is a joint
-constraint, so that is the only stage where they move as one. `MIN_LEAD` keeps
-the title ahead of the copy when it has shrunk hard, so a badly oversized title
+**Title and copy never scale together - each shrinks for its own reasons.** One
+shared factor was wrong in both directions: a long title took "Certification
+required" from 17pt to 12.6pt without a word of it changing, and a long
+subtitle pulled a 20pt title down to 13pt.
+
+- **Width** is fitted separately. How wide the title runs says nothing about how
+  big the copy should be.
+- **Height** is shared, but sharing it does not mean splitting the cost.
+  Running out of room is almost always the copy's doing, so the copy gives way
+  first, alone. Only when it has hit its 6pt floor does the title come down, and
+  it comes down on its own too - scaling the pair would push the copy *under*
+  that floor to buy height the title could have given up instead.
+
+`MIN_LEAD` is re-applied after the title shrinks, so a title cut down hard
 cannot end up level with its own subtitle.
 
 **One ratio between label title and copy (1.8), never two clamps.** Clamping the
