@@ -5,8 +5,8 @@
 ## What this is
 
 A suite of small web tools for Seattle Makers, served as one static site.
-A **label maker** for the Label Station's die-cut sheets, and a **slideshow**
-for markets and tabling events - currently parked.
+A **today board** for a screen in the space, a **label maker** for the Label
+Station's die-cut sheets, and a **slideshow** for markets - currently parked.
 
 Astro + Tailwind v4, static output. See [README.md](README.md) for how to run
 it, add studio photos, and refresh events.
@@ -43,6 +43,18 @@ Done:
 - The Interbay map is gone - it was inaccurate, and at a market the scannable
   thing is worth more than the map anyway.
 
+Today board (`/today`) is built and verified in the browser.
+
+Done:
+- Everything on today's calendar, with kind, fullness and cancellation, from a
+  build-time render that a client-side refetch replaces. Refreshes every five
+  minutes and on `visibilitychange`.
+- `/events.json` and `/events-dummy.json` are prerendered endpoints, not files
+  in public/. The dummy's dates are generated at build time, so it is always
+  "today" rather than a fixture that rots.
+- The slideshow is parked: its entry on the index is commented out, the page
+  and `scripts/slideshow.ts` are untouched, and `/slideshow` still serves.
+
 Label maker (`/labels`) is built and verified against a print-to-PDF. Most of
 the *Implementation notes* below are about it.
 
@@ -51,8 +63,6 @@ Done:
   never installed, so the script had only ever prompted to install them. It
   reports 8 pre-existing errors in the slideshow (a `status` global collision,
   `hidden` on SVGElement, two boolean coercions). Not touched here.
-- The slideshow is parked: its entry on the index is commented out, the page
-  and `scripts/slideshow.ts` are untouched, and `/slideshow` still serves.
 - The QR sign generator (`/qr`) was removed on 2026-09-19. It shared nothing
   with the label maker but the Fraunces face; `lib/print-qr.ts` and the
   module-size warnings were always the label tool's.
@@ -71,6 +81,40 @@ Next:
   proven stable across a site change or two.
 
 ## Implementation notes
+
+**The today board's live data must come from our own origin.** The browser
+cannot fetch seattlemakers.org/events: it returns 200 with no
+`access-control-allow-origin` (checked with an `Origin:` header, not assumed),
+and there is no API behind it - the same dead ends the scraper found. So
+`/today` fetches `/events.json`, a prerendered copy of this repo's calendar.
+That endpoint is the seam: a scheduled rebuild now, or a proxy function later,
+changes what is behind it without the page changing. "Live" therefore means *as
+fresh as the last build*, and calling it anything else would be a lie.
+
+**The board renders at build time and the fetch only ever replaces it.** Every
+failure path in `today.ts` is a deliberate no-op - bad status, bad shape, no
+network - because a screen by the door showing an older day beats one showing
+an error. The one case it does speak up is when the *day has rolled over* and
+the refetch failed, which is the only state where what is on screen is actually
+wrong rather than merely old.
+
+**`today.ts` imports only the `SmEvent` *type* from lib/events.** Importing the
+module pulls `events.json` - 72K - into the client bundle, which is precisely
+what the fetch exists to avoid. The formatters in it are duplicates of the
+library's on purpose; a type-only import is erased at build and costs nothing.
+
+**`eventsOn` is deliberately unfiltered, unlike `pickByStudio`.** The reel's
+`HIDDEN_KINDS` drops tours, open studio hours and orientations as operational
+scheduling not worth advertising to a stranger at a market. A board inside the
+space is the opposite case, and this is not hypothetical: today is a public
+tour and a new-member orientation and nothing else, so applying that filter
+would have shipped an empty board.
+
+**`?src=` accepts same-origin paths only.** It is how the dummy calendar is
+tested, but an absolute or protocol-relative URL is rejected in favour of the
+real feed - otherwise the query string would be a way for anyone with the link
+to put arbitrary text on a screen in the space. Scraped titles and summaries go
+in with `textContent`, never `innerHTML`, for the same reason.
 
 **The label geometry was measured, not guessed.** `src/data/labelSheets.ts`
 carries numbers read out of the LibreOffice templates: page size and margins

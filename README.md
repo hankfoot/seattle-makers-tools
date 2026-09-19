@@ -4,6 +4,7 @@ Small web tools for Seattle Makers, all on one static site.
 
 | Tool | Path | What it does |
 | --- | --- | --- |
+| Today | `/today` | What is on in the space today, refreshing itself. Built for a screen by the door. |
 | Slideshow | `/slideshow` | A looping reel of studio photos and upcoming classes, for running full-screen at markets and tabling events. **Parked** - still serves, but off the index. |
 | Labels | `/labels` | Designs one label — title, subtitle, optional QR — and prints it onto the Label Station's sheets, skipping positions already peeled. |
 
@@ -24,6 +25,51 @@ npm run dev
 | `npm run preview` | Serve the built `dist/` |
 | `npm run events` | Refresh event data from seattlemakers.org |
 | `npm run qr` | Regenerate the QR codes in `public/brand/` |
+
+## The today board
+
+`/today` lists everything on the calendar for the current day - classes,
+certifications, meetups, open studio hours, tours and orientations - with the
+time, what kind of thing it is, and whether it is full, nearly full or
+cancelled. It is meant for a screen by the door, so it refreshes itself: every
+five minutes, and again whenever the screen is woken.
+
+**It shows more than the reel does.** The slideshow hides tours, open studio
+hours and orientations, because those are operational scheduling rather than
+something to advertise to a stranger at a market. Inside the space that is
+exactly backwards - they are most of what someone in the doorway wants to know,
+and on a typical day they are most of what is on. Filtering them would have
+left today's board empty.
+
+**The page is correct before any JavaScript runs.** Astro renders the day from
+the baked calendar at build time, and the script only replaces it when a fetch
+actually succeeds. Every failure path leaves what is on screen alone: a board
+showing an older day beats a board showing an error, and a venue with no
+network still gets a board.
+
+**Live data comes from our own origin, and it has to.** The page fetches
+`/events.json`, which is this repo's calendar served as a flat file. It cannot
+fetch seattlemakers.org directly - that page sends no `access-control-allow-origin`,
+so the browser refuses to read it, and there is no API behind it either. That
+endpoint is the seam: whatever keeps it fresh (a scheduled rebuild now, a proxy
+later) can change without the page changing.
+
+So "live" currently means *as fresh as the last build*. Wire up the scheduled
+refresh to make that daily.
+
+### Testing with a dummy calendar
+
+`/today?src=/events-dummy.json` points the board at a fake busy day, which is
+the only practical way to see every state at once - the real calendar usually
+has one or two things on. The fixture carries a cancelled class, a sold-out
+one, two nearly-full ones and a meetup.
+
+Its dates are generated **at build time for that day**, so it is always "today"
+rather than a fixture that rots. Rebuild and it moves with you.
+
+`src=` only accepts same-origin paths. An absolute or protocol-relative URL
+falls back to the real calendar - otherwise a shared link would be a way to put
+arbitrary text on a screen in the space.
 
 ## Running the reel at a market
 

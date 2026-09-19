@@ -144,3 +144,47 @@ export function formatWhen(iso: string): { day: string; time: string } {
     time: `${hour12}:${mins} ${h < 12 ? 'am' : 'pm'}`,
   };
 }
+
+/** "2026-09-19T14:00" -> "2026-09-19". Floating-local throughout; see above. */
+export function localDay(d = new Date()): string {
+  return localNow(d).slice(0, 10);
+}
+
+/**
+ * Everything on the calendar for one day, soonest first.
+ *
+ * Deliberately unfiltered, unlike `pickByStudio`. The reel hides tours, open
+ * studio hours and orientations because they are operational scheduling rather
+ * than programming worth advertising to a stranger at a market. A board inside
+ * the space is the opposite case: those are exactly what someone standing in
+ * the doorway wants to know about, and on a typical day they are most of what
+ * is on. Today (19 Sep) is a public tour and a new-member orientation and
+ * nothing else, so filtering them would leave the board empty.
+ *
+ * Cancelled classes stay in, marked, rather than vanishing - someone who came
+ * for one needs to see that it is off, not find no trace of it.
+ */
+export function eventsOn(day: string, events: SmEvent[] = EVENTS): SmEvent[] {
+  return events
+    .filter((e) => e.start.slice(0, 10) === day)
+    .sort((a, b) => a.start.localeCompare(b.start));
+}
+
+/** Organisers signal a scrapped class in the title; expose that to the board. */
+export function isCancelled(e: SmEvent): boolean {
+  return CANCELLED.test(e.title);
+}
+
+/** The label under the time: what kind of thing this is. */
+export function kindLabel(e: SmEvent): string {
+  const map: Record<string, string> = {
+    class: 'class',
+    certification: 'certification',
+    meetup: 'meetup',
+    'guided-studio': 'open studio',
+    tour: 'tour',
+    orientation: 'orientation',
+  };
+  for (const k of e.kinds) if (map[k]) return map[k];
+  return 'event';
+}

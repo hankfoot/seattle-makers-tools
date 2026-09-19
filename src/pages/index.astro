@@ -1,7 +1,7 @@
 ---
 import Base from '../layouts/Base.astro';
 import { buildReel } from '../lib/reel';
-import { FETCHED_AT, EVENTS } from '../lib/events';
+import { FETCHED_AT, EVENTS, eventsOn, localDay } from '../lib/events';
 import { studiosWithPhotos } from '../lib/photos';
 
 const reel = buildReel();
@@ -10,11 +10,12 @@ const counts = {
   photos: reel.filter((s) => s.type === 'photo').length,
   events: reel.filter((s) => s.type === 'event').length,
   studios: studiosWithPhotos().length,
+  today: eventsOn(localDay()).length,
 };
 
 const tools = [
-  // Parked. The page and its runtime are untouched and /slideshow still
-  // serves - this only takes it off the index.
+  // Parked while the today board is built out. The page and its runtime are
+  // untouched and /slideshow still serves - this only takes it off the index.
   // {
   //   name: 'Slideshow',
   //   href: '/slideshow',
@@ -23,6 +24,14 @@ const tools = [
   //   meta: `${counts.slides} slides · ${counts.photos} photos · ${counts.events} events`,
   //   ready: true,
   // },
+  {
+    name: 'Today',
+    href: '/today',
+    blurb:
+      'What is on in the space today - classes, certifications, open studio and tours - refreshing itself on a screen by the door.',
+    meta: `${counts.today} today · live`,
+    ready: true,
+  },
   {
     name: 'Labels',
     href: '/labels',
