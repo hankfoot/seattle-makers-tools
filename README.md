@@ -4,7 +4,7 @@ Small web tools for Seattle Makers, all on one static site.
 
 | Tool | Path | What it does |
 | --- | --- | --- |
-| Slideshow | `/slideshow` | A looping reel of studio photos and upcoming classes, for running full-screen at markets and tabling events. |
+| Slideshow | `/slideshow` | A looping reel of studio photos and upcoming classes, for running full-screen at markets and tabling events. **Parked** - still serves, but off the index. |
 | Labels | `/labels` | Designs one label — title, subtitle, optional QR — and prints it onto the Label Station's sheets, skipping positions already peeled. |
 
 Astro + Tailwind v4, static output. Every asset is local — once the page has

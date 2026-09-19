@@ -5,8 +5,8 @@
 ## What this is
 
 A suite of small web tools for Seattle Makers, served as one static site.
-A looping **slideshow** for markets and tabling events, and a **label maker**
-for the Label Station's die-cut sheets.
+A **label maker** for the Label Station's die-cut sheets, and a **slideshow**
+for markets and tabling events - currently parked.
 
 Astro + Tailwind v4, static output. See [README.md](README.md) for how to run
 it, add studio photos, and refresh events.
@@ -51,6 +51,8 @@ Done:
   never installed, so the script had only ever prompted to install them. It
   reports 8 pre-existing errors in the slideshow (a `status` global collision,
   `hidden` on SVGElement, two boolean coercions). Not touched here.
+- The slideshow is parked: its entry on the index is commented out, the page
+  and `scripts/slideshow.ts` are untouched, and `/slideshow` still serves.
 - The QR sign generator (`/qr`) was removed on 2026-09-19. It shared nothing
   with the label maker but the Fraunces face; `lib/print-qr.ts` and the
   module-size warnings were always the label tool's.
