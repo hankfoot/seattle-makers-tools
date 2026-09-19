@@ -47,6 +47,15 @@ actually succeeds. Every failure path leaves what is on screen alone: a board
 showing an older day beats a board showing an error, and a venue with no
 network still gets a board.
 
+**It is not live yet, and the wording on the page says so.** The board polls,
+but what it polls is `/events.json` baked at build time, so every poll returns
+the same bytes until someone rebuilds. `npm run events` is still manual. The
+footer therefore reads `calendar 27 aug · checked 3:01 pm` - two different
+times, because conflating them is how a board quietly lies: a poll succeeding
+every five minutes against a three-week-old file would otherwise show "updated
+3:01 pm" and nobody would think to doubt it. Wire up the scheduled refresh
+below and it becomes genuinely daily-fresh.
+
 **Live data comes from our own origin, and it has to.** The page fetches
 `/events.json`, which is this repo's calendar served as a flat file. It cannot
 fetch seattlemakers.org directly - that page sends no `access-control-allow-origin`,

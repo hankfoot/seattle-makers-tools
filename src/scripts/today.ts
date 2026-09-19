@@ -41,12 +41,15 @@ function today(): string {
   return `${d.getFullYear()}-${p2(d.getMonth() + 1)}-${p2(d.getDate())}`;
 }
 
-/** "2026-09-19T14:00" -> "2:00 pm" */
-function clock(iso: string): string {
-  const h = Number(iso.slice(11, 13));
-  const m = iso.slice(14, 16);
+/** 14, "00" -> "2:00 pm" */
+function hhmm(h: number, m: string): string {
   const h12 = h % 12 === 0 ? 12 : h % 12;
   return `${h12}:${m} ${h < 12 ? 'am' : 'pm'}`;
+}
+
+/** "2026-09-19T14:00" -> "2:00 pm" */
+function clock(iso: string): string {
+  return hhmm(Number(iso.slice(11, 13)), iso.slice(14, 16));
 }
 
 const KINDS: Record<string, string> = {
@@ -125,6 +128,25 @@ function render(events: SmEvent[], day: string): void {
   });
 }
 
+const MONTHS = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+
+/**
+ * Two different times, and conflating them is how a board quietly lies.
+ * `checked` is when we last re-read the feed; the calendar date is how old the
+ * data in it actually is. Those are only the same once something keeps
+ * /events.json fresh - today it is baked at build time, so a poll succeeding
+ * every five minutes against a three-week-old file would otherwise read as
+ * "updated 2:40 pm" and nobody would think to doubt the board.
+ */
+function stamp(fetchedAt?: string): string {
+  const n = new Date();
+  const checked = hhmm(n.getHours(), p2(n.getMinutes()));
+  if (!fetchedAt) return `checked ${checked}`;
+  const f = new Date(fetchedAt);
+  if (Number.isNaN(f.getTime())) return `checked ${checked}`;
+  return `calendar ${f.getDate()} ${MONTHS[f.getMonth()]} \u00b7 checked ${checked}`;
+}
+
 let lastDay = today();
 
 async function refresh(): Promise<void> {
@@ -132,14 +154,12 @@ async function refresh(): Promise<void> {
   try {
     const res = await fetch(`${source()}?t=${Date.now()}`, { cache: 'no-store' });
     if (!res.ok) throw new Error(String(res.status));
-    const data = (await res.json()) as { events?: SmEvent[] };
+    const data = (await res.json()) as { events?: SmEvent[]; fetchedAt?: string };
     if (!Array.isArray(data.events)) throw new Error('shape');
 
     render(data.events, day);
     lastDay = day;
-    status!.textContent = `updated ${clock(
-      `${day}T${p2(new Date().getHours())}:${p2(new Date().getMinutes())}`,
-    )}`;
+    status!.textContent = stamp(data.fetchedAt);
   } catch {
     // Keep whatever is on screen. Only say so if the day has rolled over,
     // because that is the one case where the board is now actually wrong.
