@@ -302,7 +302,69 @@ same (1.8×) on every stock. Two things to watch:
 
 ## Deploying
 
-The output is plain static files. Any static host works; nothing needs a server.
+The site is static and builds to `dist/`. The one piece of server code is
+[`functions/api/events.js`](functions/api/events.js), which Cloudflare Pages
+serves alongside it - that is what makes the today board live.
+
+```bash
+npx wrangler pages deploy
+```
+
+**Prefer the git integration over deploying from a laptop.** Connect the
+Cloudflare Pages project to this GitHub repo and every push to `main` builds
+and deploys itself. Then GitHub access is the only access a contributor ever
+needs: no `wrangler` install, no Cloudflare credentials, no knowing which host
+it is on. Laptop deploys ship whatever happens to be on that person's disk and
+need per-person credentials, which is the wrong shape for a shared project.
+
+Any host that runs server code works - Vercel, Netlify and Deno Deploy all do.
+GitHub Pages does not: it is static-only, so `/api/events` would 404 and the
+board would silently fall back to build-time data. It would still work, but it
+would stop being live.
+
+## Handover
+
+Everything here is designed so that owning the repo is the same as owning the
+tools. Worth knowing when this changes hands.
+
+**There is nothing to migrate but the repo.** The function reads no secrets,
+has no environment variables, no bindings, no database and nothing stored in a
+dashboard - it is a file in this repository. Whoever can merge to `main` can
+change what the board does. There is no hidden state anywhere.
+
+**Two things are tied to accounts rather than to the code:**
+
+| Thing | Who holds it | Note |
+| --- | --- | --- |
+| The Cloudflare Pages project | Whoever created it | Pages projects cannot be moved between accounts - you delete and recreate, which changes the `*.pages.dev` URL |
+| The domain | Whoever runs DNS | A subdomain of seattlemakers.org makes the host swappable underneath |
+
+So **create the Cloudflare account under an organisation identity**, not a
+personal one - a role address like `tech@seattlemakers.org` rather than a
+member's own login. Cloudflare supports inviting further members with roles,
+though with the git integration most contributors never need an account at all.
+
+**Recreating the deployment from scratch**, if it is ever lost, is:
+
+1. Create a Cloudflare Pages project, connect it to this repo
+2. Build command `npm run build`, output directory `dist`
+3. Point the subdomain at it
+
+There is no step four. No secrets to re-enter, no data to restore.
+
+**Refreshing the baked fallback** is `npm run events`, which rewrites
+`src/data/events.json` and the pictures in `public/events/`. It is manual, and
+it does not affect whether the board is live - it only refreshes what the board
+falls back to when the scrape fails. Commit the result.
+
+**The fragile part is the scrape**, and it is fragile on purpose rather than by
+accident: there is no API, so both the script and the function parse the
+calendar's HTML. If the site is redesigned, the parser breaks. It fails loudly
+- the script exits non-zero and leaves the previous data in place, and the
+function treats a zero-event parse as a failure and serves the baked calendar -
+so the failure mode is stale data, never an empty board. Fixing it means
+updating [`src/lib/parse-calendar.mjs`](src/lib/parse-calendar.mjs), which both
+callers share.
 
 ## Layout
 
