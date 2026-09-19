@@ -82,6 +82,34 @@ Next:
 
 ## Implementation notes
 
+**`/today` is live via a Cloudflare Pages function, not a rebuild.** The board
+reads `/api/events`, which scrapes the calendar per request and returns JSON.
+That is the only way a browser can have this data at all, and the reason is not
+negotiable: seattlemakers.org sends no `access-control-allow-origin`, so a
+fetch from the page fails before our code runs. Server-to-server has no such
+rule. `functions/` is served next to the static build by Pages, so Astro stays
+`output: 'static'` - no adapter, no hybrid mode, nothing about the label maker
+changes.
+
+**One parser, used from two runtimes.** `src/lib/parse-calendar.mjs` is pure
+string-handling - no fs, no Node built-ins - because a Workers runtime has
+none. The scraper runs it and writes a file; the function runs it and returns a
+response. Everything in fetch-events.mjs that touches disk (summary and picture
+enrichment) stayed behind, which is why live rows have no picture and only the
+summaries that could be grafted on from the baked data by title - 83 of 166 at
+the time of writing.
+
+**Both the function and the board refuse to claim freshness they do not have.**
+The envelope carries `live`, set only when the scrape actually succeeded; the
+static fallback has no such field and so can never accidentally assert it. On
+any failure - bad status, network error, or a zero-event parse, which means the
+markup moved rather than that nothing is on - the function returns the *baked*
+calendar with the *baked* `fetchedAt`, so the footer reads "calendar 27 aug"
+rather than today. The board shows "live · checked 3:10 pm" or "calendar 27 aug
+· checked 3:10 pm", never one dressed as the other. An earlier version showed
+"updated 3:01 pm" off a five-minute poll against a three-week-old file, which
+is exactly the lie this structure exists to prevent.
+
 **The today board's live data must come from our own origin.** The browser
 cannot fetch seattlemakers.org/events: it returns 200 with no
 `access-control-allow-origin` (checked with an `Origin:` header, not assumed),

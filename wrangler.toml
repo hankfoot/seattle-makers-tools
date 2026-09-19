@@ -1,0 +1,6 @@
+# Cloudflare Pages. The static build is dist/; functions/ is picked up
+# automatically and served alongside it, which is why Astro stays
+# `output: 'static'` with no adapter.
+name = "seattle-makers-tools"
+compatibility_date = "2026-09-19"
+pages_build_output_dir = "dist"

@@ -27,11 +27,21 @@ if (!list || !empty || !status || !dateEl) throw new Error('today: missing mount
  * URL would both fail CORS and turn a shared link into a way to put arbitrary
  * text on a screen in the space.
  */
-function source(): string {
+function sources(): string[] {
   const raw = new URLSearchParams(location.search).get('src');
-  if (!raw) return '/events.json';
-  return raw.startsWith('/') && !raw.startsWith('//') ? raw : '/events.json';
+  if (raw) return raw.startsWith('/') && !raw.startsWith('//') ? [raw] : DEFAULTS;
+  return DEFAULTS;
 }
+
+/**
+ * Live first, baked second.
+ *
+ * /api/events scrapes the calendar on demand and is the only thing here that
+ * is actually live. It does not exist during `astro dev` or on a host without
+ * functions, so /events.json - the calendar baked in at build time - is the
+ * fallback, and the board degrades to build-fresh instead of breaking.
+ */
+const DEFAULTS = ['/api/events', '/events.json'];
 
 const p2 = (n: number) => String(n).padStart(2, '0');
 
@@ -138,9 +148,13 @@ const MONTHS = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', '
  * every five minutes against a three-week-old file would otherwise read as
  * "updated 2:40 pm" and nobody would think to doubt the board.
  */
-function stamp(fetchedAt?: string): string {
+function stamp(fetchedAt?: string, live?: boolean): string {
   const n = new Date();
   const checked = hhmm(n.getHours(), p2(n.getMinutes()));
+  // `live` is set only by /api/events, and only when it really did just scrape
+  // the calendar. The static fallback has no such field, so it can never
+  // accidentally claim to be live.
+  if (live) return `live \u00b7 checked ${checked}`;
   if (!fetchedAt) return `checked ${checked}`;
   const f = new Date(fetchedAt);
   if (Number.isNaN(f.getTime())) return `checked ${checked}`;
@@ -152,14 +166,24 @@ let lastDay = today();
 async function refresh(): Promise<void> {
   const day = today();
   try {
-    const res = await fetch(`${source()}?t=${Date.now()}`, { cache: 'no-store' });
-    if (!res.ok) throw new Error(String(res.status));
-    const data = (await res.json()) as { events?: SmEvent[]; fetchedAt?: string };
-    if (!Array.isArray(data.events)) throw new Error('shape');
+    let data: { events?: SmEvent[]; fetchedAt?: string; live?: boolean } | null = null;
+    for (const url of sources()) {
+      try {
+        const res = await fetch(`${url}?t=${Date.now()}`, { cache: 'no-store' });
+        if (!res.ok) continue;
+        const body = await res.json();
+        if (!Array.isArray(body?.events)) continue;
+        data = body;
+        break;
+      } catch {
+        // Try the next source. Only an empty list at the end is a failure.
+      }
+    }
+    if (!data) throw new Error('no source');
 
-    render(data.events, day);
+    render(data.events!, day);
     lastDay = day;
-    status!.textContent = stamp(data.fetchedAt);
+    status!.textContent = stamp(data.fetchedAt, data.live);
   } catch {
     // Keep whatever is on screen. Only say so if the day has rolled over,
     // because that is the one case where the board is now actually wrong.

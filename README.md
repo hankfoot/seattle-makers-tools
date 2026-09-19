@@ -47,24 +47,38 @@ actually succeeds. Every failure path leaves what is on screen alone: a board
 showing an older day beats a board showing an error, and a venue with no
 network still gets a board.
 
-**It is not live yet, and the wording on the page says so.** The board polls,
-but what it polls is `/events.json` baked at build time, so every poll returns
-the same bytes until someone rebuilds. `npm run events` is still manual. The
-footer therefore reads `calendar 27 aug · checked 3:01 pm` - two different
-times, because conflating them is how a board quietly lies: a poll succeeding
-every five minutes against a three-week-old file would otherwise show "updated
-3:01 pm" and nobody would think to doubt it. Wire up the scheduled refresh
-below and it becomes genuinely daily-fresh.
+**It is live on the deployed site, and it says which it is.** The board reads
+`/api/events`, a Cloudflare Pages function that scrapes the calendar on demand
+and returns JSON. Every reload gets the real calendar - no cron, no commits, no
+rebuild.
 
-**Live data comes from our own origin, and it has to.** The page fetches
-`/events.json`, which is this repo's calendar served as a flat file. It cannot
-fetch seattlemakers.org directly - that page sends no `access-control-allow-origin`,
-so the browser refuses to read it, and there is no API behind it either. That
-endpoint is the seam: whatever keeps it fresh (a scheduled rebuild now, a proxy
-later) can change without the page changing.
+**The function exists because a browser cannot do this itself.** Fetching
+seattlemakers.org from the page is blocked outright: that page sends no
+`access-control-allow-origin`, so the request fails before any of our code sees
+a byte, and there is no API behind it either. Server-to-server requests are not
+subject to that rule, so the function does the fetch and hands the result back
+from our own origin, which the page *is* allowed to read. No amount of
+JavaScript in the page can substitute for it.
 
-So "live" currently means *as fresh as the last build*. Wire up the scheduled
-refresh to make that daily.
+It runs the same parser as the scraper - [`src/lib/parse-calendar.mjs`](src/lib/parse-calendar.mjs),
+which is pure string-handling with no filesystem access precisely so it can run
+in both places. One parser, so a calendar redesign cannot break one while the
+other keeps working.
+
+**Where there is no function, it degrades instead of breaking.** During `astro
+dev`, or on a host without functions, `/api/events` 404s and the board falls
+back to `/events.json` - the calendar baked in at build time. It then labels
+itself honestly: `live · checked 3:10 pm` when it really did just scrape, and
+`calendar 27 aug · checked 3:10 pm` when it is serving build-time data. Those
+are two different facts and the footer never conflates them.
+
+The same applies if the scrape fails upstream: the function returns the baked
+calendar carrying *its* own date, so a failure shows up as old data rather than
+as fresh data that happens to be wrong. A zero-event parse counts as a failure
+too - that means the markup moved, not that the space has nothing on.
+
+`npm run events` is still the thing that refreshes the baked fallback, and it
+is still manual. It no longer gates whether the board is current.
 
 ### Testing with a dummy calendar
 
