@@ -1,6 +1,12 @@
-# Cloudflare Pages. The static build is dist/; functions/ is picked up
-# automatically and served alongside it, which is why Astro stays
-# `output: 'static'` with no adapter.
+# Cloudflare Worker with static assets.
+#
+# `main` handles /api/events; everything else is served from dist/ through the
+# ASSETS binding. Astro still builds a plain static site - this wraps it rather
+# than changing how it is built.
 name = "seattle-makers-tools"
+main = "worker/index.js"
 compatibility_date = "2026-09-19"
-pages_build_output_dir = "dist"
+
+[assets]
+directory = "./dist"
+binding = "ASSETS"

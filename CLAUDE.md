@@ -82,14 +82,22 @@ Next:
 
 ## Implementation notes
 
-**`/today` is live via a Cloudflare Pages function, not a rebuild.** The board
+**`/today` is live via a Cloudflare Worker, not a rebuild.** The board
 reads `/api/events`, which scrapes the calendar per request and returns JSON.
 That is the only way a browser can have this data at all, and the reason is not
 negotiable: seattlemakers.org sends no `access-control-allow-origin`, so a
 fetch from the page fails before our code runs. Server-to-server has no such
-rule. `functions/` is served next to the static build by Pages, so Astro stays
+rule. `worker/index.js` handles that one path and hands everything else to the
+ASSETS binding, which serves the Astro build out of dist/, so Astro stays
 `output: 'static'` - no adapter, no hybrid mode, nothing about the label maker
 changes.
+
+It was a Pages Function first. Cloudflare's git integration now creates Workers
+rather than Pages projects and runs `wrangler deploy`, which wants a Worker
+entry point - a Pages-shaped `functions/` directory fails the deploy outright
+with "Missing entry-point to Worker script or to assets directory" *after* a
+perfectly good build. Workers with static assets is also the platform
+Cloudflare is actually developing.
 
 **One parser, used from two runtimes.** `src/lib/parse-calendar.mjs` is pure
 string-handling - no fs, no Node built-ins - because a Workers runtime has

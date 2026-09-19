@@ -52,7 +52,7 @@ showing an older day beats a board showing an error, and a venue with no
 network still gets a board.
 
 **It is live on the deployed site, and it says which it is.** The board reads
-`/api/events`, a Cloudflare Pages function that scrapes the calendar on demand
+`/api/events`, a Cloudflare Worker that scrapes the calendar on demand
 and returns JSON. Every reload gets the real calendar - no cron, no commits, no
 rebuild.
 
@@ -307,7 +307,7 @@ same (1.8×) on every stock. Two things to watch:
 ## Deploying
 
 The site is static and builds to `dist/`. The one piece of server code is
-[`functions/api/events.js`](functions/api/events.js), which Cloudflare Pages
+[`worker/index.js`](worker/index.js), which Cloudflare
 serves alongside it - that is what makes the today board live.
 
 ```bash
@@ -315,7 +315,7 @@ npx wrangler pages deploy
 ```
 
 **Prefer the git integration over deploying from a laptop.** Connect the
-Cloudflare Pages project to this GitHub repo and every push to `main` builds
+Cloudflare Worker to this GitHub repo and every push to `main` builds
 and deploys itself. Then GitHub access is the only access a contributor ever
 needs: no `wrangler` install, no Cloudflare credentials, no knowing which host
 it is on. Laptop deploys ship whatever happens to be on that person's disk and
@@ -340,7 +340,7 @@ change what the board does. There is no hidden state anywhere.
 
 | Thing | Who holds it | Note |
 | --- | --- | --- |
-| The Cloudflare Pages project | Whoever created it | Pages projects cannot be moved between accounts - you delete and recreate, which changes the `*.pages.dev` URL |
+| The Cloudflare Worker | Whoever created it | Workers cannot be moved between accounts - you delete and recreate, which changes the `*.workers.dev` URL |
 | The domain | Whoever runs DNS | A subdomain of seattlemakers.org makes the host swappable underneath |
 
 So **create the Cloudflare account under an organisation identity**, not a
@@ -350,7 +350,7 @@ though with the git integration most contributors never need an account at all.
 
 **Recreating the deployment from scratch**, if it is ever lost, is:
 
-1. Create a Cloudflare Pages project, connect it to this repo
+1. Create a Cloudflare Worker, connect it to this repo
 2. Build command `npm run build`, output directory `dist`
 3. Point the subdomain at it
 

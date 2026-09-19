@@ -1,7 +1,7 @@
-import { parse, SOURCE } from '../../src/lib/parse-calendar.mjs';
+import { parse, SOURCE } from '../src/lib/parse-calendar.mjs';
 // `with { type: 'json' }` is the standard form: Node refuses a bare JSON
 // import without it, and the Workers bundler accepts it either way.
-import baked from '../../src/data/events.json' with { type: 'json' };
+import baked from '../src/data/events.json' with { type: 'json' };
 
 /**
  * The calendar, scraped on demand.
@@ -13,9 +13,16 @@ import baked from '../../src/data/events.json' with { type: 'json' };
  * page, runs the same parser the scraper uses, and hands back JSON from our own
  * origin, which the page *is* allowed to read.
  *
- * Runs on Cloudflare Pages Functions, next to the static build. Astro stays
- * `output: 'static'` - no adapter, no hybrid rendering, nothing about the label
- * maker or the reel changes.
+ * Runs as a Cloudflare Worker with static assets: this script handles
+ * /api/events and hands everything else to the ASSETS binding, which serves
+ * the Astro build out of dist/. Astro stays `output: 'static'` - no adapter, no
+ * hybrid rendering, nothing about the label maker or the reel changes.
+ *
+ * This was a Pages Function first. Cloudflare's git integration now creates
+ * Workers rather than Pages projects, and runs `wrangler deploy`, which wants a
+ * Worker entry point - a Pages-shaped `functions/` directory fails the deploy
+ * outright. Workers with static assets is also the platform Cloudflare is
+ * actually developing, so this is the form the makerspace should inherit.
  */
 
 /** Seconds the edge may serve a cached copy. A class list does not move faster. */
@@ -46,7 +53,7 @@ const json = (body, status = 200) =>
     },
   });
 
-export async function onRequestGet() {
+async function events() {
   try {
     const res = await fetch(SOURCE, {
       headers: { 'user-agent': 'seattle-makers-tools/0.1 (+https://github.com/hankfoot/seattle-makers-tools)' },
@@ -72,3 +79,14 @@ export async function onRequestGet() {
     return json(envelope(baked.events ?? [], baked.fetchedAt, false));
   }
 }
+
+export default {
+  async fetch(request, env) {
+    const url = new URL(request.url);
+    // Only this one path is dynamic. Everything else - pages, the prerendered
+    // /events.json fallback, fonts, photos - is a static file, served by the
+    // assets binding rather than by anything we write.
+    if (url.pathname === '/api/events') return events();
+    return env.ASSETS.fetch(request);
+  },
+};

@@ -10,22 +10,21 @@ set it up.
 ## What is and is not account-bound
 
 **Not account-bound.** Everything that makes the site work is in this repo:
-the pages, the Cloudflare function at `functions/api/events.js`, the parser,
+the pages, the Cloudflare Worker at `worker/index.js`, the parser,
 and `wrangler.toml`. There are **no secrets, no environment variables, no
 bindings and no database**. Whoever controls the repo controls the behaviour,
 and there is no state to migrate.
 
 **Account-bound.** Two things only:
 
-- The Cloudflare Pages *project* - which account builds and serves the site.
+- The Cloudflare *Worker* - which account builds and serves the site.
 - The domain attached to it.
 
 ## Do not attach the real subdomain to the first deployment
 
 The first deployment lives in a personal Cloudflare account and is disposable.
-Pages projects cannot be moved between Cloudflare accounts: the project is
-recreated under the new account, and the `*.pages.dev` hostname changes with
-it.
+Workers cannot be moved between Cloudflare accounts: the Worker is recreated
+under the new account, and the `*.workers.dev` hostname changes with it.
 
 That is cheap - it is a git-connected build with no state - but only if nothing
 is pointing at the old hostname yet. So **leave `tools.seattlemakers.org` (or
@@ -50,29 +49,29 @@ reason the throwaway hostname should stay throwaway.
    `git remote set-url origin https://github.com/<org>/seattle-makers-tools.git`
 
 3. **Reconnect Cloudflare to GitHub.** The GitHub app authorisation does not
-   follow a repo across owners, so the Pages project loses its source. If the
+   follow a repo across owners, so the Worker loses its source. If the
    Cloudflare account is also changing, skip this and do step 4 instead.
 
-4. **Recreate the Pages project** under the makerspace Cloudflare account.
+4. **Recreate the Worker** under the makerspace Cloudflare account.
    Use a role login (something like `tech@seattlemakers.org`) rather than a
    personal one, so it is not tied to one member. Settings, in full:
 
    | Field | Value |
    | --- | --- |
-   | Framework preset | None |
    | Build command | `npm run build` |
-   | Output directory | `dist` |
+   | Deploy command | `npx wrangler deploy` |
    | Environment variables | none |
 
-   `functions/` is detected automatically. `.nvmrc` pins Node 22.12.0 and
-   Cloudflare honours it.
+   Everything else comes from `wrangler.toml` - the entry point and the
+   `dist/` assets directory - so there is nothing else to fill in. `.nvmrc`
+   pins Node 22.12.0 and Cloudflare honours it.
 
 5. **Point the subdomain at it**, now that the account is the final one.
 
 6. **Update the two user-agent strings** to the new repo URL. They identify
    this scraper to seattlemakers.org, so they should point somewhere real:
 
-   - `functions/api/events.js`
+   - `worker/index.js`
    - `scripts/fetch-events.mjs`
 
 7. **Check `LICENSE`.** It currently reads `Copyright (c) 2026 Seattle Makers`,
@@ -94,7 +93,7 @@ repo rather than something configured in a dashboard.
 The scrape is the fragile part and it is deliberately loud about it. If
 seattlemakers.org redesigns its calendar, `parse()` returns zero events;
 `scripts/fetch-events.mjs` then exits non-zero and leaves the previous data in
-place, and `functions/api/events.js` treats it as a failure and serves the
+place, and `worker/index.js` treats it as a failure and serves the
 baked calendar with its own older date. The board keeps working and visibly
 shows stale data rather than silently going empty. Fix it in
 `src/lib/parse-calendar.mjs`, which both callers share.
