@@ -6,7 +6,6 @@ Small web tools for Seattle Makers, all on one static site.
 | --- | --- | --- |
 | Slideshow | `/slideshow` | A looping reel of studio photos and upcoming classes, for running full-screen at markets and tabling events. |
 | Labels | `/labels` | Designs one label — title, subtitle, optional QR — and prints it onto the Label Station's sheets, skipping positions already peeled. |
-| QR signs | `/qr` | Turns a link into a printable sign — title above the code, description below — at full page, half or card size. |
 
 Astro + Tailwind v4, static output. Every asset is local — once the page has
 loaded, the reel keeps running with the network unplugged.
@@ -209,9 +208,9 @@ Click to switch a position on or off, or use All / Clear.
 **Load the sheet face down, with the top edge towards you** (the Brother
 printers in the space). **Then check the print dialog every time** — no headers
 or footers, margins off, scale at 100%. Browsers reset these between sessions
-and sometimes between jobs. Unlike the sign tool these pages are full-bleed by
-necessity — the die-cut is where it is, so the page cannot carry a safety
-margin, and anything other than true size puts the ink between the labels.
+and sometimes between jobs. These pages are full-bleed by necessity — the
+die-cut is where it is, so the page cannot carry a safety margin, and anything
+other than true size puts the ink between the labels.
 
 The **subtitle** is a small rich-text editor — bold, italics, inline code, bullet
 and numbered lists. The title is plain text by design.
@@ -231,50 +230,6 @@ same (1.8×) on every stock. Two things to watch:
   `?stock=&dir=&align=&title=&sub=&url=&on=` fills the form. `on=` names the
   positions to print (1-based, matching the numbers on the preview), and `sub=`
   may carry markup, so a bookmarked checklist keeps its bullets.
-
-## Printing a QR sign
-
-Open `/qr`, type a link, and add an eyebrow, title and description. Everything
-on the sheet is sized in inches, so the preview is the print — what you see is
-what comes out of the printer, at true size.
-
-The sheet is laid out as three bands: a masthead (small-caps eyebrow over a
-title ruled top and bottom), the code with its description filling the middle,
-and an imprint line at the foot carrying the link and the Seattle Makers name.
-Every mark is black — the hierarchy comes from size, weight, tracking and white
-space, so it photocopies perfectly and costs nothing extra to print.
-
-Leave a field empty and it disappears cleanly: no title also removes the rules
-that bracket it.
-
-| Size | Piece | Fill sheet |
-| --- | --- | --- |
-| Full page | 7.25 × 10in | 1 |
-| Half | 7.25 × 4.75in | 2 |
-| Card | 3.625 × 5in | 4 (2 × 2) |
-
-**In the print dialog, uncheck "Headers and footers" and leave Scale at 100%.**
-Browsers stamp the date and URL into the page margin by default, and CSS cannot
-turn that off. Scaling anything other than 100% breaks true size.
-
-The sheet is laid out inside a 0.5in margin and held to 7.25in wide, which keeps
-it clear of every printer's unprintable edge and inside A4's printable width, so
-it will not be silently shrunk to fit.
-
-A few things worth knowing:
-
-- **A bare host gets `https://` added.** Type `seattlemakers.org/interest` and
-  the tool shows you what it actually encodes. Schemes you type yourself —
-  `mailto:`, `tel:`, a `WIFI:` string — are left alone.
-- **Watch for the module warning.** A long link on a small card makes the
-  squares too fine to scan. The tool warns below 0.8mm per module and refuses
-  below 0.5mm. Shorten the link or go up a size.
-- **Nothing is saved.** Close the tab and it's gone. To keep a sign, bookmark
-  its URL — the form fills itself from
-  `?url=&title=&desc=&size=&copies=&cut=&showurl=`.
-- **Cut lines** default on for half and card, off for full page. Cards tile with
-  no gutter, so neighbouring cut lines sit on top of each other — one cut
-  separates two cards.
 
 ## Deploying
 

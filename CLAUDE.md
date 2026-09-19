@@ -5,8 +5,8 @@
 ## What this is
 
 A suite of small web tools for Seattle Makers, served as one static site.
-A looping **slideshow** for markets and tabling events, and a **QR sign
-generator** for printed signage.
+A looping **slideshow** for markets and tabling events, and a **label maker**
+for the Label Station's die-cut sheets.
 
 Astro + Tailwind v4, static output. See [README.md](README.md) for how to run
 it, add studio photos, and refresh events.
@@ -38,44 +38,22 @@ Done:
 - Interest-form QR: on the brand card where the map used to be, and full screen
   on `q`. Generated at author time by `npm run qr` into public/brand/, so **the
   reel** ships no QR library. Verified by decoding the shipped SVG with OpenCV.
-  (The `/qr` tool does encode in the browser - see below. Astro splits scripts
-  per page, so the reel's bundle is unaffected.)
+  (The `/labels` tool does encode in the browser - see below. Astro splits
+  scripts per page, so the reel's bundle is unaffected.)
 - The Interbay map is gone - it was inaccurate, and at a market the scannable
   thing is worth more than the map anyway.
 
-QR sign generator (`/qr`) is built and verified against a print-to-PDF.
+Label maker (`/labels`) is built and verified against a print-to-PDF. Most of
+the *Implementation notes* below are about it.
 
 Done:
-- Link + title + description -> a printable sheet at full page (7.25 x 10in),
-  half (7.25 x 4.75in) or card (3.625 x 5in), one centered or tiled to fill the
-  sheet (2 halves, 4 cards) with cut lines.
-- Browser print only - no PNG/SVG/PDF export, no persistence, no backend.
-- `?url=&title=&desc=&size=&copies=&cut=&showurl=` prefills the form. Not
-  persistence: it makes one sign reproducible and is what lets the print
-  verification run headless.
-- Half prints as **two portrait half-letters on a landscape sheet** - what a
-  half-page flyer actually is. `@page` cannot be selected by class, so `qr.ts`
-  rewrites the rule to swap `size: letter portrait|landscape`.
-- Title face is **Fraunces** (self-hosted variable woff2, latin subset), paired
-  with Lato for everything functional. Declared in global.css but referenced
-  only by /qr, so the reel never fetches it.
-- The footer mark is the seattlemakers.org logo. The site serves it at 149x46,
-  which prints at ~150dpi; `public/brand/wordmark.png` is the identical artwork
-  at 2048x634, so `wordmark-black.png` is generated from that by keeping its
-  alpha and forcing every visible pixel to pure K.
-- The sheet is an editorial layout: masthead (tracked small-caps eyebrow over a
-  title ruled above and below), code + description in the middle band, imprint
-  line at the foot. Black only, on purpose - it photocopies, and the hierarchy
-  is carried by size, weight, tracking and air rather than colour.
-- Editor chrome echoes the index page (lowercase lockup, 4px green rule) and
-  the preview shows the whole 8.5 x 11in sheet rather than just the printable
-  area, so the margin you get is the margin you see. The dashed printable-area
-  guide and the empty-state wording are `@media screen` only - verified by
-  printing with cut lines off and confirming the boundary rows are pure white.
 - `npm run check` now actually runs; `@astrojs/check` and `typescript` were
   never installed, so the script had only ever prompted to install them. It
   reports 8 pre-existing errors in the slideshow (a `status` global collision,
   `hidden` on SVGElement, two boolean coercions). Not touched here.
+- The QR sign generator (`/qr`) was removed on 2026-09-19. It shared nothing
+  with the label maker but the Fraunces face; `lib/print-qr.ts` and the
+  module-size warnings were always the label tool's.
 
 Next:
 - Those 8 slideshow type errors.
@@ -133,8 +111,8 @@ centring look like zero.
 identical die-cut rectangles; only the content turns. That is why each pair has
 the same count, and why picking the wrong one cannot waste a sheet.
 
-**The label page is `@page { margin: 0 }` and absolutely positioned**, unlike
-/qr which is laid out inside the page's content box. A die-cut does not move, so
+**The label page is `@page { margin: 0 }` and absolutely positioned**, rather
+than laid out inside the page's content box. A die-cut does not move, so
 the grid is placed in absolute inches from the physical page corner. The cost is
 that the sheet is full-bleed and Chrome's "fit to printable area" would ruin it,
 hence the explicit Margins: None / Scale: 100 instruction in the UI.
@@ -240,11 +218,9 @@ the label.
 
 **The shaded code box needs `print-color-adjust: exact`.** Browsers do not print
 backgrounds unless the viewer ticks "Background graphics", so without it the box
-shows on screen and vanishes on paper - the same trap that forced the sign
-tool's eyebrow rule to be built from borders rather than a knockout. It is set
-on the `code` element alone, so the rest of the sheet stays ink-free and
-photocopy-friendly. Checked by printing and looking for the grey block, not by
-assuming.
+shows on screen and vanishes on paper. It is set on the `code` element alone,
+so the rest of the sheet stays ink-free and photocopy-friendly. Checked by
+printing and looking for the grey block, not by assuming.
 
 **The subtitle editor is Quill**, restricted to bold / italic / code / lists -
 exactly what `clean()` allows, so it cannot offer a format that would be
@@ -369,26 +345,15 @@ every real photo at 0.080+, so `MIN_BYTES_PER_PIXEL = 0.06` splits them cleanly.
 Dimensions come from parsing the JPEG SOF / PNG IHDR header directly, which
 avoids pulling in an image library for two numbers.
 
-**The QR sheet is sized in inches, and that is the whole trick.** CSS pins
+**Print geometry is sized in inches, and that is the whole trick.** CSS pins
 `in`/`pt` to 96px/in on screen and to real physical units in print, so one
 element is simultaneously the preview and a true-size print - there is no second
-set of measurements. The sheet is the `@page` *content box* (`margin: 0.5in`),
-never a full-bleed 8.5x11: printers have a ~0.25in unprintable edge, Chrome's
-"fit to printable area" silently shrinks anything that overflows (which would
-destroy true size), and a page-height element is the classic trailing blank
-page. The grid is held to **7.25in**, not the full 7.5in, so an A4 printer
-(7.27in printable at these margins) does not trigger shrink-to-fit either.
+set of measurements.
 
 **Preview scaling is `transform`, never `zoom`.** `zoom` re-lays-out text at the
 scaled size, so preview line breaks would diverge from print and it would stop
 being a preview. The cost is that a scaled element keeps its unscaled layout
-box, so `qr.ts` sets `#preview-host`'s height by hand.
-
-**Card copies tile with no gutter.** Two 5in cards plus any gap exceeds the 10in
-sheet, and CSS grid responds by *silently squashing* the cards rather than
-overflowing - measured at 4.89in instead of 5in before this was caught. 3.625 x
-5in at `gap: 0` divides 7.25 x 10in exactly, and adjacent cut lines land on top
-of each other, which is what you want when trimming a stack.
+box, so `labels.ts` sets `#preview-host`'s height by hand.
 
 **Print QR settings deliberately differ from the reel's** (`scripts/make-qr.mjs`):
 `#000000` not `#111111`, because brand ink is not single-channel black and
@@ -396,14 +361,14 @@ drivers render it as a four-colour composite that fuzzes every module edge;
 `margin: 4` not `1`, because `1` is out of spec and only survives on a huge black
 field; and error correction `M` not `H`, because `H` costs 30-40% more modules
 for the same payload, which means *smaller* modules at a fixed physical size -
-the real limit on a 2.25in card. `H` was right for the reel: screen glare at an
+the real limit on the 2.5 x 1.56in stock. `H` was right for the reel: glare at an
 angle. It is wrong on paper.
 
 **Two things in this repo print badly without an explicit reset.**
 `global.css` sets `html { background: var(--color-sm-ink) }`, which prints as a
 solid black page whenever "Background graphics" is ticked, and `Base.astro` puts
 `min-h-screen` on `<body>`, which is `100vh` in print and emits a blank second
-page. Both are forced back in `qr.astro`'s `@media print`.
+page. Both are forced back in `labels.astro`'s `@media print`.
 
 **Astro scoped styles cannot reach the injected QR.** Scoped `<style>` adds a
 build-time data attribute that elements created by `innerHTML`/`cloneNode` never
@@ -413,28 +378,12 @@ receive, so a scoped `.p-qr svg` rule silently fails to match. The sheet CSS is
 scaled-down preview where it makes module rows look uneven - overridden to
 `geometricPrecision` under `@media screen` only.
 
-**The middle band is `flex: 1 0 auto`, never `1 1 auto`.** It has to grow into
-the space between masthead and imprint, but it must not *shrink*: a shrinking
-band silently absorbs text that does not fit, which would defeat the
-`scrollHeight > clientHeight` overflow check and print a clipped card with no
-warning.
-
-**The eyebrow rule is two flex-grown borders, not a white knockout.** Sitting
-text on a rule is normally done by painting the background colour over the line;
-that fails here because Chrome does not print backgrounds by default, so the
-rule would print straight through the words. Borders are foreground and always
-print.
-
-**`text-wrap: balance` on the title and description** is what stops a card
-description breaking as one full line plus a one-word orphan. Chrome honours it
-in print, which is the only renderer that matters here.
-
 **Astro eats whitespace at element boundaries across a line break.** `and leave\n<b>Scale</b>`
 renders as "leaveScale". Keep `<b>` flush against its neighbouring text.
 
 **The silent QR failure is modules too small to scan**, not anything visible.
-`qr.ts` parses the `viewBox` back off the SVG the encoder just produced, works
-out mm per module, and warns below 0.8mm / errors below 0.5mm. Calibration: a
+`print-qr.ts` parses the `viewBox` back off the SVG the encoder just produced,
+works out mm per module, and warns below 0.8mm / errors below 0.5mm. Calibration: a
 155-char URL on a 2.25in card is 0.88mm and decodes 4/4 from a 300dpi *and* a
 150dpi raster, so the threshold is not alarmist.
 
