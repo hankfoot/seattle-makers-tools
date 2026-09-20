@@ -66,6 +66,30 @@ you'll actually do. It is read from across a room by someone deciding whether
 to walk over, so the first six words carry it. No need to repeat the class name
 — it is directly above.
 
+**This is not a favour to us.** The excerpt is not a field we invented to read
+— it already drives three things on your own site, and the auto-generated text
+is doing all three badly:
+
+| Where it shows | Today |
+| --- | --- |
+| **Site search results** | the run-on text appears under each event title |
+| **Link previews** — Slack, iMessage, Facebook, anywhere the URL is pasted | same text, `[…]` and all |
+| **The events RSS feed** | same text again; 6 of 10 items end in `[…]` |
+
+Verified: the feed's `<description>` and the page's `og:description` are
+character-for-character the same string, so one field fixes all three at once.
+
+Where it does **not** show, so nothing visible breaks: the calendar grid at
+`/events`, the `/event_type/…` archives, and `/events/list/` all show titles and
+times only.
+
+**Use the Excerpt box, not the Yoast ones.** Yoast also has a meta description
+(SEO tab) and a Facebook description (Social tab), and either would override the
+excerpt for link previews. Neither is set today. The excerpt is the better place
+regardless: it is core WordPress rather than one plugin's field, so it survives
+an SEO-plugin change, and it is the only one of the three that also fixes search
+results and the feed.
+
 **Open question we can't answer from outside:** when a recurring class is put on
 the calendar again, is it duplicated from the previous instance or created
 fresh? If duplicated, the excerpt carries over and this is a one-time cost per
