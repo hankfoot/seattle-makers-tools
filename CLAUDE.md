@@ -55,6 +55,8 @@ Done:
   of them do. See *Pictures* below.
 - A help strip along the bottom: sign in at the check-in PC, and the shop
   number to call for a staff member in the building.
+- The wordmark in the hero, knocked out white, with the greeting shortened to
+  "Welcome" so the board does not say the name twice.
 - `/events-dummy.json` is a prerendered endpoint, not a file in public/. Its
   times are generated at build time relative to the build's clock, so it is
   always "today" with something running rather than a fixture that rots.
@@ -388,6 +390,27 @@ screen. No copy is written twice and nothing in it changes between the two - an
 earlier attempt swapped the heading between "Daily Events" and "Welcome to
 Seattle Makers" depending on the mode, which meant the page could never show you
 what the wall would say.
+
+**The lockup is in the hero, and the greeting shortened to make room for it
+honestly.** The board used to say "Welcome to Seattle Makers" and now says
+"Welcome", with the wordmark knocked out white on the right of the green band.
+Keeping both was tried first and is the thing to avoid: the name appears twice,
+and the greeting wraps onto two lines to leave room for its own repetition. The
+greeting is still the board's voice - it is the one line here addressed to a
+person rather than about the schedule - and the mark is what says where you
+are.
+
+**It is the one-line "Skinny" variant, for the reason the footer already
+found.** At a corner-sized footprint the stacked lockup puts SEATTLE on its own
+line at about 13px and it goes soft, where one line buys roughly double the
+letter height in the same space - and this board is read from much further away
+than a footer. Reversing it costs no second asset: the artwork is black on
+transparent, so `filter: brightness(0) invert(1)` knocks it out white, held at
+88% so it does not out-shout the greeting beside it.
+
+Unlike the time rail, it does *not* collapse on a narrow board - it grows in
+proportion instead. With the greeting down to one word, the mark is the only
+thing left saying whose board this is.
 
 **Everything inside the board is measured in `cqmin`, and a single `rem` in
 there breaks the preview.** The board is `container-type: size`, so `cqmin` is

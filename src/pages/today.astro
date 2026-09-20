@@ -58,12 +58,34 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
         the page is what the room reads off the wall. */}
     <section id="t-board" class="t-board" aria-label={`Today at ${SITE.org}`}>
       <header class="t-hero">
-        <h2 class="t-welcome">Welcome to {SITE.org}</h2>
-        {/* One line, deliberately: Astro eats whitespace at an element
-            boundary across a line break, so the separator and the date set on
-            separate lines render as "today ·Saturday". The span holds the date
-            and nothing else - today.ts rewrites it at the day rollover. */}
-        <p class="t-sub">What's on today · <span id="t-date">{heading}</span></p>
+        <div class="t-hero-text">
+          {/* "Welcome", not "Welcome to Seattle Makers": the lockup beside it
+              says the name, and a board that says it twice made the greeting
+              wrap onto two lines to leave room for its own repetition. The
+              greeting is still the board's voice - it is the one thing here
+              addressed to a person rather than about the schedule. */}
+          <h2 class="t-welcome">Welcome</h2>
+          {/* One line, deliberately: Astro eats whitespace at an element
+              boundary across a line break, so the separator and the date set on
+              separate lines render as "today ·Saturday". The span holds the date
+              and nothing else - today.ts rewrites it at the day rollover. */}
+          <p class="t-sub">What's on today · <span id="t-date">{heading}</span></p>
+        </div>
+
+        {/* The lockup, knocked out white on the green band.
+
+            The one-line "Skinny" variant, not the stacked one, for the reason
+            the footer already found the hard way: at a corner-sized footprint
+            the stacked mark puts SEATTLE on its own line at about 13px and it
+            goes soft, where one line buys roughly double the letter height in
+            the same space. This board is read from further away than a footer
+            ever is.
+
+            `alt=""` on purpose: the heading beside it already says Seattle
+            Makers, so a screen reader announcing the picture as well would
+            just read the name twice. The intrinsic size is stated so the band
+            does not reflow when the file lands. */}
+        <img class="t-mark" src="/brand/wordmark-inline.png" alt="" width="500" height="63" />
       </header>
 
       <!-- Empty on purpose. There is no longer a build-time render: the baked
@@ -167,12 +189,34 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
      and the page's own title is no use to them. */
   .t-hero {
     flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 4cqmin;
     /* Full-bleed green, but its text lands on the same left edge as the rows
        below: past a point the content stops widening and centres instead, so a
        very wide screen does not run titles into lines nobody reads from across
        a room. One expression, no breakpoint, and the band stays edge to edge. */
     padding: 3.6cqmin max(3.4cqmin, calc((100% - 168cqmin) / 2));
     background: var(--color-sm-green);
+  }
+
+  /* min-width: 0 so a long greeting wraps rather than shoving the lockup off
+     the band - a flex item's default min-width is its content. */
+  .t-hero-text {
+    min-width: 0;
+  }
+
+  /* The lockup is black artwork on transparent, so one filter reverses it to
+     white rather than shipping a second file. Not full strength: at 100% it
+     out-shouts the greeting it is standing next to, which is the wrong way
+     round for a board whose job is to say what is on. */
+  .t-mark {
+    flex: 0 0 auto;
+    width: 21cqmin;
+    height: auto;
+    filter: brightness(0) invert(1);
+    opacity: 0.88;
   }
 
   .t-welcome {
@@ -587,6 +631,12 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
     /* The time stacks above the text now, so both are placed explicitly -
        left to auto-placement the body would land beside the time rather than
        under it. */
+    /* Kept at this size, and bigger in proportion: with the greeting down to
+       one word, the lockup is the only thing on the board saying where you
+       are. */
+    .t-mark {
+      width: 30cqmin;
+    }
     .t-time {
       grid-column: 1;
       padding-right: 0;
