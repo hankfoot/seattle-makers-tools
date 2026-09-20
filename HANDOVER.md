@@ -1,8 +1,9 @@
 # Handover
 
-This repo is meant to end up owned by Seattle Makers. It was built in a
-personal GitHub account and first deployed from a personal Cloudflare account,
-so this is the list of what has to move and what breaks if it does not.
+This repo is meant to end up owned by Seattle Makers. **The Cloudflare side is
+already there** - the Worker was created under the makerspace's own Cloudflare
+account, so the deployment, its URL and its billing are final. What is still
+personal is the **GitHub repo**, and that is the only thing left to move.
 
 Written down because the person doing the transfer may not be the person who
 set it up.
@@ -20,22 +21,22 @@ and there is no state to migrate.
 - The Cloudflare *Worker* - which account builds and serves the site.
 - The domain attached to it.
 
-## Do not attach the real subdomain to the first deployment
+## The subdomain can go on whenever you want
 
-The first deployment lives in a personal Cloudflare account and is disposable.
-Workers cannot be moved between Cloudflare accounts: the Worker is recreated
-under the new account, and the `*.workers.dev` hostname changes with it.
+This used to say not to attach it. That no longer applies: because the Worker
+already lives in the makerspace's Cloudflare account, it is not going to be
+recreated somewhere else, so its address is stable and a custom domain can be
+pointed at it at any time. Moving the GitHub repo does not disturb it.
 
-That is cheap - it is a git-connected build with no state - but only if nothing
-is pointing at the old hostname yet. So **leave `tools.seattlemakers.org` (or
-whatever it ends up being) until the Cloudflare account is the makerspace's
-one.** Doing the DNS step once, at the end, avoids a window where the published
-address stops working.
+Worth knowing *why* the address matters, though, because it stays true: the
+label maker's save feature **is** the URL - the README tells staff "to keep a
+sheet, bookmark it". So once people start bookmarking sheets, changing the
+hostname breaks them. Pick the address you want to keep before publicising it.
 
-The same reasoning applies to anything printed or bookmarked. Note that the
-label maker's *save* feature is the URL - the README says "to keep a sheet,
-bookmark it" - so staff bookmarks break if the host changes under them. Another
-reason the throwaway hostname should stay throwaway.
+Workers cannot be moved between Cloudflare accounts - you delete and recreate,
+and the `*.workers.dev` hostname changes - which is the trap this section
+originally existed to avoid. Creating it in the right account from the start
+sidestepped it.
 
 ## Transfer steps
 
@@ -48,25 +49,22 @@ reason the throwaway hostname should stay throwaway.
    the real URL avoids confusion:
    `git remote set-url origin https://github.com/<org>/seattle-makers-tools.git`
 
-3. **Reconnect Cloudflare to GitHub.** The GitHub app authorisation does not
-   follow a repo across owners, so the Worker loses its source. If the
-   Cloudflare account is also changing, skip this and do step 4 instead.
+3. **Reconnect Cloudflare to GitHub.** This is the one thing the repo move
+   breaks. The GitHub app authorisation does not follow a repo across owners,
+   so after the transfer the Worker can no longer see its source and stops
+   auto-deploying. Re-authorise the Cloudflare GitHub app against the org and
+   point the Worker at the transferred repo. The Worker itself, its settings
+   and its URL are untouched - this is a reconnection, not a rebuild.
 
-4. **Recreate the Worker** under the makerspace Cloudflare account.
-   Use a role login (something like `tech@seattlemakers.org`) rather than a
-   personal one, so it is not tied to one member. Settings, in full:
+4. **Nothing to do for Cloudflare beyond that.** The Worker is already on the
+   makerspace account. For reference, if one ever does need recreating, the
+   settings are: build command `npm run build`, deploy command
+   `npx wrangler deploy`, no environment variables. Everything else - the entry
+   point and the `dist/` assets directory - comes from `wrangler.toml`, and
+   `.nvmrc` pins the Node version.
 
-   | Field | Value |
-   | --- | --- |
-   | Build command | `npm run build` |
-   | Deploy command | `npx wrangler deploy` |
-   | Environment variables | none |
-
-   Everything else comes from `wrangler.toml` - the entry point and the
-   `dist/` assets directory - so there is nothing else to fill in. `.nvmrc`
-   pins Node 22.12.0 and Cloudflare honours it.
-
-5. **Point the subdomain at it**, now that the account is the final one.
+5. **Point the subdomain at it** whenever you want - see above; it does not
+   depend on the repo move.
 
 6. **Update the two user-agent strings** to the new repo URL. They identify
    this scraper to seattlemakers.org, so they should point somewhere real:
