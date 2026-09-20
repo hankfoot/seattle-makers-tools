@@ -55,7 +55,7 @@ const MIN_IMAGE_WIDTH = 600;
 const MIN_BYTES_PER_PIXEL = 0.06;
 
 const res = await fetch(SOURCE, {
-  headers: { 'user-agent': 'seattle-makers-tools/0.1 (+https://github.com/hankfoot/seattle-makers-tools)' },
+  headers: { 'user-agent': 'seattle-makers-tools/0.1 (+https://github.com/seattlemakers/seattle-makers-tools)' },
 });
 if (!res.ok) {
   console.error(`fetch-events: ${SOURCE} returned HTTP ${res.status}`);

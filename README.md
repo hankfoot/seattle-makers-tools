@@ -385,7 +385,10 @@ would stop being live.
 ## Handover
 
 Everything here is designed so that owning the repo is the same as owning the
-tools. Worth knowing when this changes hands.
+tools. **It has changed hands:** the Worker was always on the makerspace's
+Cloudflare account, and the repo moved to the `seattlemakers` GitHub org on
+2026-09-20. [HANDOVER.md](HANDOVER.md) is the authority on what that took and
+what is still outstanding; this section is the shape of the thing.
 
 **There is nothing to migrate but the repo.** The function reads no secrets,
 has no environment variables, no bindings, no database and nothing stored in a

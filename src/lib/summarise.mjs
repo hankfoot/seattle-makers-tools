@@ -106,7 +106,7 @@ export async function describeEvent(url, fetchImpl = fetch) {
     const res = await fetchImpl(url, {
       headers: {
         'user-agent':
-          'seattle-makers-tools/0.1 (+https://github.com/hankfoot/seattle-makers-tools)',
+          'seattle-makers-tools/0.1 (+https://github.com/seattlemakers/seattle-makers-tools)',
       },
     });
     if (!res.ok) return null;

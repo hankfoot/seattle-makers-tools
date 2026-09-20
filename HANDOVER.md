@@ -1,11 +1,13 @@
 # Handover
 
-This repo is meant to end up owned by Seattle Makers. **The Cloudflare side is
-already there** - the Worker was created under the makerspace's own Cloudflare
-account, so the deployment, its URL and its billing are final. What is still
-personal is the **GitHub repo**, and that is the only thing left to move.
+This repo is owned by Seattle Makers, and **both halves are now on the
+makerspace's own accounts.** The Worker was created under its Cloudflare
+account from the start, so the deployment, its URL and its billing were always
+final; the GitHub repo was the last personal piece and moved to the
+`seattlemakers` org on 2026-09-20.
 
-Written down because the person doing the transfer may not be the person who
+One step of that move is still outstanding - see *Transfer steps* below, item
+3. Written down because the person doing the transfer may not be the person who
 set it up.
 
 ## What is and is not account-bound
@@ -40,21 +42,25 @@ sidestepped it.
 
 ## Transfer steps
 
-1. **GitHub repo → the org.** Transferring into an organisation needs
-   repo-creation rights there, so either the person transferring is added to
-   the org first, or an org owner initiates it. History, issues and stars come
-   across, and GitHub redirects the old URL.
+**The repo moved to `seattlemakers/seattle-makers-tools` on 2026-09-20.** What
+that took, and what it left:
 
-2. **Update the local remote** afterwards - the redirect works, but pointing at
-   the real URL avoids confusion:
-   `git remote set-url origin https://github.com/<org>/seattle-makers-tools.git`
+1. ~~**GitHub repo → the org.**~~ Done. Transferred by an org admin via the
+   API; history, issues and stars came across, and GitHub redirects the old
+   `hankfoot/` URL indefinitely. The repo is still public.
 
-3. **Reconnect Cloudflare to GitHub.** This is the one thing the repo move
-   breaks. The GitHub app authorisation does not follow a repo across owners,
-   so after the transfer the Worker can no longer see its source and stops
-   auto-deploying. Re-authorise the Cloudflare GitHub app against the org and
-   point the Worker at the transferred repo. The Worker itself, its settings
-   and its URL are untouched - this is a reconnection, not a rebuild.
+2. ~~**Update the local remote.**~~ Done. The redirect works either way, but
+   every clone should be pointed at the real URL:
+   `git remote set-url origin https://github.com/seattlemakers/seattle-makers-tools.git`
+
+3. **Reconnect Cloudflare to GitHub.** *Still to do, and it is the one thing
+   the move breaks.* The GitHub app authorisation does not follow a repo across
+   owners, so the Worker can no longer see its source and has stopped
+   auto-deploying. In the Cloudflare dashboard: re-authorise the Cloudflare
+   GitHub app against the `seattlemakers` org, then point the Worker at the
+   transferred repo. The Worker itself, its settings and its URL are untouched -
+   this is a reconnection, not a rebuild. **Until it is done, pushes to `main`
+   do not deploy.**
 
 4. **Nothing to do for Cloudflare beyond that.** The Worker is already on the
    makerspace account. For reference, if one ever does need recreating, the
@@ -66,15 +72,17 @@ sidestepped it.
 5. **Point the subdomain at it** whenever you want - see above; it does not
    depend on the repo move.
 
-6. **Update the two user-agent strings** to the new repo URL. They identify
-   this scraper to seattlemakers.org, so they should point somewhere real:
+6. ~~**Update the two user-agent strings.**~~ Done, and there were three, not
+   two. This note used to name `worker/index.js`, which has not carried the
+   string since the response moved out of it: it imports `calendarResponse()`
+   from `src/lib/calendar-api.mjs`, and that module holds the header. The three
+   real ones are `scripts/fetch-events.mjs`, `src/lib/calendar-api.mjs` and
+   `src/lib/summarise.mjs` - grep for `user-agent` rather than trusting a list.
+   The footer's repo link in `src/components/SiteFooter.astro` moved with
+   them.
 
-   - `worker/index.js`
-   - `scripts/fetch-events.mjs`
-
-7. **Check `LICENSE`.** It currently reads `Copyright (c) 2026 Seattle Makers`,
-   which assumes the work was handed over outright. Correct it if that is not
-   the arrangement.
+7. ~~**Check `LICENSE`.**~~ Done. It reads `Copyright (c) 2026 Seattle Makers`,
+   which the transfer makes correct rather than presumptuous. Left as is.
 
 ## After the transfer, how anyone contributes
 
