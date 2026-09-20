@@ -1,0 +1,46 @@
+---
+/**
+ * The masthead, on every tool page.
+ *
+ * This is the whole cohesion argument in one element: a near-black bar with
+ * the white lockup at the left and tracked uppercase nav at the right is what
+ * you see at the top of seattlemakers.org, so a page that carries it reads as
+ * part of that site before anyone has looked at the content.
+ *
+ * Styles live in global.css, not in a scoped block here, so the bar can be
+ * reasoned about alongside the sheet it sits on.
+ */
+interface Props {
+  /** Pathname of the page rendering this, e.g. "/today". Marks the nav link. */
+  current?: string;
+}
+const { current = '' } = Astro.props;
+
+const links = [
+  { href: '/today', label: 'Today' },
+  { href: '/labels', label: 'Labels' },
+];
+---
+
+<header class="sm-masthead no-print">
+  <div class="sm-masthead-inner">
+    <a href="/" aria-label="Seattle Makers tools — home">
+      <img class="sm-wordmark" src="/brand/wordmark-black.png" alt="Seattle Makers" />
+    </a>
+    <nav class="sm-nav" aria-label="Tools">
+      {
+        links.map((l) => (
+          <a href={l.href} aria-current={l.href === current ? 'page' : undefined}>
+            {l.label}
+          </a>
+        ))
+      }
+      {/* Set apart by a rule, because it leaves the site rather than moving
+          around inside it, and at the same weight it read as a third tool. */}
+      <a class="sm-nav-out" href="https://seattlemakers.org" rel="noopener">
+        seattlemakers.org
+        <span aria-hidden="true">↗</span>
+      </a>
+    </nav>
+  </div>
+</header>

@@ -1,6 +1,28 @@
 @import 'tailwindcss';
 
-/* Self-hosted so the reel renders identically on a market PC with no network. */
+/* ============================================================== typefaces ===
+
+   Roboto is seattlemakers.org's face - every heading, every paragraph, every
+   nav item on that site is Roboto - so it is this site's face too. One
+   variable file covers 100-900, which is why the four weights the UI uses
+   (400 body, 500 labels, 700 headings, 900 numerals) cost one 37K download
+   rather than four.
+
+   Self-hosted rather than linked from Google, matching how Lato is handled
+   below: the market PC and the screen by the door should render identically
+   with no network. */
+@font-face {
+  font-family: 'Roboto';
+  src: url('/fonts/roboto.woff2') format('woff2');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Lato belongs to the reel alone now, which is why /slideshow names it
+   explicitly rather than inheriting it. The reel's 25 slides were laid out and
+   verified against Lato's metrics; the tool pages were not, and they have a
+   better reason to match the website. */
 @font-face {
   font-family: 'Lato';
   src: url('/fonts/lato-400.woff2') format('woff2');
@@ -23,26 +45,41 @@
   font-display: block;
 }
 
-/* Display face for print only. Declared here but never referenced by the reel,
-   so the browser only fetches it on /labels - a font-face rule alone downloads
-   nothing. Variable across the weight range in one file. */
-@font-face {
-  font-family: 'Fraunces';
-  src: url('/fonts/fraunces.woff2') format('woff2');
-  font-weight: 100 900;
-  font-style: normal;
-  font-display: block;
-}
-
 @theme {
-  /* Sampled from the wordmark in the brand deck. */
-  --color-sm-green: #10733c;
-  --color-sm-green-dark: #0b5a2e;
-  --color-sm-ink: #111111;
-  --color-sm-paper: #ffffff;
-  --color-sm-mist: #f1f1f1;
+  /* ------------------------------------------------------------ palette ---
 
-  --font-sans: 'Lato', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+     Read off seattlemakers.org with getComputedStyle, not sampled from a
+     screenshot or guessed from the deck - a screenshot is already through a
+     colour profile, and the deck predates the current site.
+
+       green       #13723C  headings and primary buttons
+       green-dark  #0E4D29  the hover state on those buttons
+       green-mid   #43AA6D  secondary buttons
+       sage        #84BF80  nav links on the dark bar
+       ink         #1A1A1A  the masthead bar
+       slate       #606164  body copy (the site's own body colour)
+       mist        #E5E5E5  the ground the white content sits on
+
+     The old --color-sm-green was #10733c, sampled from the wordmark in the
+     brand deck. Three units off is invisible on its own and obvious when this
+     site's green sits next to the real one in a browser tab beside it. */
+  --color-sm-green: #13723c;
+  --color-sm-green-dark: #0e4d29;
+  --color-sm-green-mid: #43aa6d;
+  --color-sm-sage: #84bf80;
+  --color-sm-ink: #1a1a1a;
+  --color-sm-slate: #606164;
+  --color-sm-line: #dcdddf;
+  --color-sm-mist: #e5e5e5;
+  --color-sm-paper: #ffffff;
+
+  --font-sans: 'Roboto', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-reel: 'Lato', ui-sans-serif, system-ui, sans-serif;
+
+  /* The site's one typographic tic: small labels and nav items are tracked
+     wide open (2px at 15px, 1px at 16px). Named so it stays consistent rather
+     than being re-eyeballed per component. */
+  --tracking-label: 0.14em;
 }
 
 /* Tailwind's display utilities outrank the UA rule for [hidden], so a flex
@@ -53,6 +90,244 @@
 
 html {
   font-family: var(--font-sans);
+  /* Black, so the full-bleed reel never flashes white behind itself. The tool
+     pages paint their own ground over it. */
   background: var(--color-sm-ink);
   color: var(--color-sm-ink);
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* One focus ring for the whole site. Green-mid rather than green so it stays
+   visible against both the white plates and the green buttons it lands on. */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--color-sm-green-mid);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ================================================================= shell ===
+
+   The chrome every tool page shares. Defined here rather than in a component's
+   scoped <style> because /today builds rows in the browser: Astro's scoping
+   attribute is stamped on at build, so an element created by script never
+   matches a scoped rule. Same trap as the injected QR on /labels. */
+
+.sm-masthead {
+  background: var(--color-sm-ink);
+  border-bottom: 3px solid var(--color-sm-green);
+}
+
+.sm-masthead-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  max-width: var(--sm-shell-w, 64rem);
+  margin: 0 auto;
+  padding: 0.85rem 1.5rem;
+}
+
+/* The lockup must never give up width to the nav. As a plain flex item it
+   did: at 375px the nav filled the bar and the anchor was shrunk to 0, which
+   showed as a masthead with no logo in it at all. */
+.sm-masthead-inner > a:first-child {
+  flex: 0 0 auto;
+}
+
+/* wordmark-black.png is pure black on transparent - checked pixel by pixel -
+   so inverting it gives exactly the white lockup the real masthead uses, with
+   no second asset to keep in step with the first. */
+.sm-wordmark {
+  display: block;
+  width: auto;
+  height: 2.1rem;
+  filter: invert(1);
+}
+
+.sm-nav {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  min-width: 0;
+}
+
+.sm-nav a {
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--color-sm-sage);
+  transition: color 140ms ease;
+}
+
+.sm-nav a:hover {
+  color: var(--color-sm-paper);
+}
+
+.sm-nav a[aria-current='page'] {
+  color: var(--color-sm-paper);
+}
+
+/* Specific enough to beat `.sm-nav a` without !important, which would have
+   taken the hover state down with it. */
+.sm-nav a.sm-nav-out {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  padding-left: 1.5rem;
+  border-left: 1px solid rgb(255 255 255 / 0.18);
+  color: #8f9093;
+}
+
+.sm-nav a.sm-nav-out:hover {
+  color: var(--color-sm-paper);
+}
+
+.sm-nav-out span {
+  font-size: 0.7em;
+}
+
+/* Has to match the specificity of the rule that set `display` above - as a
+   bare `.sm-nav-out` it lost, and the link stayed on at 375px while squeezing
+   the wordmark out of the bar. */
+@media (max-width: 48rem) {
+  .sm-nav a.sm-nav-out {
+    display: none;
+  }
+}
+
+/* The white sheet the content sits on, floating on the mist - the boxed
+   layout the website uses, where the grey shows as a gutter all the way
+   round rather than only at the sides. */
+.sm-sheet {
+  max-width: var(--sm-shell-w, 64rem);
+  margin: 0 auto;
+  padding: 3rem 2.5rem 2.5rem;
+  background: var(--color-sm-paper);
+}
+
+@media (max-width: 40rem) {
+  .sm-sheet {
+    padding: 2rem 1.25rem 2rem;
+  }
+  .sm-masthead-inner {
+    padding: 0.7rem 1.25rem;
+  }
+  .sm-nav {
+    gap: 1.1rem;
+  }
+  .sm-wordmark {
+    height: 1.75rem;
+  }
+}
+
+/* ---------------------------------------------------------------- type --- */
+
+/* Green, 700, sentence case - the site's h1 exactly. */
+.sm-h1 {
+  font-size: clamp(2rem, 1.4rem + 2.4vw, 2.8rem);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.015em;
+  color: var(--color-sm-green);
+}
+
+/* The short rule the website sets between a heading and its paragraph. It is
+   the one piece of decoration on the page, so it is the only one. */
+.sm-rule {
+  width: 3rem;
+  height: 3px;
+  margin: 1.1rem 0 1.25rem;
+  background: var(--color-sm-green-mid);
+  border: 0;
+}
+
+.sm-lead {
+  font-size: 1.0625rem;
+  line-height: 1.55;
+  color: var(--color-sm-slate);
+}
+
+/* Eyebrows, tags, meta - anything small enough that tracking it open is what
+   makes it read as a label rather than as shrunken prose. */
+.sm-label {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--color-sm-slate);
+}
+
+/* Wide enough that the rule closing the last row and the rule opening the
+   footer read as two edges rather than as one doubled line. */
+.sm-foot {
+  margin-top: 3.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--color-sm-line);
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  color: var(--color-sm-slate);
+}
+
+/* ------------------------------------------------------------- buttons --- */
+
+/* Pill, 700, tracked, white on green. The website's call to action, down to
+   the 50px radius. */
+.sm-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.85rem 1.6rem;
+  border: 0;
+  border-radius: 50px;
+  background: var(--color-sm-green);
+  color: var(--color-sm-paper);
+  font: inherit;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background-color 140ms ease,
+    box-shadow 140ms ease;
+}
+
+.sm-btn:hover:not(:disabled) {
+  background: var(--color-sm-green-dark);
+  box-shadow: 0 6px 18px rgb(19 114 60 / 0.25);
+}
+
+.sm-btn:disabled {
+  background: var(--color-sm-line);
+  color: #8d8e90;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+/* Nothing in the shell belongs on paper. /labels prints a full-bleed sheet
+   positioned from the page corner, and a masthead above it would push the
+   first row of labels off its die-cut. */
+@media print {
+  .sm-masthead {
+    display: none !important;
+  }
 }

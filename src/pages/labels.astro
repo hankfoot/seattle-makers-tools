@@ -20,6 +20,8 @@ const stocks = STOCKS.map((s) => ({
   title="Labels — Seattle Makers"
   description="Design a label and print it onto the Label Station's sheets."
   bodyClass="lb-page"
+  current="/labels"
+  shellWidth="84rem"
 >
   <div class="lb-layout">
     {/* Wrapper so the sidebar reads as one column on a wide screen. Below the
@@ -28,10 +30,12 @@ const stocks = STOCKS.map((s) => ({
         independently - preview above the button. */}
     <div class="lb-col no-print">
       <aside class="lb-editor">
+      {/* No back link and no "seattle makers" eyebrow: the masthead above
+          carries both, and repeating them here was the page saying its own
+          name twice. */}
       <header class="lb-head">
-        <a href="/" class="lb-back">← tools</a>
-        <p class="lb-eyebrow">seattle makers</p>
-        <h1>labels</h1>
+        <h1>Labels</h1>
+        <hr class="sm-rule" />
         <p class="lb-sub">One design, printed onto the sheet you choose.</p>
       </header>
 
@@ -358,10 +362,11 @@ const stocks = STOCKS.map((s) => ({
       shape-rendering: geometricPrecision;
     }
 
+    /* Flat mist, not the dotted workbench grid this used to have. The texture
+       was a nice cue and it is a texture nothing else on the site or on
+       seattlemakers.org uses, which made this page the odd one out. */
     body.lb-page {
       background-color: var(--color-sm-mist);
-      background-image: radial-gradient(circle at 1px 1px, rgb(0 0 0 / 0.055) 1px, transparent 0);
-      background-size: 22px 22px;
     }
 
     .lb-layout {
@@ -456,7 +461,7 @@ const stocks = STOCKS.map((s) => ({
       opacity: 0.13;
     }
     .lb-cell:hover {
-      background: rgb(16 115 60 / 0.1);
+      background: rgb(19 114 60 / 0.1);
       outline-color: var(--color-sm-green);
     }
     .lb-cell[data-on='0']:hover .lb-inner {
@@ -492,9 +497,9 @@ const stocks = STOCKS.map((s) => ({
       margin-bottom: 0.7rem;
       font-size: 0.72rem;
       font-weight: 700;
-      letter-spacing: 0.04em;
+      letter-spacing: var(--tracking-label);
       text-transform: uppercase;
-      color: #8a8a8a;
+      color: var(--color-sm-slate);
     }
     .pv-label {
       color: var(--color-sm-green);
@@ -503,59 +508,46 @@ const stocks = STOCKS.map((s) => ({
 
   /* ============================================================== editor === */
 
+  /* The editor is a white plate on the mist, the same relationship the sheet
+     has to the ground on every other page. */
   .lb-editor {
     display: flex;
     flex-direction: column;
     gap: 1rem;
+    padding: 1.75rem 1.5rem;
+    background: var(--color-sm-paper);
   }
   .lb-actions {
     display: flex;
     flex-direction: column;
     gap: 0.6rem;
   }
-  .lb-back {
-    font-size: 0.8rem;
-    font-weight: 700;
-    color: var(--color-sm-green);
-  }
-  .lb-back:hover {
-    text-decoration: underline;
-  }
   .lb-head {
-    padding-bottom: 1.1rem;
-    border-bottom: 4px solid var(--color-sm-green);
-  }
-  .lb-eyebrow {
-    margin-top: 0.9rem;
-    font-size: 1.05rem;
-    font-weight: 900;
-    line-height: 1;
-    letter-spacing: -0.02em;
-    color: #b0b0b0;
+    padding-bottom: 0.2rem;
   }
   .lb-editor h1 {
-    margin-top: 0.55rem;
-    font-family: 'Fraunces', 'Iowan Old Style', Georgia, serif;
-    font-size: 2.7rem;
-    font-weight: 900;
-    font-variation-settings: 'SOFT' 0, 'WONK' 0, 'opsz' 144;
-    line-height: 0.95;
-    letter-spacing: -0.02em;
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: -0.015em;
     color: var(--color-sm-green);
   }
+  .lb-head .sm-rule {
+    margin: 0.85rem 0 0.9rem;
+  }
   .lb-sub {
-    margin-top: 0.3rem;
     font-size: 0.9rem;
-    color: #525252;
+    line-height: 1.5;
+    color: var(--color-sm-slate);
   }
 
   .lb-group {
     margin-top: 0.4rem;
     font-size: 0.68rem;
-    font-weight: 900;
+    font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: #a3a3a3;
+    letter-spacing: var(--tracking-label);
+    color: var(--color-sm-green);
   }
   .lb-group + .lb-field,
   .lb-group + .lb-note {
@@ -570,25 +562,25 @@ const stocks = STOCKS.map((s) => ({
   .lb-field > span,
   .lb-field > legend {
     font-size: 0.72rem;
-    font-weight: 900;
+    font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: #404040;
+    letter-spacing: var(--tracking-label);
+    color: var(--color-sm-ink);
   }
   .lb-field > span i,
   .lb-field > legend i {
     font-style: normal;
-    font-weight: 700;
+    font-weight: 400;
     text-transform: none;
     letter-spacing: 0;
-    color: #a3a3a3;
+    color: var(--color-sm-slate);
   }
   .lb-field input[type='text'],
   .lb-editor-shell {
     width: 100%;
     padding: 0.55rem 0.7rem;
-    border: 1px solid #d4d4d4;
-    border-radius: 0.4rem;
+    border: 1px solid var(--color-sm-line);
+    border-radius: 6px;
     background: #fff;
     font: inherit;
     font-size: 0.95rem;
@@ -615,7 +607,7 @@ const stocks = STOCKS.map((s) => ({
   }
   #f-sub-toolbar.ql-toolbar.ql-snow {
     border: 0;
-    border-bottom: 1px solid #e5e5e5;
+    border-bottom: 1px solid var(--color-sm-line);
     padding: 0.3rem 0.35rem;
     background: #fafafa;
     font-family: inherit;
@@ -626,7 +618,7 @@ const stocks = STOCKS.map((s) => ({
     border-radius: 0.25rem;
   }
   .ql-snow.ql-toolbar button:hover {
-    background: rgb(16 115 60 / 0.09);
+    background: rgb(19 114 60 / 0.09);
   }
   .ql-snow.ql-toolbar button:hover .ql-stroke,
   .ql-snow.ql-toolbar button.ql-active .ql-stroke {
@@ -637,7 +629,7 @@ const stocks = STOCKS.map((s) => ({
     fill: var(--color-sm-green);
   }
   .ql-snow.ql-toolbar button.ql-active {
-    background: rgb(16 115 60 / 0.13);
+    background: rgb(19 114 60 / 0.13);
   }
   #f-sub.ql-container.ql-snow {
     border: 0;
@@ -681,8 +673,8 @@ const stocks = STOCKS.map((s) => ({
     flex-direction: column;
     gap: 0.1rem;
     padding: 0.5rem 0.4rem;
-    border: 1px solid #d4d4d4;
-    border-radius: 0.4rem;
+    border: 1px solid var(--color-sm-line);
+    border-radius: 6px;
     background: #fff;
     font: inherit;
     font-size: 0.82rem;
@@ -699,7 +691,7 @@ const stocks = STOCKS.map((s) => ({
     font-style: normal;
     font-weight: 400;
     font-size: 0.68rem;
-    color: #a3a3a3;
+    color: var(--color-sm-slate);
   }
   .lb-seg button:hover:not(:disabled) {
     border-color: var(--color-sm-green);
@@ -720,7 +712,7 @@ const stocks = STOCKS.map((s) => ({
   /* The stock offers no upright variant. The control stays put and greys out
      rather than disappearing. */
   .lb-field.is-limited legend {
-    color: #a3a3a3;
+    color: var(--color-sm-slate);
   }
 
   .lb-picks {
@@ -729,9 +721,9 @@ const stocks = STOCKS.map((s) => ({
     gap: 0.4rem;
   }
   .lb-mini {
-    padding: 0.3rem 0.7rem;
-    border: 1px solid #d4d4d4;
-    border-radius: 0.4rem;
+    padding: 0.3rem 0.85rem;
+    border: 1px solid var(--color-sm-line);
+    border-radius: 50px;
     background: #fff;
     font: inherit;
     font-size: 0.8rem;
@@ -745,21 +737,21 @@ const stocks = STOCKS.map((s) => ({
     margin-left: auto;
     font-size: 0.8rem;
     font-weight: 700;
-    color: #737373;
+    color: var(--color-sm-slate);
   }
 
   .lb-note,
   .lb-warn {
     font-size: 0.78rem;
-    line-height: 1.35;
+    line-height: 1.45;
   }
   .lb-note {
     margin-top: -0.4rem;
-    color: #737373;
+    color: var(--color-sm-slate);
   }
   .lb-warn {
-    padding: 0.5rem 0.65rem;
-    border-radius: 0.4rem;
+    padding: 0.55rem 0.75rem;
+    border-radius: 6px;
     background: #fef3c7;
     color: #713f12;
   }
@@ -768,34 +760,37 @@ const stocks = STOCKS.map((s) => ({
     color: #7f1d1d;
   }
 
+  /* The website's call to action: a green pill, 700, tracked. Same shape as
+     every primary button on seattlemakers.org, down to the 50px radius. */
   .lb-print {
-    padding: 0.75rem;
+    padding: 0.85rem 1.6rem;
     border: 0;
-    border-radius: 0.4rem;
+    border-radius: 50px;
     background: var(--color-sm-green);
     color: #fff;
     font: inherit;
-    font-size: 1rem;
-    font-weight: 900;
+    font-size: 0.9375rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
     cursor: pointer;
     transition:
       background-color 140ms ease,
-      box-shadow 140ms ease,
-      transform 140ms ease;
+      box-shadow 140ms ease;
   }
   .lb-print:hover:not(:disabled) {
     background: var(--color-sm-green-dark);
-    box-shadow: 0 6px 18px rgb(16 115 60 / 0.28);
-    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgb(19 114 60 / 0.25);
   }
   .lb-print:disabled {
-    background: #d4d4d4;
+    background: var(--color-sm-line);
+    color: #8d8e90;
+    box-shadow: none;
     cursor: not-allowed;
   }
   .lb-hint {
     font-size: 0.75rem;
-    line-height: 1.4;
-    color: #737373;
+    line-height: 1.5;
+    color: var(--color-sm-slate);
   }
 
   /* =============================================================== print === */

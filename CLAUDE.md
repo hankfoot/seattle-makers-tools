@@ -67,6 +67,18 @@ Done:
   with the label maker but the Fraunces face; `lib/print-qr.ts` and the
   module-size warnings were always the label tool's.
 
+All three pages were rebranded against seattlemakers.org on 2026-09-19 and
+verified in the browser at 1440 and 375, and on paper.
+
+Done:
+- Roboto replaces Lato on the tool pages, the palette was re-read off the live
+  site, and every page now carries the same dark masthead with the white
+  lockup. Fraunces is gone.
+- `/today` rebuilt around a time rail; `/` rebuilt as hairline rows; `/labels`
+  chrome retokenised, its dotted ground dropped and its Print button made the
+  website's green pill.
+- The reel is deliberately untouched and stays on Lato. See *Branding* below.
+
 Next:
 - Those 8 slideshow type errors.
 - Photos for **leatherworking** and **a/v studio** - the only two studios still
@@ -81,6 +93,91 @@ Next:
   proven stable across a site change or two.
 
 ## Implementation notes
+
+### Branding
+
+**The palette was read off seattlemakers.org with `getComputedStyle`, not
+sampled from a screenshot or taken from the brand deck.** A screenshot has
+already been through a colour profile, and the deck predates the current site.
+What came back:
+
+| token | value | where it is used on the real site |
+| --- | --- | --- |
+| `--color-sm-green` | `#13723C` | every h1/h2, primary buttons |
+| `--color-sm-green-dark` | `#0E4D29` | the hover on those buttons |
+| `--color-sm-green-mid` | `#43AA6D` | secondary buttons |
+| `--color-sm-sage` | `#84BF80` | nav links on the dark bar |
+| `--color-sm-ink` | `#1A1A1A` | the masthead bar |
+| `--color-sm-slate` | `#606164` | body copy |
+| `--color-sm-mist` | `#E5E5E5` | the ground the white content sits on |
+
+The old `--color-sm-green` was `#10733c`, sampled from the wordmark in the
+deck. Three units is invisible on its own and obvious in a tab next to the real
+one. `--color-sm-ink` moved `#111111` -> `#1A1A1A` at the same time, which also
+shifts the reel's stage black by a hair; that is intended, there is one black.
+
+**Roboto is the site's face because it is seattlemakers.org's face** - every
+heading, paragraph and nav item there is Roboto. One variable woff2 covers
+100-900, so the four weights the UI uses cost a single 37K download, less than
+the three static Lato files it replaced. Self-hosted, matching how Lato was
+handled: the screen by the door should render the same with no network.
+
+**The reel stays on Lato, and names it explicitly.** Its 25 slides were laid
+out and verified against Lato's metrics on a fixed 1920x1080 stage, where a
+wider face does not reflow so much as overrun. `slideshow.astro` sets
+`body { font-family: var(--font-reel) }` because the inherited face is now
+Roboto. The tool pages have no such geometry and a much better reason to match
+the website.
+
+**A consequence worth knowing: printed labels are now set in Roboto.** The
+label sheet inherits `--font-sans` like everything else. The auto-fit adapts on
+its own - the print-to-PDF check still lands all eight labels inside their
+die-cut rectangles - but the stock in the drawer printed before this change is
+in Lato and will not match a fresh sheet.
+
+**Fraunces was deleted, and the old comment about it was wrong.** global.css
+described it as "display face for print only", but nothing on the printed sheet
+ever referenced it: its only two uses were the `/today` h1 and the `/labels`
+sidebar h1, both screen chrome. A serif was also the single loudest thing
+saying "different organisation", since seattlemakers.org has no serif anywhere.
+Removing both uses took 33K of font with it.
+
+**The masthead's white lockup is `wordmark-black.png` inverted, not a second
+file.** That PNG is pure black on transparent - checked pixel by pixel, not
+assumed - so `filter: invert(1)` gives exactly the white lockup the real
+masthead uses. One asset, so the two can never drift apart.
+
+**The masthead must be `display: none` in print, and its anchor must be
+`flex: 0 0 auto`.** The first because `/labels` positions its sheet in absolute
+inches from the physical page corner and anything above it pushes the first row
+off its die-cut. The second because as a plain flex item the lockup gives up
+width to the nav: at 375px the nav filled the bar and the anchor was shrunk to
+zero, which showed as a masthead with no logo in it at all.
+
+**Two rules that set `display` on the same element need the same specificity.**
+`.sm-nav a.sm-nav-out` sets `display: inline-flex`; the media query that hides
+the external link below 48rem was written as a bare `.sm-nav-out`, which loses,
+so the link stayed on at 375px - and it was the thing crushing the wordmark.
+`!important` would have fixed the display and taken the hover colour down with
+it. Matching the selector is the fix.
+
+**`today.astro`'s styles are `is:global` and its class names are plain.** The
+board renders at build time and `today.ts` replaces those rows in the browser;
+Astro stamps its scoping attribute at build, so a scoped rule would style the
+server-rendered floor and nothing that replaces it. Same trap as the injected
+QR on `/labels`. The two renders must emit identical markup or the board
+visibly restyles itself the moment the first fetch lands - which is why the row
+classes are defined once as names rather than as utility strings copied into
+two files.
+
+**The time rail is a `::before` on the row, not a `border-left` on the
+content.** A border only covers the text box, so the line came out as
+disconnected ticks with gaps between rows. The pseudo-element spans `top: 0` to
+`bottom: -1px`, taking it down through the row's own hairline into the next
+one, so the day reads as one continuous line. The rail offset and the grid's
+first column are the same `--rail` custom property, so they cannot drift.
+
+### The rest
 
 **`/today` is live via a Cloudflare Worker, not a rebuild.** The board
 reads `/api/events`, which scrapes the calendar per request and returns JSON.

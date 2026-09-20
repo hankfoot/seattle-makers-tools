@@ -3,13 +3,13 @@
  * What is on in the space today.
  *
  * Rendered at build time from the baked calendar, then refetched from
- * /events.json in the browser so a screen left up overnight is right in the
- * morning without anyone touching it. The build-time render is the floor: if
- * the fetch fails - no network, host down, a redeploy mid-request - the board
- * keeps showing the last known good day rather than going blank.
+ * /api/events (or /events.json) in the browser so a screen left up overnight is
+ * right in the morning without anyone touching it. The build-time render is the
+ * floor: if the fetch fails - no network, host down, a redeploy mid-request -
+ * the board keeps showing the last known good day rather than going blank.
  */
 import Base from '../layouts/Base.astro';
-import { eventsOn, localDay, FETCHED_AT } from '../lib/events';
+import { eventsOn, localDay, FETCHED_AT, isCancelled, kindLabel, formatWhen } from '../lib/events';
 
 const day = localDay();
 const initial = eventsOn(day);
@@ -19,49 +19,204 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
   month: 'long',
   day: 'numeric',
 });
+
+/** The tag after the kind: the one fact about getting in that matters. */
+function flag(e: (typeof initial)[number]): { text: string; tone: string } | null {
+  if (isCancelled(e)) return { text: 'cancelled', tone: 'off' };
+  if (e.soldOut) return { text: 'full', tone: 'mute' };
+  if (typeof e.available === 'number' && e.available > 0 && e.available <= 5) {
+    return { text: `${e.available} left`, tone: 'go' };
+  }
+  return null;
+}
 ---
 
-<Base title="Today — Seattle Makers" description="What is on at Seattle Makers today.">
-  <main class="mx-auto max-w-4xl px-6 py-12">
-    <header class="border-b-4 border-sm-green pb-6">
-      <a href="/" class="text-sm font-bold text-sm-green no-underline hover:underline">&larr; tools</a>
-      <p class="mt-6 text-lg font-black tracking-tight text-neutral-400">seattle makers</p>
-      <h1 class="t-display mt-1 text-6xl leading-none font-black text-sm-green">today</h1>
-      <p id="t-date" class="mt-3 text-xl text-neutral-600">{heading}</p>
-    </header>
+<Base
+  title="Today — Seattle Makers"
+  description="What is on at Seattle Makers today."
+  current="/today"
+  shellWidth="72rem"
+>
+  <main class="sm-sheet">
+    <h1 class="sm-h1">Today</h1>
+    <hr class="sm-rule" />
+    <p id="t-date" class="sm-lead">{heading}</p>
 
     <!-- Server-rendered floor. today.ts replaces the contents on a successful
-         fetch; if it never does, this is what stays on screen. -->
-    <ol id="t-list" class="mt-8 space-y-3">
+         fetch; if it never does, this is what stays on screen. The two must
+         build the same markup, which is why the row classes are plain names
+         defined once below rather than utility strings in two places. -->
+    <ol id="t-list" class="t-list">
       {
-        initial.map((e) => (
-          <li class="t-row rounded-lg border border-neutral-300 bg-white p-5">
-            <div class="flex items-baseline justify-between gap-4">
-              <span class="t-time text-2xl font-black tabular-nums">{e.start.slice(11)}</span>
-            </div>
-            <h2 class="mt-1 text-xl font-bold">{e.title}</h2>
-          </li>
-        ))
+        initial.map((e) => {
+          const f = flag(e);
+          return (
+            <li class={`t-row${isCancelled(e) ? ' is-off' : ''}`}>
+              <span class="t-time">{formatWhen(e.start).time}</span>
+              <div class="t-body">
+                <p class="t-tags">
+                  <span class="t-kind">{kindLabel(e)}</span>
+                  {f && <span class={`t-flag is-${f.tone}`}>{f.text}</span>}
+                </p>
+                <h2 class="t-title">{e.title.replace(/\s*\(?\bcancell?ed\b\)?\s*/i, ' ').trim()}</h2>
+                {e.summary && <p class="t-sum">{e.summary}</p>}
+              </div>
+            </li>
+          );
+        })
       }
     </ol>
 
-    <p id="t-empty" class="mt-8 rounded-lg border border-dashed border-neutral-400 p-8 text-center text-lg text-neutral-500" hidden={initial.length > 0}>
-      Nothing on the calendar today.
-    </p>
+    <p id="t-empty" class="t-empty" hidden={initial.length > 0}>Nothing on the calendar today.</p>
 
-    <footer class="mt-10 border-t border-neutral-300 pt-4 text-sm text-neutral-500">
-      <span id="t-status">calendar fetched {FETCHED_AT.slice(0, 10)}</span>
+    <footer class="sm-foot">
+      <span id="t-status" class="sm-label">calendar {FETCHED_AT.slice(0, 10)}</span>
     </footer>
   </main>
 </Base>
 
-<style>
-  /* Fraunces is already declared in global.css for /labels; reusing it here
-     costs no extra download on a visit that has seen either page. */
-  .t-display {
-    font-family: 'Fraunces', 'Iowan Old Style', Georgia, serif;
-    font-variation-settings: 'SOFT' 0, 'WONK' 0, 'opsz' 144;
-    letter-spacing: -0.02em;
+{/* Global, not scoped: today.ts builds rows with createElement in the browser,
+    and Astro stamps its scoping attribute at build time - so a scoped rule
+    would style the server-rendered floor and nothing that replaces it. Same
+    trap as the injected QR on /labels. */}
+<style is:global>
+  /* The board's one structural idea: a rail of times down the left with the
+     day's events hanging off it. A day is a real sequence, so the order is
+     information and the rail is what makes it legible from across a room -
+     you find the time first, then read across. Bordered cards made it a list
+     of things with no shape. */
+  .t-list {
+    margin-top: 2.25rem;
+    border-top: 1px solid var(--color-sm-line);
+  }
+
+  .t-row {
+    /* One number, so the rule and the column it divides can never drift. */
+    --rail: clamp(6.5rem, 4.6rem + 5vw, 9.5rem);
+    position: relative;
+    display: grid;
+    grid-template-columns: var(--rail) 1fr;
+    padding: 1.5rem 0;
+    border-bottom: 1px solid var(--color-sm-line);
+  }
+
+  /* The rail runs the full height of the row and down through the hairline
+     into the next one, so the day reads as one continuous line with events
+     hung off it. A border on .t-body only covered the text and left the line
+     broken into ticks. */
+  .t-row::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: -1px;
+    left: var(--rail);
+    width: 2px;
+    background: var(--color-sm-line);
+  }
+
+  /* Right-aligned against the rail, tabular, so every time ends on the same
+     vertical and the column scans as a clock rather than as ragged text. */
+  .t-time {
+    padding-right: 1.5rem;
+    text-align: right;
+    font-size: clamp(1.05rem, 0.9rem + 0.5vw, 1.4rem);
+    font-weight: 700;
+    line-height: 1.45;
+    font-variant-numeric: tabular-nums;
+    color: var(--color-sm-ink);
+    white-space: nowrap;
+  }
+
+  .t-body {
+    padding-left: 1.5rem;
+  }
+
+  .t-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-bottom: 0.15rem;
+  }
+
+  .t-kind,
+  .t-flag {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: var(--tracking-label);
+    line-height: 1.6;
+    text-transform: uppercase;
+  }
+
+  .t-kind {
+    color: var(--color-sm-green);
+  }
+
+  .t-flag.is-go {
+    color: var(--color-sm-green-mid);
+  }
+  .t-flag.is-mute {
+    color: var(--color-sm-slate);
+  }
+  .t-flag.is-off {
+    color: #a6272b;
+  }
+
+  /* Sized for a screen you read from across the room, not from a chair. */
+  .t-title {
+    font-size: clamp(1.2rem, 1rem + 0.7vw, 1.7rem);
+    font-weight: 700;
+    line-height: 1.3;
+    color: var(--color-sm-ink);
+  }
+
+  .t-sum {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+    margin-top: 0.35rem;
+    max-width: 68ch;
+    font-size: clamp(0.9rem, 0.84rem + 0.2vw, 1.05rem);
+    line-height: 1.55;
+    color: var(--color-sm-slate);
+  }
+
+  /* Cancelled stays on the board, dimmed - someone who came for it needs to
+     see that it is off, not find no trace of it. */
+  .t-row.is-off .t-time,
+  .t-row.is-off .t-title {
+    color: var(--color-sm-slate);
+    text-decoration: line-through;
+    text-decoration-thickness: 1px;
+  }
+
+  /* An empty screen is an invitation, not a void. */
+  .t-empty {
+    margin-top: 2.25rem;
+    padding: 3.5rem 1.5rem;
+    border-top: 1px solid var(--color-sm-line);
+    border-bottom: 1px solid var(--color-sm-line);
+    text-align: center;
+    font-size: 1.125rem;
+    color: var(--color-sm-slate);
+  }
+
+  @media (max-width: 34rem) {
+    .t-row {
+      grid-template-columns: 1fr;
+      gap: 0.4rem;
+    }
+    /* No column, so no rail to divide it. */
+    .t-row::before {
+      display: none;
+    }
+    .t-time {
+      padding-right: 0;
+      text-align: left;
+    }
+    .t-body {
+      padding-left: 0;
+    }
   }
 </style>
 

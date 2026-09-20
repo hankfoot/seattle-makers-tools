@@ -87,39 +87,38 @@ function el(tag: string, cls: string, text?: string): HTMLElement {
   return n;
 }
 
+/**
+ * One row of the time rail.
+ *
+ * This has to come out identical to the build-time render in today.astro -
+ * same elements, same class names - or the board visibly restyles itself the
+ * moment the first fetch lands. The classes are plain names defined once, in
+ * that page's `is:global` block; utility strings would have had to be kept in
+ * step by hand in two files.
+ */
 function row(e: SmEvent): HTMLLIElement {
   const cancelled = CANCELLED.test(e.title);
-  const li = el(
-    'li',
-    'rounded-lg border border-neutral-300 bg-white p-5 transition',
-  ) as HTMLLIElement;
-  if (cancelled) li.classList.add('opacity-60');
+  const li = el('li', cancelled ? 't-row is-off' : 't-row') as HTMLLIElement;
 
-  const head = el('div', 'flex flex-wrap items-baseline gap-x-4 gap-y-1');
-  head.append(el('span', 'text-2xl font-black tabular-nums text-sm-ink', clock(e.start)));
-  head.append(
-    el('span', 'text-xs font-bold tracking-widest text-neutral-500 uppercase', kindOf(e)),
-  );
+  li.append(el('span', 't-time', clock(e.start)));
 
+  const body = el('div', 't-body');
+
+  const tags = el('p', 't-tags');
+  tags.append(el('span', 't-kind', kindOf(e)));
   if (cancelled) {
-    head.append(el('span', 'text-xs font-bold tracking-widest text-red-700 uppercase', 'cancelled'));
+    tags.append(el('span', 't-flag is-off', 'cancelled'));
   } else if (e.soldOut) {
-    head.append(el('span', 'text-xs font-bold tracking-widest text-neutral-500 uppercase', 'full'));
+    tags.append(el('span', 't-flag is-mute', 'full'));
   } else if (typeof e.available === 'number' && e.available > 0 && e.available <= 5) {
-    head.append(
-      el(
-        'span',
-        'text-xs font-bold tracking-widest text-sm-green uppercase',
-        `${e.available} left`,
-      ),
-    );
+    tags.append(el('span', 't-flag is-go', `${e.available} left`));
   }
-  li.append(head);
+  body.append(tags);
 
-  const title = el('h2', 'mt-1 text-xl leading-snug font-bold', e.title.replace(CANCELLED, ' ').trim());
-  li.append(title);
+  body.append(el('h2', 't-title', e.title.replace(CANCELLED, ' ').trim()));
+  if (e.summary) body.append(el('p', 't-sum', e.summary));
 
-  if (e.summary) li.append(el('p', 'mt-1 line-clamp-2 text-neutral-600', e.summary));
+  li.append(body);
   return li;
 }
 

@@ -28,56 +28,139 @@ const tools = [
     name: 'Today',
     href: '/today',
     blurb:
-      'What is on in the space today - classes, certifications, open studio and tours - refreshing itself on a screen by the door.',
-    meta: `${counts.today} today · live once deployed`,
-    ready: true,
+      'What is on in the space today — classes, certifications, open studio and tours — refreshing itself on a screen by the door.',
+    meta:
+      counts.today === 1 ? '1 event today' : `${counts.today} events today`,
   },
   {
     name: 'Labels',
     href: '/labels',
     blurb:
-      "Design one label - title, subtitle, optional QR - and print it onto the Label Station's sheets, skipping any that have already been peeled.",
+      "Design one label — title, subtitle, optional QR — and print it onto the Label Station's sheets, skipping any that have already been peeled.",
     meta: '4 stocks · 2 to 20 per sheet',
-    ready: true,
   },
 ];
 ---
 
-<Base title="Seattle Makers Tools">
-  <main class="mx-auto max-w-3xl px-6 py-16">
-    <header class="border-b-4 border-sm-green pb-8">
-      <h1 class="text-5xl leading-none font-black tracking-tight">
-        seattle makers <span class="text-sm-green">tools</span>
-      </h1>
-      <p class="mt-3 text-lg text-neutral-600">Small web tools for the space.</p>
-    </header>
+<Base title="Tools — Seattle Makers" current="/">
+  <main class="sm-sheet">
+    <h1 class="sm-h1">Tools</h1>
+    <hr class="sm-rule" />
+    <p class="sm-lead">Small web tools for the space.</p>
 
-    <ul class="mt-10 space-y-4">
+    {/* Hairline-separated rows rather than bordered cards. Two items do not
+        need four boxes drawn round them, and the row is wide enough that the
+        name, the blurb and the state all sit on one reading line. */}
+    <ul class="tools">
       {
         tools.map((t) => (
           <li>
-            <a
-              href={t.href}
-              class="block rounded-lg border border-neutral-300 bg-white p-6 transition hover:border-sm-green hover:shadow-md"
-            >
-              <div class="flex items-baseline justify-between gap-4">
-                <h2 class="text-2xl font-black">{t.name}</h2>
-                <span class="shrink-0 text-sm font-bold text-sm-green">open →</span>
-              </div>
-              <p class="mt-2 text-neutral-700">{t.blurb}</p>
-              <p class="mt-3 font-mono text-xs text-neutral-500">{t.meta}</p>
+            <a href={t.href}>
+              <span class="t-name">{t.name}</span>
+              <span class="t-meta sm-label">{t.meta}</span>
+              <span class="t-blurb">{t.blurb}</span>
             </a>
           </li>
         ))
       }
     </ul>
 
-    <footer class="mt-12 border-t border-neutral-300 pt-6 font-mono text-xs text-neutral-500">
+    <footer class="sm-foot">
       <p>
-        {EVENTS.length} events on file, fetched {FETCHED_AT.slice(0, 10)} from seattlemakers.org.
-        Refresh with <code class="rounded bg-neutral-200 px-1">npm run events</code>.
+        {EVENTS.length} events on file, fetched {FETCHED_AT.slice(0, 10)} from seattlemakers.org. Refresh
+        with <code>npm run events</code>.
       </p>
-      <p class="mt-1">{counts.studios} studios have photos. Add more in public/studios/.</p>
+      <p>{counts.studios} studios have photos. Add more in public/studios/.</p>
     </footer>
   </main>
 </Base>
+
+<style>
+  .tools {
+    margin-top: 2.5rem;
+    border-top: 1px solid var(--color-sm-line);
+  }
+
+  .tools li {
+    border-bottom: 1px solid var(--color-sm-line);
+  }
+
+  /* A grid so the name and the state sit on one baseline and the blurb runs
+     under both, indented to nothing - the row reads top-down without any of
+     the three pieces needing a box to belong to. */
+  .tools a {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: baseline;
+    gap: 0.45rem 1.5rem;
+    padding: 1.6rem 1rem 1.6rem 0;
+    text-decoration: none;
+    transition: padding-left 160ms ease;
+  }
+
+  .tools a:hover {
+    padding-left: 0.6rem;
+  }
+
+  .t-name {
+    font-size: 1.5rem;
+    font-weight: 700;
+    line-height: 1.1;
+    color: var(--color-sm-ink);
+    transition: color 140ms ease;
+  }
+
+  /* The arrow rides with the name rather than sitting in a corner of its own.
+     A whole row that is a link does not also need the word "Open" in it -
+     the hover and the arrow say it, and one of the three had to go. */
+  .t-name::after {
+    content: '→';
+    margin-left: 0.5rem;
+    font-size: 1.1rem;
+    color: var(--color-sm-green);
+    transition: transform 160ms ease;
+    display: inline-block;
+  }
+
+  .tools a:hover .t-name {
+    color: var(--color-sm-green);
+  }
+
+  .tools a:hover .t-name::after {
+    transform: translateX(4px);
+  }
+
+  .t-meta {
+    justify-self: end;
+  }
+
+  .t-blurb {
+    grid-column: 1 / -1;
+    max-width: 64ch;
+    font-size: 0.9375rem;
+    line-height: 1.55;
+    color: var(--color-sm-slate);
+  }
+
+  .sm-foot p + p {
+    margin-top: 0.25rem;
+  }
+
+  .sm-foot code {
+    padding: 0.1em 0.35em;
+    border-radius: 3px;
+    background: var(--color-sm-mist);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.8125rem;
+  }
+
+  @media (max-width: 34rem) {
+    .tools a {
+      grid-template-columns: 1fr;
+    }
+    .t-meta {
+      justify-self: start;
+      order: 3;
+    }
+  }
+</style>

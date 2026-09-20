@@ -93,6 +93,16 @@ const slides = buildReel();
 </Base>
 
 <style is:global>
+  /* The reel stays on Lato while the tool pages moved to Roboto to match
+     seattlemakers.org. Its 25 slides were laid out and verified against Lato's
+     metrics at a fixed 1920x1080 stage, where a wider or narrower face does
+     not reflow so much as overrun; the tool pages have no such geometry and a
+     much better reason to match the website. Named here rather than inherited,
+     because the inherited face is now Roboto. */
+  body {
+    font-family: var(--font-reel);
+  }
+
   #stage {
     position: absolute;
     top: 50%;

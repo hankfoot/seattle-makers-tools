@@ -1,11 +1,22 @@
 ---
 import '../styles/global.css';
+import SiteHeader from '../components/SiteHeader.astro';
 
 interface Props {
   title: string;
   description?: string;
   /** Chrome-free full-bleed page (the reel). */
   bare?: boolean;
+  /** Render the shared masthead. Off for the reel, which is full-bleed. */
+  chrome?: boolean;
+  /** Pathname of this page, so the masthead can mark the current nav link. */
+  current?: string;
+  /**
+   * Width of the masthead bar's contents and of any .sm-sheet below it, set
+   * as a custom property so the two can never disagree. A tool page that
+   * needs a wider working area passes one value and both follow.
+   */
+  shellWidth?: string;
   /**
    * Extra classes for <body>. Pass a literal string - Tailwind v4 scans source
    * text, so a class name assembled at runtime never gets generated.
@@ -16,6 +27,9 @@ const {
   title,
   description = 'Tools for Seattle Makers.',
   bare = false,
+  chrome = !Astro.props.bare,
+  current = '',
+  shellWidth = '64rem',
   bodyClass = '',
 } = Astro.props;
 
@@ -32,10 +46,23 @@ const body = bare
     <title>{title}</title>
     <meta name="description" content={description} />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <link rel="preload" href="/fonts/lato-900.woff2" as="font" type="font/woff2" crossorigin />
-    <link rel="preload" href="/fonts/lato-700.woff2" as="font" type="font/woff2" crossorigin />
+    <meta name="theme-color" content="#1a1a1a" />
+    {/* The reel is the one page still set in Lato, so it is the one page that
+        preloads it. Everywhere else the single variable Roboto covers every
+        weight the UI asks for. */}
+    {
+      bare ? (
+        <>
+          <link rel="preload" href="/fonts/lato-900.woff2" as="font" type="font/woff2" crossorigin />
+          <link rel="preload" href="/fonts/lato-700.woff2" as="font" type="font/woff2" crossorigin />
+        </>
+      ) : (
+        <link rel="preload" href="/fonts/roboto.woff2" as="font" type="font/woff2" crossorigin />
+      )
+    }
   </head>
-  <body class={body}>
+  <body class={body} style={`--sm-shell-w: ${shellWidth}`}>
+    {chrome && <SiteHeader current={current} />}
     <slot />
   </body>
 </html>
