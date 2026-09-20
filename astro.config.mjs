@@ -29,10 +29,12 @@ function calendarApi() {
            */
           async (req, res, next) => {
             // The base is a throwaway: req.url is a path, and URL needs one.
-            if (!req.url || new URL(req.url, 'http://localhost').pathname !== '/api/events') {
-              return next();
-            }
-            const { status, body } = await calendarResponse();
+            if (!req.url) return next();
+            const u = new URL(req.url, 'http://localhost');
+            if (u.pathname !== '/api/events') return next();
+            const { status, body } = await calendarResponse({
+              day: u.searchParams.get('day') ?? undefined,
+            });
             res.statusCode = status;
             res.setHeader('content-type', 'application/json; charset=utf-8');
             res.end(body);

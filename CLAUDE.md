@@ -122,14 +122,7 @@ time. Three ways out, roughly in order of how much they cost:
    worth advertising, hand-maintained, with no dates. The reel does not really
    need *today's* schedule - it needs "we teach this".
 
-**Broken: event descriptions on the board.** Live rows now carry a title, a
-time and a kind, and nothing else. The calendar grid the Worker scrapes has no
-descriptions at all; the ones the board used to show were grafted on by title
-from the baked file (83 of 166 matched). Getting them back means fetching each
-event's own page from the Worker, which is 160-odd requests per refresh and far
-too slow to do per request - so it wants the same build-time or scheduled
-treatment as the reel, writing a small title-to-description map rather than a
-whole calendar.
+(Event descriptions were on this list and are fixed - see *Descriptions* below.)
 
 - Those 8 slideshow type errors.
 - Photos for **leatherworking** and **a/v studio** - the only two studios still
@@ -401,6 +394,42 @@ function returns early when the panel is not mounted, and `?now=` works without
 `?now=` showed a simulated day with nothing saying so. That is the single
 outcome the red bar exists to prevent, and it was broken the first time.
 
+### Descriptions
+
+**`og:description` is the only usable source, and that was measured rather than
+assumed.** Across a sample of event pages: `og:description` present on 8 of 8;
+`<meta name="description">` 0 of 8; JSON-LD `Event.description` 0 of 8; the
+`.tribe-events-single-event-description` body 0 of 8. There is no second option
+to weigh.
+
+**What it hands back needs work, in four specific ways** - all of them live on
+seattlemakers.org right now, all handled in `lib/summarise.mjs`:
+
+1. A trailing `[…]` where WordPress cut the excerpt.
+2. A heading glued to the paragraph after it with no punctuation between:
+   *"…required prior to using the woodshop Working on a project…"*
+3. A bullet list flattened into word salad, announced by an emoji:
+   *"…atmosphere! What's covered 🌞 Printing films & burning screens Films…"*
+4. A missing space after a full stop: *"coverstitch machine.In this course"*
+
+The rule that ties it together: **complete sentences only, up to a budget.**
+Half a sentence with an ellipsis reads as broken; a whole short one reads as
+written. On the sample this turned 7 of 8 clean immediately, and the eighth -
+the glued heading - needed the narrow `OPENERS` rule.
+
+**`OPENERS` is a word list, and it is deliberately narrow.** A general
+"lowercase followed by a capital" rule also matches *"the Seattle Makers maker
+space"* and would eat half the sentence. It only ever runs before the first
+sentence ending, so it cannot chop out a later clause. Verified against the
+sample: it rewrote exactly the one entry that needed it and left the other
+seven byte-identical.
+
+**Descriptions cost a subrequest each, so the board asks for one day.**
+`/api/events?day=YYYY-MM-DD` fetches event pages only for that day - 3 to 6 of
+them, in parallel, capped at `MAX_DESCRIBED` so a malformed `day` cannot fan
+out to a hundred fetches behind one request. Without `day` the response comes
+back bare, which is what a caller wanting the whole calendar should get.
+
 ### The rest
 
 **`/today` is live via a Cloudflare Worker, not a rebuild.** The board
@@ -461,6 +490,21 @@ not get it; use `npm run serve` for a production-shaped check.
 
 `calendar-api.mjs` is plain `.mjs` with no Node built-ins, for the same reason
 `parse-calendar.mjs` is: a Workers runtime has none.
+
+**Astro restarts on `astro.config.mjs` changes but not on changes to modules
+the config imports.** The config is bundled once at startup, so
+`calendar-api.mjs` gets inlined; editing it leaves the dev server running the
+version from when it booted. This produced a genuinely confusing middle state -
+`/api/events` worked, because the config itself had changed and triggered a
+restart, but `?day=` did nothing, because only the imported module had. Restart
+the dev server after touching anything the config pulls in.
+
+**And check what is actually holding the port.** A dev server left running from
+eleven days earlier held 4321 through this whole session; every `astro dev`
+started against that port failed to bind and exited, silently, while the old
+process kept answering. `lsof -nP -iTCP:4321 -sTCP:LISTEN` then
+`ps -o lstart= -p <pid>` is the two-command check, and the start date is the
+tell.
 
 **Annotate `astro.config.mjs` rather than reaching for `@ts-ignore`.** It
 carries `// @ts-check`, so an untyped middleware callback puts four implicit-any

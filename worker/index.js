@@ -32,7 +32,8 @@ export default {
     // is a static file, served by the assets binding rather than by us.
     if (url.pathname === '/api/events') {
       const { status, body } = await calendarResponse({
-        cf: { cacheTtl: TTL, cacheEverything: true },
+        day: url.searchParams.get('day') ?? undefined,
+        init: { cf: { cacheTtl: TTL, cacheEverything: true } },
       });
       return new Response(body, {
         status,

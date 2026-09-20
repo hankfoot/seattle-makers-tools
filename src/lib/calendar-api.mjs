@@ -1,4 +1,5 @@
 import { parse, SOURCE } from './parse-calendar.mjs';
+import { describeEvent } from './summarise.mjs';
 
 /**
  * The /api/events response, in one place.
@@ -16,6 +17,16 @@ import { parse, SOURCE } from './parse-calendar.mjs';
 /** Seconds the edge may serve a cached copy. A class list does not move faster. */
 export const TTL = 120;
 
+/**
+ * How many event pages one response may fetch for descriptions.
+ *
+ * The calendar grid carries none, so each one costs a subrequest. A day has 3
+ * to 6 events, and the busiest on file has 6, so this is generous - but it is
+ * a hard bound rather than a hope: without it a malformed `day` that matched
+ * a hundred rows would fan out to a hundred fetches behind one request.
+ */
+const MAX_DESCRIBED = 10;
+
 export { SOURCE };
 
 /**
@@ -24,9 +35,15 @@ export { SOURCE };
  * Returns `{ status, body }` where body is already a JSON string, so both
  * callers just wrap it in whatever Response their runtime uses.
  *
- * `init` lets the Worker pass its `cf` cache hints; Node ignores them.
+ * @param {object} [opts]
+ * @param {string} [opts.day] - "YYYY-MM-DD". Events on this day get a
+ *   description fetched from their own page; everything else is returned
+ *   bare. The board asks for the day it is rendering, which keeps this to a
+ *   handful of subrequests instead of one per event in the calendar.
+ * @param {object} [opts.init] - passed to fetch; the Worker uses it for its
+ *   `cf` cache hints. Node ignores them.
  */
-export async function calendarResponse(init = {}) {
+export async function calendarResponse({ day, init = {} } = {}) {
   try {
     const res = await fetch(SOURCE, {
       headers: {
@@ -42,6 +59,17 @@ export async function calendarResponse(init = {}) {
     // has nothing on. Serving that would silently empty every board, so treat
     // it as a failure, exactly as the scraper exits non-zero.
     if (!events.length) throw new Error('parsed zero events');
+
+    // Descriptions, for the one day being looked at.
+    if (day && /^\d{4}-\d{2}-\d{2}$/.test(day)) {
+      const wanted = events.filter((e) => e.start.slice(0, 10) === day).slice(0, MAX_DESCRIBED);
+      // In parallel: sequentially this would be six round trips to a WordPress
+      // site stacked behind one board refresh.
+      const texts = await Promise.all(wanted.map((e) => describeEvent(e.url)));
+      wanted.forEach((e, i) => {
+        if (texts[i]) e.summary = texts[i];
+      });
+    }
 
     return {
       status: 200,

@@ -500,7 +500,11 @@ async function refresh(): Promise<void> {
     let data: { events?: SmEvent[]; fetchedAt?: string; live?: boolean } | null = null;
     for (const url of sources()) {
       try {
-        const res = await fetch(`${url}?t=${Date.now()}`, { cache: 'no-store' });
+        // `day` asks the API to fetch descriptions for just this day's
+        // events - a handful of pages rather than one per event in the
+        // calendar. `t` is only a cache-buster.
+        const sep = url.includes('?') ? '&' : '?';
+        const res = await fetch(`${url}${sep}day=${day}&t=${Date.now()}`, { cache: 'no-store' });
         if (!res.ok) continue;
         const body = await res.json();
         // `ok: false` is the Worker saying the scrape failed. Treat it as no
