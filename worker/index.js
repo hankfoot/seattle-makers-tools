@@ -1,6 +1,9 @@
 import { parse, SOURCE } from '../src/lib/parse-calendar.mjs';
 // `with { type: 'json' }` is the standard form: Node refuses a bare JSON
 // import without it, and the Workers bundler accepts it either way.
+//
+// This is the *reel's* calendar, not a fallback for this endpoint. It is read
+// here for one thing only: event descriptions. See SUMMARIES below.
 import baked from '../src/data/events.json' with { type: 'json' };
 
 /**
@@ -28,14 +31,23 @@ import baked from '../src/data/events.json' with { type: 'json' };
 /** Seconds the edge may serve a cached copy. A class list does not move faster. */
 const TTL = 120;
 
-/** Summaries come from per-event pages the scraper visits; the calendar grid
- *  has none. Graft the known ones on by title so live rows keep their blurb. */
+/**
+ * Summaries come from per-event pages the scraper visits; the calendar grid
+ * this endpoint reads has none at all. Graft the known ones on by title so live
+ * rows keep their blurb - about half of them match.
+ *
+ * This is the one thing the baked file still does for the board. It is content,
+ * not freshness: a class description ages far more slowly than a schedule, and
+ * a missing one costs a line of text rather than making the board wrong. The
+ * *calendar* half of this file is no longer served here at all.
+ */
 const SUMMARIES = new Map(
   (baked.events ?? []).filter((e) => e.summary).map((e) => [e.title, e.summary]),
 );
 
 function envelope(events, fetchedAt, live) {
   return JSON.stringify({
+    ok: true,
     source: SOURCE,
     fetchedAt,
     live,
@@ -72,11 +84,20 @@ async function events() {
       if (s) e.summary = s;
     }
     return json(envelope(events, new Date().toISOString(), true));
-  } catch {
-    // Hand back the build-time calendar with *its* own date, never today's.
-    // The board prints that date, so a failure here shows up as old data
-    // rather than as fresh data that happens to be wrong.
-    return json(envelope(baked.events ?? [], baked.fetchedAt, false));
+  } catch (err) {
+    // No fallback calendar. This endpoint used to hand back the build-time
+    // copy, which meant a board could sit on a wall quietly showing a schedule
+    // from weeks earlier; the file only refreshed when somebody remembered to
+    // run `npm run events`, and nobody did.
+    //
+    // So a failure is now reported as a failure. What must never happen is
+    // returning an empty list with `ok: true` - the board would render
+    // "Nothing on the calendar today", which is a confident lie about the
+    // space rather than an admission that we could not look.
+    return json(
+      JSON.stringify({ ok: false, error: String(err && err.message ? err.message : err) }),
+      502,
+    );
   }
 }
 

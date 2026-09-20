@@ -46,12 +46,13 @@ Done:
 Today board (`/today`) is built and verified in the browser.
 
 Done:
-- Everything on today's calendar, with kind, fullness and cancellation, from a
-  build-time render that a client-side refetch replaces. Refreshes every five
+- Everything on today's calendar, with kind, fullness and cancellation, fetched
+  live from /api/events. Refreshes every five
   minutes and on `visibilitychange`.
-- `/events.json` and `/events-dummy.json` are prerendered endpoints, not files
-  in public/. The dummy's dates are generated at build time, so it is always
-  "today" rather than a fixture that rots.
+- `/events-dummy.json` is a prerendered endpoint, not a file in public/. Its
+  times are generated at build time relative to the build's clock, so it is
+  always "today" with something running rather than a fixture that rots.
+  `/events.json` is gone - see *There is no fallback calendar* below.
 - The slideshow is parked: its entry on the index is commented out, the page
   and `scripts/slideshow.ts` are untouched, and `/slideshow` still serves.
 
@@ -390,18 +391,27 @@ none. The scraper runs it and writes a file; the function runs it and returns a
 response. Everything in fetch-events.mjs that touches disk (summary and picture
 enrichment) stayed behind, which is why live rows have no picture and only the
 summaries that could be grafted on from the baked data by title - 83 of 166 at
-the time of writing.
+the time of writing. That graft is now the *only* thing the Worker reads
+`events.json` for: it is content rather than freshness, a description ages far
+more slowly than a schedule, and a missing one costs a line of text rather than
+making the board wrong.
 
-**Both the function and the board refuse to claim freshness they do not have.**
-The envelope carries `live`, set only when the scrape actually succeeded; the
-static fallback has no such field and so can never accidentally assert it. On
-any failure - bad status, network error, or a zero-event parse, which means the
-markup moved rather than that nothing is on - the function returns the *baked*
-calendar with the *baked* `fetchedAt`, so the footer reads "calendar 27 aug"
-rather than today. The board shows "live · checked 3:10 pm" or "calendar 27 aug
-· checked 3:10 pm", never one dressed as the other. An earlier version showed
-"updated 3:01 pm" off a five-minute poll against a three-week-old file, which
-is exactly the lie this structure exists to prevent.
+**There is no fallback calendar any more, and that is the point.** The Worker
+used to answer a failed scrape with the build-time copy of the calendar,
+stamped with its own old date. Honest, but the file only refreshed when
+somebody ran `npm run events`, and nobody did - so the safety net was a
+schedule from weeks earlier, and the board spent its life showing it. It was 24
+events behind when this was removed.
+
+A failure is now reported as one: `{ ok: false }` with a 502, and the board
+says "Cannot reach the calendar right now." What must never happen is an empty
+list with `ok: true` - the board would render "Nothing on the calendar today",
+which is a confident lie about the space rather than an admission that we could
+not look. `today.ts` checks `ok === false` explicitly for that reason, and its
+empty state has two different sentences depending on which happened.
+
+The `live` flag survives for the same reason the two-part stamp does: it is
+what stops a future fallback being reported as fresh.
 
 **Nothing but `npm run serve` exercises the API locally.** `astro dev` and
 `astro preview` serve static files, so `/api/events` 404s under both and the
@@ -422,12 +432,15 @@ That endpoint is the seam: a scheduled rebuild now, or a proxy function later,
 changes what is behind it without the page changing. "Live" therefore means *as
 fresh as the last build*, and calling it anything else would be a lie.
 
-**The board renders at build time and the fetch only ever replaces it.** Every
-failure path in `today.ts` is a deliberate no-op - bad status, bad shape, no
-network - because a screen by the door showing an older day beats one showing
-an error. The one case it does speak up is when the *day has rolled over* and
-the refetch failed, which is the only state where what is on screen is actually
-wrong rather than merely old.
+**There is no build-time render of the board.** `/today` used to ship the
+day's events in its HTML as a floor under the fetch. They came from the baked
+calendar, so the floor was a schedule from weeks earlier presented as today,
+for however long the first fetch took - and forever if JS never ran. It now
+ships an empty list and says "Checking the calendar…", which is true.
+
+The cost is real and accepted: with no JS there is no board at all. The board
+already depended on JS for every refresh, so this trades a wrong answer for no
+answer.
 
 **`today.ts` imports only the `SmEvent` *type* from lib/events.** Importing the
 module pulls `events.json` - 72K - into the client bundle, which is precisely

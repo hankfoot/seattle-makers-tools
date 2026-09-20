@@ -60,14 +60,18 @@ function sources(): string[] {
 }
 
 /**
- * Live first, baked second.
+ * One source. /api/events scrapes the calendar on demand.
  *
- * /api/events scrapes the calendar on demand and is the only thing here that
- * is actually live. It does not exist during `astro dev` or on a host without
- * functions, so /events.json - the calendar baked in at build time - is the
- * fallback, and the board degrades to build-fresh instead of breaking.
+ * There used to be a second: /events.json, the calendar baked in at build time.
+ * It is gone, because it only refreshed when somebody ran `npm run events` and
+ * nobody did - so the "fallback" was a schedule from weeks earlier presented as
+ * today. A board that admits it cannot reach the calendar is worth more than
+ * one confidently showing the wrong day.
+ *
+ * This does mean `astro dev` and `astro preview` have no source at all, since
+ * the Worker runs under neither. Use `npm run serve`.
  */
-const DEFAULTS = ['/api/events', '/events.json'];
+const DEFAULTS = ['/api/events'];
 
 /**
  * The clock the board reasons about.
@@ -191,6 +195,7 @@ function render(events: SmEvent[], day: string): void {
   const stamp = now();
   const marks = statuses(shown, stamp);
   list!.replaceChildren(...shown.map((e, i) => row(e, marks[i]!, stamp)));
+  empty!.textContent = 'Nothing on the calendar today.';
   empty!.hidden = shown.length > 0;
 
   dateEl!.textContent = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
@@ -459,11 +464,11 @@ const MONTHS = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', '
 
 /**
  * Two different times, and conflating them is how a board quietly lies.
- * `checked` is when we last re-read the feed; the calendar date is how old the
- * data in it actually is. Those are only the same once something keeps
- * /events.json fresh - today it is baked at build time, so a poll succeeding
- * every five minutes against a three-week-old file would otherwise read as
- * "updated 2:40 pm" and nobody would think to doubt the board.
+ * `checked` is when we last re-read the feed; `fetchedAt` is how old the data
+ * in it actually is. Now that the only source is a live scrape they are the
+ * same moment and one clock time says everything - but the split is kept,
+ * because it is the thing that stops a future fallback being reported as
+ * fresh. That is not hypothetical: it is what the baked file did for weeks.
  */
 function stamp(fetchedAt?: string, live?: boolean): string {
   // The real clock, never the debug override: this sentence is about a fetch
@@ -501,7 +506,9 @@ async function refresh(): Promise<void> {
         const res = await fetch(`${url}?t=${Date.now()}`, { cache: 'no-store' });
         if (!res.ok) continue;
         const body = await res.json();
-        if (!Array.isArray(body?.events)) continue;
+        // `ok: false` is the Worker saying the scrape failed. Treat it as no
+        // source rather than as a day with nothing on.
+        if (body?.ok === false || !Array.isArray(body?.events)) continue;
         data = body;
         break;
       } catch {
@@ -514,9 +521,16 @@ async function refresh(): Promise<void> {
     lastDay = day;
     status!.textContent = stamp(data.fetchedAt, data.live);
   } catch {
-    // Keep whatever is on screen. Only say so if the day has rolled over,
-    // because that is the one case where the board is now actually wrong.
-    if (day !== lastDay) status!.textContent = 'offline - showing an older day';
+    // Keep whatever is on screen - a board showing the last good day beats one
+    // showing an error. But with no baked fallback there may be nothing on
+    // screen at all, and an empty list must not be read as "nothing is on".
+    if (!shown.length) {
+      empty!.textContent = 'Cannot reach the calendar right now.';
+      empty!.hidden = false;
+      status!.textContent = 'Not connected';
+    } else if (day !== lastDay) {
+      status!.textContent = 'Offline - showing an older day';
+    }
   }
 }
 

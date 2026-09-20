@@ -71,27 +71,30 @@ other keeps working.
 
 **Where there is no function, it degrades instead of breaking.** During `astro
 dev`, or on a host without functions, `/api/events` 404s and the board falls
-back to `/events.json` - the calendar baked in at build time. It then labels
+back to nothing - there is no second source. It then labels
 itself honestly: `live · checked 3:10 pm` when it really did just scrape, and
 `calendar 27 aug · checked 3:10 pm` when it is serving build-time data. Those
 are two different facts and the footer never conflates them.
 
-The same applies if the scrape fails upstream: the function returns the baked
-calendar carrying *its* own date, so a failure shows up as old data rather than
-as fresh data that happens to be wrong. A zero-event parse counts as a failure
-too - that means the markup moved, not that the space has nothing on.
+If the scrape fails upstream - the site is down, or its markup moved - the
+function reports the failure rather than serving something older. The board
+then says **"Cannot reach the calendar right now."** It used to fall back to a
+calendar baked in at build time, but that file only refreshed when somebody ran
+`npm run events`, and nobody did, so the safety net was a schedule from weeks
+earlier. A board that admits it cannot see is worth more than one confidently
+showing the wrong day.
 
-`npm run events` is still the thing that refreshes the baked fallback, and it
-is still manual. It no longer gates whether the board is current.
+`npm run events` still exists. It now refreshes two things that are *not* the
+board's schedule: the reel's offline calendar, and the event descriptions the
+API grafts onto live rows (about half of them match by title).
 
 ### Running it locally with the live API
 
 `npm run dev` and `npm run preview` serve static files only. The Worker is not
 running under either, so `/api/events` 404s and the board falls back to the
-baked `/events.json` - which means **the board always looks stale locally, and
-the stamp reads "Last updated 27 aug" or whenever you last ran `npm run
-events`.** That is the fallback working as designed, not a bug, but it is easy
-to mistake for one.
+nothing at all - which means **the board shows "Cannot reach the calendar right
+now." under `npm run dev` and `npm run preview`.** That is correct behaviour,
+not a bug: there is no source without the Worker.
 
 To exercise the real thing:
 
@@ -405,7 +408,7 @@ though with the git integration most contributors never need an account at all.
 
 There is no step four. No secrets to re-enter, no data to restore.
 
-**Refreshing the baked fallback** is `npm run events`, which rewrites
+**Refreshing the reel's calendar and the API's descriptions** is `npm run events`, which rewrites
 `src/data/events.json` and the pictures in `public/events/`. It is manual, and
 it does not affect whether the board is live - it only refreshes what the board
 falls back to when the scrape fails. Commit the result.
@@ -414,7 +417,7 @@ falls back to when the scrape fails. Commit the result.
 accident: there is no API, so both the script and the function parse the
 calendar's HTML. If the site is redesigned, the parser breaks. It fails loudly
 - the script exits non-zero and leaves the previous data in place, and the
-function treats a zero-event parse as a failure and serves the baked calendar -
+function treats a zero-event parse as a failure and reports it -
 so the failure mode is stale data, never an empty board. Fixing it means
 updating [`src/lib/parse-calendar.mjs`](src/lib/parse-calendar.mjs), which both
 callers share.

@@ -21,41 +21,18 @@
  * would be telling them about the thing they are already using.
  */
 import Base from '../layouts/Base.astro';
-import { eventsOn, localDay, FETCHED_AT, isCancelled, kindLabel } from '../lib/events';
+import { localDay } from '../lib/events';
 import { toolById, pageTitle } from '../data/tools';
-import { statuses, sessionEnd, clock, progress, statusNote, nowLocal } from '../lib/day-status';
-
-const MONTHS = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
-/** Matches the runtime stamp's wording so the board does not reword itself on
-    the first fetch. See `stamp()` in today.ts for why both halves exist. */
-const BAKED = new Date(FETCHED_AT);
-const bakedStamp = `Last updated ${BAKED.getDate()} ${MONTHS[BAKED.getMonth()]}`;
 
 const TOOL = toolById('today');
 
 const day = localDay();
-const initial = eventsOn(day);
-const now = nowLocal();
-const marks = statuses(initial, now);
 
 const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
   weekday: 'long',
   month: 'long',
   day: 'numeric',
 });
-
-/** The tag after the kind: the one fact about getting in that matters. */
-function flag(e: (typeof initial)[number]): { text: string; tone: string } | null {
-  if (isCancelled(e)) return { text: 'cancelled', tone: 'off' };
-  if (e.soldOut) return { text: 'full', tone: 'mute' };
-  if (typeof e.available === 'number' && e.available > 0 && e.available <= 5) {
-    return { text: `${e.available} left`, tone: 'go' };
-  }
-  return null;
-}
-
-const BADGE: Record<string, string> = { live: 'On now', next: 'Up next' };
-const CANCELLED = /\s*\(?\bcancell?ed\b\)?\s*/i;
 ---
 
 <Base title={pageTitle(TOOL)} description={TOOL.blurb} shellWidth="72rem">
@@ -64,7 +41,7 @@ const CANCELLED = /\s*\(?\bcancell?ed\b\)?\s*/i;
       a wall board has nothing to navigate to. */}
   <div class="sm-crumb-row">
     <a class="sm-back" href="/">← All tools</a>
-    <p id="t-status" class="sm-stamp">{bakedStamp}</p>
+    <p id="t-status" class="sm-stamp">Checking the calendar…</p>
   </div>
 
   <main class="sm-sheet t-board">
@@ -73,42 +50,16 @@ const CANCELLED = /\s*\(?\bcancell?ed\b\)?\s*/i;
       <p id="t-date" class="sm-lead">{heading}</p>
     </header>
 
-    <!-- Server-rendered floor. today.ts replaces the contents on a successful
-         fetch and re-stamps statuses on a timer; if neither ever runs, this is
-         what stays on screen. The two must build identical markup - see the
-         note at the top of today.ts. -->
-    <ol id="t-list" class="t-list">
-      {
-        initial.map((e, i) => {
-          const f = flag(e);
-          const st = marks[i]!;
-          const end = sessionEnd(e.start, e.end);
-          const note = statusNote(st, e.start, end, now);
-          return (
-            <li class={`t-row${isCancelled(e) ? ' is-off' : ''}`} data-status={st}>
-              <span class="t-time">{clock(e.start)}</span>
-              <div class="t-body">
-                <p class="t-tags">
-                  {BADGE[st] && <span class="t-badge">{BADGE[st]}</span>}
-                  <span class="t-kind">{kindLabel(e)}</span>
-                  {f && <span class={`t-flag is-${f.tone}`}>{f.text}</span>}
-                </p>
-                <h2 class="t-title">{e.title.replace(CANCELLED, ' ').trim()}</h2>
-                {e.summary && <p class="t-sum">{e.summary}</p>}
-                {note && <p class="t-note">{note}</p>}
-                {st === 'live' && (
-                  <div class="t-progress" role="presentation">
-                    <i style={`width:${progress(e.start, end, now).toFixed(1)}%`} />
-                  </div>
-                )}
-              </div>
-            </li>
-          );
-        })
-      }
-    </ol>
+    <!-- Empty on purpose. There is no longer a build-time render: the baked
+         calendar it was drawn from only refreshed when somebody ran
+         `npm run events`, so the "floor" it provided was a schedule from weeks
+         earlier, shown as today until the first fetch replaced it. Better to
+         show nothing for the moment it takes than something wrong.
 
-    <p id="t-empty" class="t-empty" hidden={initial.length > 0}>Nothing on the calendar today.</p>
+         today.ts fills this, and says so if it cannot. -->
+    <ol id="t-list" class="t-list"></ol>
+
+    <p id="t-empty" class="t-empty">Checking the calendar…</p>
 
     {/* Filled by the fit pass when a display cannot show every row. */}
     <p id="t-more" class="t-more" hidden></p>
