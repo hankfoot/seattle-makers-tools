@@ -74,6 +74,12 @@ type Row = {
   seriesDays?: number;
   title: string;
   kinds: string[];
+  /**
+   * The calendar's own slugs, not our studio slugs - the woodshop is tagged
+   * `woodworking` on the real feed, and data/studios maps it back. A fixture
+   * carrying `woodshop` here resolves to no studio, so the dummy board would
+   * be missing a label the production one shows.
+   */
   categories: string[];
   available: number | null;
   soldOut?: boolean;
@@ -86,7 +92,7 @@ const ROWS: Row[] = [
     d: 180,
     title: 'Open Studio: Woodshop',
     kinds: ['guided-studio'],
-    categories: ['woodshop'],
+    categories: ['woodworking'],
     available: 6,
     summary: 'Bench time with a monitor on the floor. Bring your own stock.',
   },
@@ -142,7 +148,7 @@ const ROWS: Row[] = [
     seriesDays: 21,
     title: 'Woodshop Basics (4 Part Series)',
     kinds: ['certification'],
-    categories: ['woodshop'],
+    categories: ['woodworking'],
     available: 4,
     summary: 'Four evenings. The feed ends this three weeks out; only tonight runs.',
   },

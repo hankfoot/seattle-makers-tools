@@ -20,8 +20,13 @@
  * avoid. The status rules live in lib/day-status, which imports no data, so
  * this file and today.astro share one implementation instead of keeping two
  * copies of the same rules in step by hand.
+ *
+ * data/studios is safe to import here for the same reason: it is a list and a
+ * lookup table with no data import behind it, so the studio map costs about a
+ * kilobyte rather than the whole calendar.
  */
 import type { SmEvent } from '../lib/events';
+import { studiosForCategories } from '../data/studios';
 import {
   statuses,
   sessionEnd,
@@ -38,12 +43,14 @@ const POLL_MS = 5 * 60 * 1000;
     a lie, coarse enough to be free. */
 const TICK_MS = 30 * 1000;
 
+const board = document.getElementById('t-board');
+const fullBtn = document.getElementById('t-full') as HTMLButtonElement | null;
 const list = document.getElementById('t-list') as HTMLOListElement | null;
 const empty = document.getElementById('t-empty');
 const status = document.getElementById('t-status');
 const dateEl = document.getElementById('t-date');
 const more = document.getElementById('t-more');
-if (!list || !empty || !status || !dateEl || !more) {
+if (!board || !list || !empty || !status || !dateEl || !more) {
   throw new Error('today: missing mount points');
 }
 
@@ -122,6 +129,27 @@ function kindOf(e: SmEvent): string {
   return 'event';
 }
 
+/**
+ * Which studio owns this event, from the calendar's own category slugs.
+ *
+ * Absent on purpose for the rows that genuinely belong to no room - tours,
+ * new-member orientations, game night, the building being closed. Around a
+ * third of the calendar carries no studio slug at all, and over half of that
+ * is those whole-building events, so a blank here is usually correct rather
+ * than a gap. Where it is a gap - a handful of titles the calendar simply has
+ * not tagged - the fix belongs on the event, not in a lookup table here that
+ * would make the board look right while the source stayed wrong.
+ *
+ * A few events carry two (leatherworking + sewing, cnc + woodshop). Both are
+ * shown: which of the two rooms it is actually in is a question for the
+ * organiser, and picking one silently would answer it wrongly some of the time.
+ */
+function studioOf(e: SmEvent): string {
+  return studiosForCategories(e.categories)
+    .map((s) => s.name)
+    .join(' + ');
+}
+
 const CANCELLED = /\s*\(?\bcancell?ed\b\)?\s*/i;
 const BADGE: Partial<Record<Status, string>> = { live: 'On now', next: 'Up next' };
 
@@ -155,6 +183,8 @@ function row(e: SmEvent, st: Status, now: string): HTMLLIElement {
   const badge = BADGE[st];
   if (badge) tags.append(el('span', 't-badge', badge));
   tags.append(el('span', 't-kind', kindOf(e)));
+  const studio = studioOf(e);
+  if (studio) tags.append(el('span', 't-studio', studio));
   if (cancelled) {
     tags.append(el('span', 't-flag is-off', 'cancelled'));
   } else if (e.soldOut) {
@@ -379,31 +409,95 @@ function markSimulated(): void {
 /* ------------------------------------------------------------ display mode */
 
 /**
- * `?tv=1` forces the display layout on, `?tv=0` off. Otherwise: a large
- * portrait viewport, which is a vertical TV and essentially nothing else. The
- * thresholds deliberately sit above a tablet in portrait (an iPad Pro 11" is
- * 834x1194) so a handheld device never silently becomes a wall board.
+ * Whether the browser is fullscreen - by either mechanism, because they are
+ * two different things and neither one sees the other.
+ *
+ * `document.fullscreenElement` is only set when a page called
+ * `requestFullscreen()`. Pressing F11 puts the *browser* in fullscreen and
+ * leaves that property null - and F11 is the case this board actually meets,
+ * since nothing on /today asks for fullscreen and the screen in the space is a
+ * browser somebody put up. The CSS `(display-mode: fullscreen)` query is what
+ * catches that one. Checking both means the detection survives either route,
+ * including a future button here that calls the API.
+ *
+ * The media query is created once: a MediaQueryList only fires `change` while
+ * a reference to it is alive, so one built inside the check would stop
+ * listening the moment it went out of scope.
+ */
+const fullscreenQuery = window.matchMedia('(display-mode: fullscreen)');
+
+function isFullscreen(): boolean {
+  return document.fullscreenElement !== null || fullscreenQuery.matches;
+}
+
+/**
+ * `?tv=1` forces the display layout on, `?tv=0` off. Then fullscreen. Then: a
+ * large portrait viewport, which is a vertical TV and essentially nothing else.
+ * The thresholds deliberately sit above a tablet in portrait (an iPad Pro 11"
+ * is 834x1194) so a handheld device never silently becomes a wall board.
+ *
+ * Fullscreen is allowed to skip those thresholds because it is not a guess.
+ * They exist to stop a *size* being mistaken for an intent, and there is
+ * nothing accidental about F11 - putting this page up fullscreen is a request
+ * for the board, not for a bigger web page. `?tv=0` still wins, so a fullscreen
+ * window can be held in the windowed layout when someone is working on it.
  */
 function wantsTv(): boolean {
   const q = new URLSearchParams(location.search).get('tv');
   if (q === '1') return true;
   if (q === '0') return false;
+  if (isFullscreen()) return true;
   return window.matchMedia('(orientation: portrait) and (min-width: 700px) and (min-height: 1200px)')
     .matches;
 }
 
+/**
+ * The miniature is the shape of the screen it is a miniature of.
+ *
+ * The board on the page has to have *some* aspect ratio, and picking one
+ * blind - 16/9, say - makes it a preview of a screen nobody here owns: hang
+ * the real board on a portrait TV and the row count, the wrap points and the
+ * fit pass all come out different from what the window promised. `screen` is
+ * the display this window is on, which is the display fullscreen will fill, so
+ * it is the honest answer and it costs two numbers.
+ *
+ * Both forms are written because CSS needs them differently: `aspect-ratio`
+ * wants a ratio, and the width cap has to multiply a height by a number.
+ */
+function setBoardShape(): void {
+  const w = screen?.width || window.innerWidth;
+  const h = screen?.height || window.innerHeight;
+  if (!w || !h) return;
+  board!.style.setProperty('--board-ar', `${w} / ${h}`);
+  board!.style.setProperty('--board-arn', String(w / h));
+}
+
+/**
+ * `t-full` is separate from `t-tv` even though fullscreen implies it: `?tv=1`
+ * on a laptop is the display layout in a window, and only the F11 case is
+ * really the browser being fullscreen. See the fullscreen block in today.astro.
+ */
 function applyMode(): void {
-  document.documentElement.classList.toggle('t-tv', wantsTv());
+  const root = document.documentElement;
+  root.classList.toggle('t-full', isFullscreen());
+  root.classList.toggle('t-tv', wantsTv());
+  setBoardShape();
   fit();
 }
 
 /**
- * Make the board fit one viewport exactly.
+ * Make the board fit itself exactly.
  *
  * A wall screen cannot be scrolled, so anything past the bottom edge is
  * invisible with no way to reveal it - worse than not being there, because the
  * board silently looks like the day ends early. This hides rows until the list
  * fits and says how many it dropped.
+ *
+ * It runs at both sizes, which is the point of the miniature: the board on the
+ * page drops the same rows the wall screen drops, because it is the same board
+ * measured the same way. It used to return early unless the display layout was
+ * on, which made sense when the page was a scrolling list rather than a picture
+ * of a screen.
  *
  * What gets sacrificed, in order: finished events from the top of the day, then
  * the latest events from the bottom. Never the live row or the next one - those
@@ -415,8 +509,6 @@ function fit(): void {
   const rows = [...list!.children] as HTMLLIElement[];
   for (const r of rows) r.hidden = false;
   more!.hidden = true;
-
-  if (!document.documentElement.classList.contains('t-tv')) return;
 
   const overflows = () => list!.scrollHeight > list!.clientHeight + 1;
   if (!overflows()) return;
@@ -553,3 +645,33 @@ document.addEventListener('visibilitychange', () => {
 
 // Rotating a screen, or resizing a window, changes whether this is a display.
 window.addEventListener('resize', applyMode);
+
+/**
+ * The button fullscreens *the board*, not the document.
+ *
+ * `document.documentElement.requestFullscreen()` would blow the whole page up
+ * and rely on CSS to hide the parts that should not be there. Asking for the
+ * element means the browser renders that element and nothing else, which is
+ * the same picture arrived at honestly - and it is the one route that cannot
+ * leave a stray bit of page chrome on a screen in the space.
+ *
+ * F11 still works and still lands somewhere sensible; that is what the t-tv
+ * rules in today.astro are for.
+ */
+fullBtn?.addEventListener('click', () => {
+  if (document.fullscreenElement) void document.exitFullscreen();
+  else void board!.requestFullscreen().catch(() => {});
+});
+
+// The board changes size for reasons the window knows nothing about - entering
+// element fullscreen, a --board-ar rewrite, the page reflowing around it - and
+// every one of them changes how many rows fit. Watching the element itself
+// catches all of them; watching the window catches some.
+new ResizeObserver(() => fit()).observe(board);
+
+// So does entering or leaving fullscreen, and both routes have to be watched.
+// `fullscreenchange` fires only for the API; the media query fires for F11.
+// Resize usually fires for both, but not dependably - going fullscreen on a
+// screen the window already filled changes no dimension.
+document.addEventListener('fullscreenchange', applyMode);
+fullscreenQuery.addEventListener('change', applyMode);

@@ -48,8 +48,8 @@ Done:
 Today board (`/today`) is built and verified in the browser.
 
 Done:
-- Everything on today's calendar, with kind, fullness and cancellation, fetched
-  live from /api/events. Refreshes every five
+- Everything on today's calendar, with studio, kind, fullness and cancellation,
+  fetched live from /api/events. Refreshes every five
   minutes and on `visibilitychange`.
 - `/events-dummy.json` is a prerendered endpoint, not a file in public/. Its
   times are generated at build time relative to the build's clock, so it is
@@ -343,6 +343,27 @@ and waiting one real tick - the two live rows went past, their badges and
 progress bars were removed, and the "checked" stamp did **not** change, which
 is the proof no fetch was involved.
 
+**A row with no studio is usually right, not a gap.** `studioOf()` resolves the
+owning studio through `data/studios`, which the reel already used - studios.ts
+imports no data, so the board gets the map for about a kilobyte rather than
+the calendar. About a third of the calendar carries no studio slug, but over
+half of that is genuinely whole-building: tours, new-member orientations, game
+night, the space being closed. The temptation is a title-matching fallback
+("Woodshop Guided Studio" -> woodshop, six titles' worth); it was deliberately
+not built, because it makes the board look correct while the source stays wrong
+and removes the pressure behind WISHLIST's studio-tag ask. The genuinely
+untagged handful shows a blank instead.
+
+Three events resolve to two studios (`leatherworking` + `sewing`, `cnc` +
+`woodshop`). Both are shown. Which room it is actually in is a question for the
+organiser, and choosing one silently would answer it wrongly some of the time.
+
+**The dummy fixture carries the calendar's slugs, not ours.** The woodshop is
+tagged `woodworking` on the real feed and studios.ts maps it back;
+`events-dummy.json.ts` said `woodshop`, which resolves to nothing - so the
+dummy board would have been missing a label the production board shows, which
+is exactly the kind of divergence a fixture exists to prevent.
+
 **Exactly one row is ever `next`.** "Up next" has to mean one thing on a board,
 or it is a synonym for "not yet" repeated down the page.
 
@@ -354,6 +375,87 @@ finished events first (oldest first), then the far end of the day (latest
 first), and **never the live row or the next one** - those are the two facts
 the board exists to show. Rows are hidden rather than removed, so the next pass
 can bring them back without a re-render.
+
+**The board is one element at two sizes, and that is the whole design.**
+`#t-board` holds the greeting, the date and the rows; the page around it holds
+the tool's title, the crumb, the stamp and the button. On the page the board is
+a miniature; in fullscreen the page is hidden and the same element fills the
+screen. No copy is written twice and nothing in it changes between the two - an
+earlier attempt swapped the heading between "Daily Events" and "Welcome to
+Seattle Makers" depending on the mode, which meant the page could never show you
+what the wall would say.
+
+**Everything inside the board is measured in `cqmin`, and a single `rem` in
+there breaks the preview.** The board is `container-type: size`, so `cqmin` is
+1% of its own short side and the whole thing scales as one drawing. A page unit
+inside would stay put while the board shrank, the miniature would fit a
+different number of rows than the screen does, and the preview would quietly
+stop being one. Proof that it holds: at 1440x900 the wall board drops 4 rows and
+prints "+ 4 earlier not shown", and the miniature of it on the page drops the
+same 4.
+
+The short side rather than the height, because the board is previewed in
+landscape and hung in portrait and type sized off the long axis is enormous on
+the other one - the same rule the label geometry follows.
+
+**The miniature takes its shape from `screen`, not from a guess.** today.ts
+writes the monitor's aspect ratio into `--board-ar` (and `--board-arn`, because
+the width cap has to multiply a height by a number). A hardcoded 16/9 would be a
+preview of a screen nobody here owns - hang the real thing on a portrait TV and
+the row count, the wrap points and the fit pass all differ from what the window
+promised. The cost is that on a phone the preview is phone-shaped, since that is
+what fullscreen there would fill.
+
+**`fit()` runs at both sizes now.** It used to return early unless the display
+layout was on, which was right when the page was a scrolling list and is wrong
+now that the page is a picture of a screen. A `ResizeObserver` on the board
+drives it, because the board changes size for reasons the window knows nothing
+about - entering element fullscreen, an `--board-ar` rewrite, the page reflowing
+around it.
+
+**An empty list must stop claiming the height.** `flex: 1 1 auto` on a list with
+no rows pushed "Nothing on the calendar today" to the very bottom of the board
+under a white void, which reads as a board that failed to draw rather than as a
+quiet day. `.t-list:empty { flex: 0 0 auto }` plus `auto` block margins on
+`.t-empty` centres it. `replaceChildren()` leaves the list genuinely childless,
+so `:empty` is a safe test.
+
+**The rail's breakpoint is a container query, not a media query.** What decides
+whether there is room for a time rail is the board's own width, and the board
+can be 263px wide inside a 1440px window. Asking the page would collapse the
+rail on a phone while leaving it on a miniature of the same size.
+
+**There are two routes into fullscreen and they are different mechanisms.**
+The button calls `requestFullscreen()` on the board element, so the browser
+renders that element and nothing else - the page is not hidden, it is not drawn,
+and no stray chrome can survive on a screen in the space. F11 leaves the whole
+page rendered, so the `html.t-tv` rules hide the chrome and let the board take
+the viewport. Both end at the same picture, and they share one declaration block
+(`#t-board:fullscreen, html.t-tv .t-board`).
+
+**Fullscreen itself has two detections, and they do not see each other.**
+`document.fullscreenElement` is set only when a page called
+`requestFullscreen()`; pressing **F11** puts the *browser* in fullscreen and
+leaves it null. The CSS `(display-mode: fullscreen)` media query is what catches
+F11. `isFullscreen()` checks both, and both are listened to: `fullscreenchange`
+for the API, the MediaQueryList's `change` for F11. Resize usually fires as well,
+but not dependably - going fullscreen on a screen the window already filled
+changes no dimension. The MediaQueryList is created once at module scope,
+because one built inside the check would stop firing as soon as it went out of
+scope.
+
+**Fullscreen is allowed to skip the display-mode thresholds.** Those exist to
+stop a *size* being mistaken for an intent, and F11 is not a size. `?tv=0` still
+wins, so a fullscreen window can be held in the windowed layout while someone
+works on it. `t-full` is set alongside `t-tv` and no rule uses it today; it is
+kept because it is the only thing that says *which route* a board on a wall took,
+which is the first question when one of them is stuck.
+
+**The element-fullscreen button cannot be verified from the preview pane.**
+`requestFullscreen()` there fails with `TypeError: Permissions check failed` -
+the pane's frame is not permitted - so the button needs one click in a real
+browser tab. The styling it lands on is verified, because `?tv=1` exercises the
+same declarations.
 
 **Display mode's thresholds sit deliberately above a tablet.** Portrait, at
 least 700px wide *and* 1200px tall - an iPad Pro 11" is 834x1194 and so stays a
