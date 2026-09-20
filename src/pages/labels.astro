@@ -689,7 +689,13 @@ const stocks = STOCKS.map((s) => ({
   }
   .lb-seg button {
     flex: 1 1 0;
-    min-width: 6.5rem;
+    /* Not a min-width. The sidebar's content box is 18.8rem (22rem less the
+       plate's 1.6rem padding), so three buttons with a 6.5rem floor and two
+       0.35rem gaps wanted 20.2rem and the third one hung over the panel's
+       right edge - the Align row was the only three-button row on the page,
+       which is why the two-button rows never showed it. `flex: 1 1 0` already
+       shares the row out evenly; the floor only ever forced the overflow. */
+    min-width: 0;
     display: flex;
     flex-direction: column;
     gap: 0.1rem;
