@@ -417,8 +417,8 @@ was deleted; the board reads the live API instead. Re-running the script
 restores the file and, with it, the reel's event slides - see *Next* in
 CLAUDE.md for why that is not the intended fix. It rewrites
 `src/data/events.json` and the pictures in `public/events/`. It is manual, and
-it does not affect whether the board is live - it only refreshes what the board
-falls back to when the scrape fails. Commit the result.
+it does not affect whether the board is live - the board reads the API and has
+no fallback to refresh. Commit the result.
 
 **The fragile part is the scrape**, and it is fragile on purpose rather than by
 accident: there is no API, so both the script and the function parse the
@@ -432,6 +432,9 @@ callers share.
 ## Layout
 
 ```
+CLAUDE.md                  how it works, and why it works that way
+HANDOVER.md                transferring the repo and the Cloudflare account
+WISHLIST.md                what we want from the calendar, and from people
 public/
   studios/<slug>/*.jpg     studio photos (drop-in, discovered at build)
   events/*.jpg             event pictures pulled by the scraper
@@ -443,7 +446,6 @@ scripts/fetch-events.mjs   the calendar scraper
 scripts/make-qr.mjs        the reel's interest-form QR, generated at author time
 src/
   data/studios.ts          studio list + category mapping
-  data/events.json         generated; commit it
   lib/events.ts            which events get a card
   lib/photos.ts            filesystem photo discovery
   lib/reel.ts              slide order

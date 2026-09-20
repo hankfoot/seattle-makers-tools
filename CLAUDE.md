@@ -99,6 +99,11 @@ Done:
 
 Next:
 
+> Wants that are **not code** - content we'd like on the calendar, questions for
+> the event coordinator, ideas without a shape yet - live in
+> [WISHLIST.md](WISHLIST.md). Keep them out of this list: everything below
+> should be work someone can pick up and finish in this repo.
+
 **Broken: the reel's event slides.** `src/data/events.json` was deleted on
 2026-09-19 because the board no longer needed it and nobody ever ran
 `npm run events` to keep it current - it was 24 events behind. `/slideshow`
