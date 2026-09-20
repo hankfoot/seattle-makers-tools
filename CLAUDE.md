@@ -340,6 +340,31 @@ each row individually instead piles three of them onto 23:30 with ends reading
 also carries real durations and a series row now, because a fixture where every
 `end` is null cannot exercise the rule at the top of this section.
 
+**The stamp says "Last updated", and it still carries two different times.**
+The wording changed; the structure did not, because collapsing them is how a
+board quietly lies. When the Worker really did just scrape, the data and the
+check are the same moment and one clock time says everything - "Last updated
+9:22 pm". When it fell back to the baked calendar they are weeks apart, so both
+appear: "Last updated 27 aug · checked 9:22 pm". With no `fetchedAt` at all we
+do not know when the data changed, so it reports only "Checked 9:22 pm" rather
+than guessing. An earlier version showed "updated 3:01 pm" off a five-minute
+poll against a three-week-old file, which is the lie this split exists to
+prevent - the new wording is the honest half of that sentence, not a return to
+it.
+
+**The debug panel is behind `?debug=1`, and `?now=HH:MM` works without it.**
+Every state depends on the wall clock, so at 9pm every event is "finished" and
+most of the board is unreachable. The panel sets the clock; the URL parameter
+does the same thing as a link, so a particular state can be shared or
+screenshotted. Malformed values are ignored rather than producing a board
+pinned to `NaN`.
+
+**`markSimulated()` is deliberately not part of `refreshDebug()`.** That
+function returns early when the panel is not mounted, and `?now=` works without
+`?debug=1` - so with the marker tied to the panel, a board opened on just
+`?now=` showed a simulated day with nothing saying so. That is the single
+outcome the red bar exists to prevent, and it was broken the first time.
+
 ### The rest
 
 **`/today` is live via a Cloudflare Worker, not a rebuild.** The board

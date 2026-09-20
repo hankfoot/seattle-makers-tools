@@ -69,9 +69,39 @@ function sources(): string[] {
  */
 const DEFAULTS = ['/api/events', '/events.json'];
 
+/**
+ * The clock the board reasons about.
+ *
+ * Normally the real one. `?debug=1` mounts a panel that can set it to any date
+ * and time, which is the only practical way to see the live/next/past states -
+ * they depend on the wall clock, so at 9pm every event is "finished" and there
+ * is nothing to look at. The override is client-side and affects only what
+ * this page *displays*; it never reaches the feed.
+ */
+let override: string | null = null;
+
+/**
+ * `?now=HH:MM` (optionally `?on=YYYY-MM-DD`) sets the clock from the URL, so a
+ * particular state is a link rather than something you have to reproduce by
+ * hand on a slider. Parsed strictly - a malformed value is ignored rather than
+ * producing a board pinned to `NaN`.
+ */
+function overrideFromUrl(): string | null {
+  const q = new URLSearchParams(location.search);
+  const t = q.get('now');
+  if (!t || !/^([01]\d|2[0-3]):[0-5]\d$/.test(t)) return null;
+  const d = q.get('on');
+  const day = d && /^\d{4}-\d{2}-\d{2}$/.test(d) ? d : nowLocal().slice(0, 10);
+  return `${day}T${t}`;
+}
+
+function now(): string {
+  return override ?? nowLocal();
+}
+
 /** Local day as "YYYY-MM-DD", matching the feed's floating-local strings. */
 function today(): string {
-  return nowLocal().slice(0, 10);
+  return now().slice(0, 10);
 }
 
 const KINDS: Record<string, string> = {
@@ -158,9 +188,9 @@ function render(events: SmEvent[], day: string): void {
     .filter((e) => typeof e.start === 'string' && e.start.slice(0, 10) === day)
     .sort((a, b) => a.start.localeCompare(b.start));
 
-  const now = nowLocal();
-  const marks = statuses(shown, now);
-  list!.replaceChildren(...shown.map((e, i) => row(e, marks[i]!, now)));
+  const stamp = now();
+  const marks = statuses(shown, stamp);
+  list!.replaceChildren(...shown.map((e, i) => row(e, marks[i]!, stamp)));
   empty!.hidden = shown.length > 0;
 
   dateEl!.textContent = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
@@ -169,6 +199,7 @@ function render(events: SmEvent[], day: string): void {
     day: 'numeric',
   });
   fit();
+  refreshDebug();
 }
 
 /**
@@ -181,8 +212,8 @@ function render(events: SmEvent[], day: string): void {
  */
 function tick(): void {
   if (!shown.length) return;
-  const now = nowLocal();
-  const marks = statuses(shown, now);
+  const stamp = now();
+  const marks = statuses(shown, stamp);
   const rows = [...list!.children] as HTMLLIElement[];
 
   shown.forEach((e, i) => {
@@ -202,7 +233,7 @@ function tick(): void {
       else if (existing && wanted) existing.textContent = wanted;
     }
 
-    const note = statusNote(st, e.start, end, now);
+    const note = statusNote(st, e.start, end, stamp);
     let noteEl = li.querySelector('.t-note');
     if (note && !noteEl) {
       noteEl = el('p', 't-note', note);
@@ -215,7 +246,7 @@ function tick(): void {
 
     const bar = li.querySelector('.t-progress');
     if (st === 'live') {
-      const pct = `${progress(e.start, end, now).toFixed(1)}%`;
+      const pct = `${progress(e.start, end, stamp).toFixed(1)}%`;
       if (bar) {
         (bar.firstElementChild as HTMLElement).style.width = pct;
       } else {
@@ -232,6 +263,112 @@ function tick(): void {
   });
 
   fit();
+  refreshDebug();
+}
+
+/* ------------------------------------------------------------------ debug */
+
+/**
+ * A panel for setting the clock, behind `?debug=1`.
+ *
+ * Every state this board can show depends on the wall clock, so most of them
+ * are simply unreachable when you happen to be looking: at 9pm every event is
+ * "finished" and there is nothing to see. Pointing the page at a chosen moment
+ * is the only practical way to check that "on now", "up next" and the progress
+ * bar behave - and to see the display layout at a busy hour rather than an
+ * empty one.
+ *
+ * It is a debug tool and says so loudly. The board is a source of truth in the
+ * space; one left on a wall showing a simulated time with no indication would
+ * be worse than one that is merely stale.
+ */
+let debugEls: { date: HTMLInputElement; range: HTMLInputElement; read: HTMLElement; tally: HTMLElement } | null =
+  null;
+
+function debugOn(): boolean {
+  return new URLSearchParams(location.search).get('debug') === '1';
+}
+
+const hhmm = (mins: number) =>
+  `${String(Math.floor(mins / 60)).padStart(2, '0')}:${String(mins % 60).padStart(2, '0')}`;
+
+function mountDebug(): void {
+  if (!debugOn() || debugEls) return;
+
+  const bar = el('div', 't-debug');
+  bar.append(el('span', 't-debug-tag', 'Debug'));
+
+  const date = document.createElement('input');
+  date.type = 'date';
+  date.className = 't-debug-date';
+  date.value = now().slice(0, 10);
+
+  const range = document.createElement('input');
+  range.type = 'range';
+  range.className = 't-debug-range';
+  range.min = '0';
+  range.max = '1439';
+  range.step = '5';
+  // Start where the board already is, which is the URL's time if it set one.
+  const n = now();
+  range.value = String(Number(n.slice(11, 13)) * 60 + Number(n.slice(14, 16)));
+
+  const read = el('span', 't-debug-read');
+  const tally = el('span', 't-debug-tally');
+
+  const live = document.createElement('button');
+  live.type = 'button';
+  live.className = 't-debug-live';
+  live.textContent = 'Back to live';
+
+  const apply = () => {
+    override = `${date.value}T${hhmm(Number(range.value))}`;
+    markSimulated();
+    void refresh();
+  };
+  date.addEventListener('input', apply);
+  range.addEventListener('input', apply);
+  live.addEventListener('click', () => {
+    override = null;
+    markSimulated();
+    const t = nowLocal();
+    date.value = t.slice(0, 10);
+    range.value = String(Number(t.slice(11, 13)) * 60 + Number(t.slice(14, 16)));
+    void refresh();
+  });
+
+  bar.append(date, range, read, tally, live);
+  document.body.append(bar);
+  debugEls = { date, range, read, tally };
+  refreshDebug();
+}
+
+/** Keep the panel's readout in step with whatever the board just rendered. */
+function refreshDebug(): void {
+  if (!debugEls) return;
+  const stamp = now();
+  debugEls.read.textContent = clock(stamp);
+
+  const counts: Record<string, number> = { live: 0, next: 0, later: 0, past: 0 };
+  for (const r of [...list!.children] as HTMLLIElement[]) {
+    const st = r.dataset.status;
+    if (st && st in counts) counts[st]!++;
+  }
+  debugEls.tally.textContent = shown.length
+    ? `${counts.live} live · ${counts.next} next · ${counts.later} later · ${counts.past} past`
+    : 'no events that day';
+}
+
+/**
+ * The red bar across the top whenever the clock is not the real one.
+ *
+ * Deliberately not part of refreshDebug(): that returns early when the panel
+ * is not mounted, and `?now=` works without `?debug=1`. Tied to the panel, a
+ * board opened with only `?now=` showed a simulated day with nothing saying so
+ * - which is the one outcome this marker exists to prevent.
+ */
+function markSimulated(): void {
+  document.documentElement.classList.toggle('t-simulated', override !== null);
 }
 
 /* ------------------------------------------------------------ display mode */
@@ -329,16 +466,28 @@ const MONTHS = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', '
  * "updated 2:40 pm" and nobody would think to doubt the board.
  */
 function stamp(fetchedAt?: string, live?: boolean): string {
-  const n = new Date();
-  const checked = clock(nowLocal(n));
+  // The real clock, never the debug override: this sentence is about a fetch
+  // that actually happened at a real moment.
+  const checked = clock(nowLocal(new Date()));
+
   // `live` is set only by /api/events, and only when it really did just scrape
   // the calendar. The static fallback has no such field, so it can never
-  // accidentally claim to be live.
-  if (live) return `live · checked ${checked}`;
-  if (!fetchedAt) return `checked ${checked}`;
+  // accidentally claim to be live. When it *is* live, the data and the check
+  // are the same moment, so one clock time says everything.
+  if (live) return `Last updated ${checked}`;
+
+  // No fetchedAt means we do not know when the data was last updated, so we do
+  // not claim to. All we can honestly report is when we looked.
+  if (!fetchedAt) return `Checked ${checked}`;
   const f = new Date(fetchedAt);
-  if (Number.isNaN(f.getTime())) return `checked ${checked}`;
-  return `calendar ${f.getDate()} ${MONTHS[f.getMonth()]} · checked ${checked}`;
+  if (Number.isNaN(f.getTime())) return `Checked ${checked}`;
+
+  // Two different times, and collapsing them is how a board quietly lies.
+  // "Last updated" is the calendar's own date - genuinely when this data last
+  // changed - and "checked" is when we last re-read it. A five-minute poll
+  // against a three-week-old file reported as "Last updated 9:22 pm" is
+  // exactly the lie this structure exists to prevent, so both stay.
+  return `Last updated ${f.getDate()} ${MONTHS[f.getMonth()]} · checked ${checked}`;
 }
 
 let lastDay = today();
@@ -373,6 +522,9 @@ async function refresh(): Promise<void> {
 
 /* ------------------------------------------------------------------- boot */
 
+override = overrideFromUrl();
+markSimulated();
+mountDebug();
 applyMode();
 void refresh();
 

@@ -25,6 +25,12 @@ import { eventsOn, localDay, FETCHED_AT, isCancelled, kindLabel } from '../lib/e
 import { toolById, pageTitle } from '../data/tools';
 import { statuses, sessionEnd, clock, progress, statusNote, nowLocal } from '../lib/day-status';
 
+const MONTHS = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+/** Matches the runtime stamp's wording so the board does not reword itself on
+    the first fetch. See `stamp()` in today.ts for why both halves exist. */
+const BAKED = new Date(FETCHED_AT);
+const bakedStamp = `Last updated ${BAKED.getDate()} ${MONTHS[BAKED.getMonth()]}`;
+
 const TOOL = toolById('today');
 
 const day = localDay();
@@ -58,7 +64,7 @@ const CANCELLED = /\s*\(?\bcancell?ed\b\)?\s*/i;
       a wall board has nothing to navigate to. */}
   <div class="sm-crumb-row">
     <a class="sm-back" href="/">← All tools</a>
-    <p id="t-status" class="sm-stamp">calendar {FETCHED_AT.slice(0, 10)}</p>
+    <p id="t-status" class="sm-stamp">{bakedStamp}</p>
   </div>
 
   <main class="sm-sheet t-board">
@@ -353,6 +359,94 @@ const CANCELLED = /\s*\(?\bcancell?ed\b\)?\s*/i;
     .t-body {
       padding-left: 0;
     }
+  }
+
+  /* ======================================================== debug panel ===
+
+     Behind ?debug=1 only. Deliberately styled as a tool rather than as part of
+     the board: a fixed dark bar, and a red hairline across the top of the page
+     whenever the clock is simulated, so a board left on a wall showing a made-up
+     time can never be mistaken for the real thing. */
+
+  .t-debug {
+    position: fixed;
+    z-index: 50;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.6rem 1rem;
+    background: var(--color-sm-ink);
+    color: #e6e8e7;
+    font-family: var(--font-display);
+    font-size: 0.8rem;
+    font-weight: 500;
+  }
+
+  .t-debug-tag {
+    padding: 0.1rem 0.45rem;
+    border-radius: 4px;
+    background: #b03a3a;
+    color: #fff;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+  }
+
+  .t-debug-range {
+    flex: 1 1 12rem;
+    min-width: 8rem;
+    accent-color: var(--color-sm-green-mid);
+  }
+
+  .t-debug-read {
+    min-width: 5.5rem;
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+  }
+
+  .t-debug-tally {
+    color: #9aa3a0;
+  }
+
+  .t-debug-date {
+    padding: 0.15rem 0.35rem;
+    border: 1px solid #454a48;
+    border-radius: 4px;
+    background: #232827;
+    color: inherit;
+    font: inherit;
+    color-scheme: dark;
+  }
+
+  .t-debug-live {
+    padding: 0.25rem 0.7rem;
+    border: 0;
+    border-radius: 999px;
+    background: var(--color-sm-green);
+    color: #fff;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  /* Unmissable while the clock is a lie. */
+  html.t-simulated body::before {
+    content: '';
+    position: fixed;
+    z-index: 60;
+    inset: 0 0 auto 0;
+    height: 4px;
+    background: #b03a3a;
+  }
+
+  /* The panel is fixed, so the board has to stop above it. */
+  html.t-tv .sm-sheet {
+    padding-bottom: clamp(1rem, 2vh, 2rem);
   }
 
   /* =================================================== display (TV) mode ===

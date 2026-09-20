@@ -89,10 +89,40 @@ is still manual. It no longer gates whether the board is current.
 `/today?src=/events-dummy.json` points the board at a fake busy day, which is
 the only practical way to see every state at once - the real calendar usually
 has one or two things on. The fixture carries a cancelled class, a sold-out
-one, two nearly-full ones and a meetup.
+one, two nearly-full ones, a multi-part series and a meetup.
 
-Its dates are generated **at build time for that day**, so it is always "today"
-rather than a fixture that rots. Rebuild and it moves with you.
+Its times are generated **at build time, relative to the build's clock**, so
+there is always something running and (before about 9pm) something up next.
+Rebuild and it moves with you.
+
+### Seeing the board at another time
+
+Every state on the board - on now, up next, finished - depends on the clock, so
+most of them are unreachable when you happen to be looking. Two query
+parameters, both client-side only:
+
+| | |
+| --- | --- |
+| `?debug=1` | a panel at the bottom with a date picker, a time slider, a count of each state, and **Back to live** |
+| `?now=HH:MM` | sets the clock straight from the URL, optionally with `?on=YYYY-MM-DD` |
+
+`/today?src=/events-dummy.json&debug=1` is the one to reach for. Drag the
+slider and watch rows move from later, to up next, to on now, to finished.
+
+**A red bar across the top means the clock is simulated.** It appears whenever
+either parameter is in play, with or without the panel - a board on a wall
+showing a made-up time with nothing saying so would be worse than a stale one.
+
+### Running it on a vertical screen
+
+`/today` fills a portrait display with nothing to scroll. It switches to that
+layout on its own for portrait viewports at least 700x1200 - above a tablet in
+portrait, so a phone never turns into a wall board - and `?tv=1` forces it for
+checking the layout on a laptop. `?tv=0` forces it off.
+
+If the day has more events than fit, the board drops finished ones first, then
+the far end of the day, and says how many it left off. It will not drop what is
+on now or what is next.
 
 `src=` only accepts same-origin paths. An absolute or protocol-relative URL
 falls back to the real calendar - otherwise a shared link would be a way to put
