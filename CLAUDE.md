@@ -87,8 +87,9 @@ Done:
   the label-availability tags become tinted chips.
 - Printed labels are unchanged - still Roboto, insets identical to three
   decimals after the pass.
-- The masthead was then rebuilt a third time, light and sticky, because it was
-  the one element the facelift had skipped and it showed.
+- The masthead was then rebuilt twice more: light and sticky, because it was
+  the one element the facelift had skipped; then reduced to a monogram, a
+  title and one outbound link, with the tool list moved back onto the page.
 
 Next:
 - Those 8 slideshow type errors.
@@ -187,18 +188,37 @@ refresh never touched, so it sat on top of the new design still wearing the old
 one. No amount of tuning its height or its green rule fixed it, because the
 problem was the material, not the proportions.
 
-It is now made of what the sheets are made of: white, a hairline instead of a
-2px green slab edge, ink nav that goes green on hover and for the current page.
-The lockup wears its own colours - `wordmark-header.png`, a 512px copy of
-`wordmark.png`, because the original is 2048px and 261K to render about 110px
-wide - which puts the brand green in the header for the first time rather than
-only in the accents. Losing the dark bar loses the most recognisable thing
-borrowed from the website, so the full-colour lockup is what pays for it.
+Going white fixed the material and left two things behind: the full lockup,
+stacked over two lines and big enough to be the loudest thing in the bar, and a
+list of every tool across the top - a lot of chrome for a site with two of
+them.
+
+**So the bar is an identity strip, not a navigation bar.** The monogram, the
+name of the thing, and the one link that leaves. Navigation went back to the
+page: the index *is* the list of tools, and each tool page carries a single
+`.sm-back` to it. Chrome that duplicates the page's own content earns nothing,
+and `Base`'s `current` prop went with the nav it fed.
+
+**The mark is the "m" of "makers" cropped out of `wordmark.png`, not redrawn.**
+Found by profiling the artwork rather than by eye: the two lines of the lockup
+overlap vertically, so there is no clean horizontal split, but within the `m`'s
+own column band (x 35-514) the rows fall into exactly two runs - y 22-271 is
+the "SE" above it and y 292-612 is the glyph, whose dominant colour comes back
+`#10733C`, the wordmark green. Cropping that is the real letterform, outline
+and all. Using the full lockup here would also have set the words "Seattle
+Makers" twice, once as artwork and again as the title beside it.
+
+`wordmark-header.png` - a 512px copy of `wordmark.png`, made because the
+original is 2048px and 261K to render about 110px wide - was what the white bar
+used before the monogram replaced it.
 
 **The bar is sticky, which it could not have been before.** A dark full-bleed
 slab following you down the page is oppressive; a white one with a hairline
 just stays available. It earns its keep on `/labels`, whose sidebar is longer
 than most viewports.
+
+**`--sm-bar-h` tracks the bar's height and has to be updated with it.** It
+went 3.2rem -> 2.85rem when the monogram replaced the stacked lockup.
 
 **`--sm-bar-h` exists because two things stick.** `/labels`' sidebar is
 `position: sticky` too, and at its old `top: 2rem` it slid straight under the

@@ -115,7 +115,7 @@
   /* The masthead's height, as a number anything positioning itself under a
      sticky bar can read. /labels' sidebar is sticky too, and at its old
      top: 2rem it slid underneath the bar the moment the bar became sticky. */
-  --sm-bar-h: 3.2rem;
+  --sm-bar-h: 2.85rem;
 }
 
 /* Tailwind's display utilities outrank the UA rule for [hidden], so a flex
@@ -199,7 +199,7 @@ body {
      84rem on /labels, and matching it per page is what used to make the
      lockup slide about between pages. A header wider than its content is
      ordinary; a header *almost* aligned with it looks like a mistake. */
-  padding: 0.7rem 2rem;
+  padding: 0.75rem 2rem;
 }
 
 /* The lockup must never give up width to the nav. As a plain flex item it
@@ -213,63 +213,63 @@ body {
    first time the brand green appears in the header rather than only in the
    accents. wordmark-header.png is the 512px copy - the full-size original is
    2048px and 261K to render about 110px wide. */
-.sm-wordmark {
+/* Small, because it is a mark beside a title rather than the title itself.
+   The "m" of "makers", cropped out of wordmark.png - the real letterform,
+   outline and all, not something redrawn. The full stacked lockup was here
+   before and it was the loudest thing in the bar, as well as setting the words
+   "Seattle Makers" a second time right next to the title. */
+.sm-mark {
   display: block;
   width: auto;
-  height: 1.95rem;
+  height: 1.35rem;
 }
 
-.sm-nav {
+.sm-brand {
   display: flex;
   align-items: center;
-  gap: 1.5rem;
+  gap: 0.55rem;
+  text-decoration: none;
   min-width: 0;
 }
 
-.sm-nav a {
-  position: relative;
-  padding: 0.4rem 0;
+.sm-brand-name {
   font-family: var(--font-display);
-  font-size: 0.75rem;
-  font-weight: 600;
-  letter-spacing: var(--tracking-label);
-  text-transform: uppercase;
-  text-decoration: none;
-  color: var(--color-sm-ink-2);
-  transition: color 140ms ease;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: -0.012em;
+  white-space: nowrap;
+  color: var(--color-sm-ink);
 }
 
-.sm-nav a:hover {
+/* "Web Tools" sits lighter than the organisation that owns it - one title,
+   with the org first and the thing you are actually in second. */
+.sm-brand-name span {
+  font-weight: 500;
+  color: var(--color-sm-slate);
+}
+
+.sm-brand:hover .sm-brand-name span {
   color: var(--color-sm-green);
 }
 
-.sm-nav a[aria-current='page'] {
-  color: var(--color-sm-green);
-}
-
-/* The current page is underlined as well as coloured. Colour alone had to
-   carry both "this is the page you are on" and "you are hovering me", so
-   hovering a link made it look selected. */
-.sm-nav a[aria-current='page']::after {
-  content: '';
-  position: absolute;
-  inset: auto 0 -0.1rem 0;
-  height: 2px;
-  border-radius: 1px;
-  background: var(--color-sm-green);
-}
-
-/* Specific enough to beat `.sm-nav a` without !important, which would have
-   taken the hover state down with it. */
-.sm-nav a.sm-nav-out {
+/* The one link that leaves the site. It is the whole right-hand side now that
+   the tools are no longer listed up here. */
+.sm-nav-out {
   display: inline-flex;
   align-items: baseline;
   gap: 0.3rem;
-  color: var(--color-sm-slate);
+  flex: 0 0 auto;
+  font-family: var(--font-display);
+  font-size: 0.75rem;
   font-weight: 500;
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--color-sm-slate);
+  transition: color 140ms ease;
 }
 
-.sm-nav a.sm-nav-out:hover {
+.sm-nav-out:hover {
   color: var(--color-sm-green);
 }
 
@@ -277,13 +277,26 @@ body {
   font-size: 0.7em;
 }
 
-/* Has to match the specificity of the rule that set `display` above - as a
-   bare `.sm-nav-out` it lost, and the link stayed on at 375px while squeezing
-   the wordmark out of the bar. */
-@media (max-width: 48rem) {
-  .sm-nav a.sm-nav-out {
-    display: none;
-  }
+/* Back to the index, on each tool page. This is what replaced the tool list in
+   the masthead: one link, on the page it belongs to, pointing at the page that
+   actually enumerates the tools. */
+.sm-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 1.1rem;
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--color-sm-slate);
+  transition: color 140ms ease;
+}
+
+.sm-back:hover {
+  color: var(--color-sm-green);
 }
 
 /* The white sheet the content sits on, floating on the mist - the boxed
@@ -316,13 +329,12 @@ body {
     border-radius: 12px;
   }
   .sm-masthead-inner {
-    padding: 0.6rem 1.35rem;
+    padding: 0.7rem 1.1rem;
   }
-  .sm-nav {
-    gap: 1.1rem;
-  }
-  .sm-wordmark {
-    height: 1.75rem;
+  /* The address is the first thing to go when the bar gets tight; the brand
+     and the title are what the bar is for. */
+  .sm-nav-out {
+    display: none;
   }
 }
 

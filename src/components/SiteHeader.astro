@@ -2,53 +2,40 @@
 /**
  * The masthead, on every tool page.
  *
- * It began as a copy of seattlemakers.org's header - a near-black full-bleed
- * slab with the lockup knocked out in white - which read as correct next to
- * the rest of the first rebrand and then stuck out badly once the pages around
- * it were lightened. It was the one element the refresh never touched, so it
- * was still carrying the old aesthetic on top of the new one.
+ * Third shape, and the first one that is not trying to be a navigation bar.
  *
- * Now it is made of the same material as everything under it: white, a
- * hairline instead of a slab edge, and the lockup in its own colours rather
- * than inverted. The dark bar was the most recognisable thing borrowed from
- * the website, so what replaces it has to work harder - hence the full-colour
- * wordmark, which puts the brand green in the header for the first time.
+ * It began as a copy of seattlemakers.org's header - a near-black full-bleed
+ * slab with the lockup knocked out in white - then went light so it matched
+ * the pages under it. What was left over was the listing of every tool across
+ * the top, which is a lot of chrome for a site with two of them, and a stacked
+ * two-line lockup big enough to be the loudest thing in the bar.
+ *
+ * So it is an identity strip now: the monogram, the name of the thing, and the
+ * one link that leaves. Navigation lives on the page - the index *is* the list
+ * of tools, and each tool page carries a single `.sm-back` to it. Chrome that
+ * duplicates the page's own content earns nothing.
+ *
+ * The mark is the "m" of "makers" cropped straight out of wordmark.png rather
+ * than drawn fresh, so it is the real letterform, outline and all. Using the
+ * full lockup here would have set "Seattle Makers" twice - once as artwork and
+ * again as the title beside it.
  *
  * Styles live in global.css, not in a scoped block here, so the bar can be
  * reasoned about alongside the sheet it sits on.
  */
-interface Props {
-  /** Pathname of the page rendering this, e.g. "/today". Marks the nav link. */
-  current?: string;
-}
-const { current = '' } = Astro.props;
-
-const links = [
-  { href: '/today', label: 'Today' },
-  { href: '/labels', label: 'Labels' },
-];
 ---
 
 <header class="sm-masthead no-print">
   <div class="sm-masthead-inner">
-    <a href="/" aria-label="Seattle Makers tools — home">
-      <img class="sm-wordmark" src="/brand/wordmark-header.png" alt="Seattle Makers" />
+    <a class="sm-brand" href="/">
+      {/* Decorative: the title beside it already names the site, and a screen
+          reader announcing "Seattle Makers" twice helps nobody. */}
+      <img class="sm-mark" src="/brand/mark.png" alt="" />
+      <span class="sm-brand-name">Seattle Makers <span>Web Tools</span></span>
     </a>
-    <nav class="sm-nav" aria-label="Tools">
-      {
-        links.map((l) => (
-          <a href={l.href} aria-current={l.href === current ? 'page' : undefined}>
-            {l.label}
-          </a>
-        ))
-      }
-      {/* Quieter than the tools, because it leaves the site rather than moving
-          around inside it. The vertical divider that used to separate it has
-          gone with the dark bar - on white it was one line too many. */}
-      <a class="sm-nav-out" href="https://seattlemakers.org" rel="noopener">
-        seattlemakers.org
-        <span aria-hidden="true">↗</span>
-      </a>
-    </nav>
+    <a class="sm-nav-out" href="https://seattlemakers.org" rel="noopener">
+      seattlemakers.org
+      <span aria-hidden="true">↗</span>
+    </a>
   </div>
 </header>

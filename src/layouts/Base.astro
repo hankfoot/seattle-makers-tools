@@ -9,8 +9,6 @@ interface Props {
   bare?: boolean;
   /** Render the shared masthead. Off for the reel, which is full-bleed. */
   chrome?: boolean;
-  /** Pathname of this page, so the masthead can mark the current nav link. */
-  current?: string;
   /**
    * Width of the masthead bar's contents and of any .sm-sheet below it, set
    * as a custom property so the two can never disagree. A tool page that
@@ -28,7 +26,6 @@ const {
   description = 'Tools for Seattle Makers.',
   bare = false,
   chrome = !Astro.props.bare,
-  current = '',
   shellWidth = '64rem',
   bodyClass = '',
 } = Astro.props;
@@ -65,7 +62,7 @@ const body = bare
     }
   </head>
   <body class={body} style={`--sm-shell-w: ${shellWidth}`}>
-    {chrome && <SiteHeader current={current} />}
+    {chrome && <SiteHeader />}
     <slot />
   </body>
 </html>
