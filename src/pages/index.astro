@@ -51,14 +51,15 @@ const tools = [
       <p class="sm-lead">Small web tools for the space.</p>
       {/* Pulled up out of the footer. These are the only facts the index
           actually knows, and in 13px grey at the bottom nobody read them. */}
-      {/* Deliberately not "N today" - the Today row below already says that,
-          and a hero that repeats the list under it is just louder, not more
-          informative. These two facts appear nowhere else. */}
-      <div class="sm-hero-stats">
-        <span class="sm-hero-stat"><b>{EVENTS.length}</b> events on file</span>
-        <span class="sm-hero-stat"><b>{counts.studios}</b> studios with photos</span>
-      </div>
     </header>
+
+    {/* On the white, under the panel. Inside it these were a third block with
+        a rule of their own, which is what made the green too tall.
+        Deliberately not "N today" - the Today row below already says that. */}
+    <div class="sm-stats">
+      <span class="sm-stat"><b>{EVENTS.length}</b> events on file</span>
+      <span class="sm-stat"><b>{counts.studios}</b> studios with photos</span>
+    </div>
 
     {/* Hairline-separated rows rather than bordered cards. Two items do not
         need four boxes drawn round them, and the row is wide enough that the

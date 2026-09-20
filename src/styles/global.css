@@ -282,12 +282,16 @@ body {
 
 /* Back to the index, on each tool page. This is what replaced the tool list in
    the masthead: one link, on the page it belongs to, pointing at the page that
-   actually enumerates the tools. */
+   actually enumerates the tools.
+
+   It sits on the ground above the plate rather than inside the green panel,
+   because the panel holds the title and the subtitle and nothing else - and a
+   third line in there was most of what made it feel oversized. */
 .sm-back {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  margin-bottom: 1.1rem;
+  margin-bottom: 0.7rem;
   font-family: var(--font-display);
   font-size: 0.7rem;
   font-weight: 600;
@@ -300,6 +304,43 @@ body {
 
 .sm-back:hover {
   color: var(--color-sm-green);
+}
+
+/* Aligns the crumb with the plate below it, which is what --sm-shell-w sizes.
+   A flex row, because /today hangs its freshness stamp off the other end -
+   that keeps the stamp near the top of the board, where it is worth reading,
+   without putting a third thing inside the green panel. */
+.sm-crumb-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.35rem 1.5rem;
+  max-width: var(--sm-shell-w, 64rem);
+  margin: 2rem auto 0.75rem;
+  padding: 0 0.25rem;
+}
+
+/* The crumb already provides the gap under the masthead, so the plate must not
+   add its own on top of it. */
+.sm-crumb-row + .sm-sheet {
+  margin-top: 0;
+}
+
+.sm-stamp {
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--color-sm-slate);
+}
+
+@media (max-width: 40rem) {
+  .sm-crumb-row {
+    margin: 1rem 0.75rem 0.5rem;
+    padding: 0;
+  }
 }
 
 /* The white sheet the content sits on, floating on the mist - the boxed
@@ -360,8 +401,8 @@ body {
 .sm-hero {
   position: relative;
   overflow: hidden;
-  margin: calc(var(--pad-y) * -1) calc(var(--pad-x) * -1) 2.25rem;
-  padding: 2.4rem var(--pad-x) 2.1rem;
+  margin: calc(var(--pad-y) * -1) calc(var(--pad-x) * -1) 2rem;
+  padding: 1.85rem var(--pad-x) 1.7rem;
   background: var(--color-sm-green);
   border-radius: 14px 14px 0 0;
 }
@@ -385,68 +426,36 @@ body {
   color: var(--color-sm-on-green);
 }
 
-/* The back link lives on the green now, so it cannot use the slate it used on
-   white. */
-.sm-hero .sm-back {
-  color: var(--color-sm-on-green);
-  opacity: 0.85;
-}
-
-.sm-hero .sm-back:hover {
-  color: var(--color-sm-paper);
-  opacity: 1;
-}
-
-/* The right-hand side of the hero, for a page that has one fact worth putting
-   level with its title - /today's freshness stamp. Wraps under on narrow. */
-.sm-hero-split {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 0.75rem 1.5rem;
-}
-
-.sm-hero-stamp {
-  font-family: var(--font-display);
-  font-size: 0.7rem;
-  font-weight: 600;
-  letter-spacing: var(--tracking-label);
-  text-transform: uppercase;
-  color: var(--color-sm-on-green);
-  white-space: nowrap;
-}
-
-/* A strip of what the site actually knows, on the index. It was in the footer
-   in small grey type, which is where facts go to be ignored; on the green it
-   gives the page something to say beyond listing two links. */
-.sm-hero-stats {
+/* A strip of what the site actually knows. It sits on the white under the
+   panel, not inside it: on the green it was a third block with a rule of its
+   own and it made the panel noticeably taller than the two lines it is
+   supposed to hold. */
+.sm-stats {
   display: flex;
   flex-wrap: wrap;
   gap: 0.4rem 1.4rem;
-  margin-top: 1.6rem;
-  padding-top: 1.2rem;
-  border-top: 1px solid rgb(255 255 255 / 0.22);
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--color-sm-line);
 }
 
-.sm-hero-stat {
+.sm-stat {
   font-family: var(--font-display);
   font-size: 0.7rem;
   font-weight: 600;
   letter-spacing: var(--tracking-label);
   text-transform: uppercase;
-  color: var(--color-sm-on-green);
+  color: var(--color-sm-slate);
 }
 
-.sm-hero-stat b {
+.sm-stat b {
   font-weight: 800;
-  color: var(--color-sm-paper);
+  color: var(--color-sm-green);
 }
 
 @media (max-width: 40rem) {
   .sm-hero {
-    margin-bottom: 1.75rem;
-    padding: 1.9rem var(--pad-x) 1.7rem;
+    margin-bottom: 1.6rem;
+    padding: 1.5rem var(--pad-x) 1.4rem;
     border-radius: 12px 12px 0 0;
   }
 }

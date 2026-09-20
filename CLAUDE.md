@@ -91,7 +91,8 @@ Done:
   the one element the facelift had skipped; then reduced to a monogram, a
   title and one outbound link, with the tool list moved back onto the page.
 - Finally every page gained a green hero panel, which is where the brand
-  colour stopped being a garnish.
+  colour stopped being a garnish - holding the title and subtitle only, with
+  the crumb, the stamp and the stats arranged around it.
 
 Next:
 - Those 8 slideshow type errors.
@@ -268,6 +269,14 @@ disconnected ticks with gaps between rows. The pseudo-element spans `top: 0` to
 one, so the day reads as one continuous line. The rail offset and the grid's
 first column are the same `--rail` custom property, so they cannot drift.
 
+**The green panel holds a title and a subtitle. Nothing else goes in it.**
+That is a size rule, not a taste one: every extra line is a full-width band of
+brand green, so a back link, a stats strip and a freshness stamp turned a
+two-line header into a slab. They live around it instead - the crumb row above
+the plate, the stats on the white below - and the panel came down from about
+200px to 146px on `/today`. If something new needs to go near the title, put it
+on the crumb row or under the panel, not in it.
+
 **Every page opens on a green panel, and that is where the brand colour
 finally does some work.** Before it the pages were ink and hairlines with green
 rationed out in 11px doses, which is a strange way to treat the most
@@ -294,20 +303,21 @@ it read as a smudge rather than as texture, because a big soft shape in the
 corner of a flat panel looks like a rendering artifact rather than a decision.
 The panel carries itself on colour, white Figtree and a rule.
 
-**The hero's right-hand side takes a fact, not an ornament.** On `/today` that
-is the freshness stamp, moved up out of the footer: on a board by the door, how
-current the thing is belongs where the eye already is, and this page goes to
-some lengths never to overstate it. `/today` has no footer left at all.
+**The crumb row is a flex row, and `/today` hangs its freshness stamp off the
+other end.** The stamp came up out of a footer - on a board by the door, how
+current the thing is belongs near the top, and this page goes to some lengths
+never to overstate it - but it is not title or subtitle, so it sits above the
+plate rather than inside the green. `/today` has no footer left at all.
 
 **Neither list has a top rule any more.** The hero's edge is already the
 boundary, and a hairline sitting 2.25rem below it had nothing above it to
 divide - it read as an orphan.
 
-**The index's hero stats deliberately exclude "N today".** The Today row
-directly beneath already carries that number, and a hero that repeats the list
-under it is louder without being more informative. The two that are there -
-events on file, studios with photos - appear nowhere else on the page, and they
-came up out of the footer, where facts in 13px grey go to be ignored.
+**The index's stats sit on the white under the panel, and deliberately exclude
+"N today".** The Today row directly beneath already carries that number, and
+repeating the list above it is louder without being more informative. The two
+that are there - events on file, studios with photos - appear nowhere else, and
+they came up out of the footer, where facts in 13px grey go to be ignored.
 
 **Green headings were the most dating thing on the page.** The website sets
 every h1 and h2 in solid `#13723C` over grey body copy, which is a 2012

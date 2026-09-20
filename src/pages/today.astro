@@ -36,18 +36,19 @@ function flag(e: (typeof initial)[number]): { text: string; tone: string } | nul
   description="What is on at Seattle Makers today."
   shellWidth="72rem"
 >
+  {/* Crumb and freshness stamp sit above the plate, so the green panel holds
+      the title and the date and nothing else. The stamp stays near the top of
+      the board, which is the point of it - this page goes to some lengths
+      never to overstate how current it is, so it may as well be legible. */}
+  <div class="sm-crumb-row">
+    <a class="sm-back" href="/">← All tools</a>
+    <p id="t-status" class="sm-stamp">calendar {FETCHED_AT.slice(0, 10)}</p>
+  </div>
+
   <main class="sm-sheet">
-    {/* The freshness stamp sits level with the date rather than in a footer.
-        On a board by the door, how current the thing is belongs where the eye
-        already is - and this page goes to some lengths never to overstate it,
-        so it may as well be legible. */}
-    <header class="sm-hero sm-hero-split">
-      <div>
-        <a class="sm-back" href="/">← All tools</a>
-        <h1 class="sm-h1">Today</h1>
-        <p id="t-date" class="sm-lead">{heading}</p>
-      </div>
-      <p id="t-status" class="sm-hero-stamp">calendar {FETCHED_AT.slice(0, 10)}</p>
+    <header class="sm-hero">
+      <h1 class="sm-h1">Today</h1>
+      <p id="t-date" class="sm-lead">{heading}</p>
     </header>
 
     <!-- Server-rendered floor. today.ts replaces the contents on a successful

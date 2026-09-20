@@ -28,12 +28,12 @@ const stocks = STOCKS.map((s) => ({
         tree and lets the fields, the sheet and the Print button be ordered
         independently - preview above the button. */}
     <div class="lb-col no-print">
+      <a class="sm-back lb-crumb" href="/">← All tools</a>
       <aside class="lb-editor">
       {/* No back link and no "seattle makers" eyebrow: the masthead above
           carries both, and repeating them here was the page saying its own
           name twice. */}
       <header class="sm-hero lb-head">
-        <a class="sm-back" href="/">← All tools</a>
         <h1>Labels</h1>
         <p class="lb-sub">One design, printed onto the sheet you choose.</p>
       </header>
@@ -510,6 +510,10 @@ const stocks = STOCKS.map((s) => ({
 
   /* The editor is a white plate on the mist, the same relationship the sheet
      has to the ground on every other page. */
+  /* .lb-col supplies the gap between the crumb and the plate. */
+  .lb-crumb {
+    margin-bottom: 0;
+  }
   .lb-editor {
     --pad-x: 1.6rem;
     --pad-y: 1.75rem;
