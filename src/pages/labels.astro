@@ -383,7 +383,8 @@ const stocks = STOCKS.map((s) => ({
     }
     .lb-col {
       position: sticky;
-      top: 2rem;
+      /* Clears the sticky masthead rather than disappearing behind it. */
+      top: calc(var(--sm-bar-h) + 1.25rem);
       flex: 0 0 22rem;
       width: 22rem;
       display: flex;

@@ -111,6 +111,11 @@
      live site's value and reads as strained at 11px - wide tracking dates a
      design faster than almost anything else. */
   --tracking-label: 0.1em;
+
+  /* The masthead's height, as a number anything positioning itself under a
+     sticky bar can read. /labels' sidebar is sticky too, and at its old
+     top: 2rem it slid underneath the bar the moment the bar became sticky. */
+  --sm-bar-h: 3.2rem;
 }
 
 /* Tailwind's display utilities outrank the UA rule for [hidden], so a flex
@@ -159,12 +164,22 @@ body {
    attribute is stamped on at build, so an element created by script never
    matches a scoped rule. Same trap as the injected QR on /labels. */
 
+/* White, hairline, sticky. The dark slab was the one element the refresh never
+   touched - still seattlemakers.org's WordPress header sitting on pages that
+   had been lightened around it - and no amount of tuning its height or its
+   green rule was going to fix that, because the problem was the material. It
+   is now the same material as the sheets below it.
+
+   Sticky is worth having here and was not before: a dark full-bleed bar
+   following you down the page is oppressive, a white one with a hairline
+   simply stays available. It matters most on /labels, whose sidebar is longer
+   than the viewport. */
 .sm-masthead {
-  background: var(--color-sm-ink);
-  /* 2px, not 3. At 3 the rule stops reading as an accent and starts reading
-     as a border the page is boxed in by, which was most of what made the bar
-     feel heavy. */
-  border-bottom: 2px solid var(--color-sm-green);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: var(--color-sm-paper);
+  border-bottom: 1px solid var(--color-sm-line);
 }
 
 .sm-masthead-inner {
@@ -178,7 +193,13 @@ body {
      masthead is for. One constant, and only the sheet under it varies. */
   max-width: 84rem;
   margin: 0 auto;
-  padding: 0.7rem 1.5rem;
+  /* Roomier than the 1.5rem it had, so the band reads as a full-width band
+     with its own gutter rather than as a column that failed to line up with
+     the sheet. It cannot line up: the sheet is 52rem on /, 72rem on /today and
+     84rem on /labels, and matching it per page is what used to make the
+     lockup slide about between pages. A header wider than its content is
+     ordinary; a header *almost* aligned with it looks like a mistake. */
+  padding: 0.7rem 2rem;
 }
 
 /* The lockup must never give up width to the nav. As a plain flex item it
@@ -188,14 +209,14 @@ body {
   flex: 0 0 auto;
 }
 
-/* wordmark-black.png is pure black on transparent - checked pixel by pixel -
-   so inverting it gives exactly the white lockup the real masthead uses, with
-   no second asset to keep in step with the first. */
+/* No invert any more: on white the lockup wears its own colours, which is the
+   first time the brand green appears in the header rather than only in the
+   accents. wordmark-header.png is the 512px copy - the full-size original is
+   2048px and 261K to render about 110px wide. */
 .sm-wordmark {
   display: block;
   width: auto;
-  height: 2.1rem;
-  filter: invert(1);
+  height: 1.95rem;
 }
 
 .sm-nav {
@@ -207,35 +228,35 @@ body {
 
 .sm-nav a {
   position: relative;
-  padding: 0.35rem 0;
+  padding: 0.4rem 0;
   font-family: var(--font-display);
   font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: var(--tracking-label);
   text-transform: uppercase;
   text-decoration: none;
-  color: var(--color-sm-sage);
+  color: var(--color-sm-ink-2);
   transition: color 140ms ease;
 }
 
 .sm-nav a:hover {
-  color: var(--color-sm-paper);
+  color: var(--color-sm-green);
 }
 
 .sm-nav a[aria-current='page'] {
-  color: var(--color-sm-paper);
+  color: var(--color-sm-green);
 }
 
-/* The current page is underlined in green rather than only brightened. White
-   alone had to carry both "this is the page you are on" and "you are hovering
-   me", so hovering a link made it look selected. */
+/* The current page is underlined as well as coloured. Colour alone had to
+   carry both "this is the page you are on" and "you are hovering me", so
+   hovering a link made it look selected. */
 .sm-nav a[aria-current='page']::after {
   content: '';
   position: absolute;
-  inset: auto 0 -0.15rem 0;
+  inset: auto 0 -0.1rem 0;
   height: 2px;
   border-radius: 1px;
-  background: var(--color-sm-green-mid);
+  background: var(--color-sm-green);
 }
 
 /* Specific enough to beat `.sm-nav a` without !important, which would have
@@ -243,14 +264,13 @@ body {
 .sm-nav a.sm-nav-out {
   display: inline-flex;
   align-items: baseline;
-  gap: 0.35rem;
-  padding-left: 1.5rem;
-  border-left: 1px solid rgb(255 255 255 / 0.18);
-  color: #8f9093;
+  gap: 0.3rem;
+  color: var(--color-sm-slate);
+  font-weight: 500;
 }
 
 .sm-nav a.sm-nav-out:hover {
-  color: var(--color-sm-paper);
+  color: var(--color-sm-green);
 }
 
 .sm-nav-out span {
@@ -277,7 +297,7 @@ body {
    that flatness was doing most of the "clunky". */
 .sm-sheet {
   max-width: var(--sm-shell-w, 64rem);
-  margin: 2rem auto;
+  margin: 2.25rem auto;
   padding: 3rem 3rem 2.75rem;
   background: var(--color-sm-paper);
   border-radius: 14px;
@@ -288,12 +308,15 @@ body {
 
 @media (max-width: 40rem) {
   .sm-sheet {
-    margin: 1rem auto;
+    /* A gutter, not `auto`. At this width the sheet is wider than its
+       max-width, so auto margins collapse to zero and the card sat flush
+       against both edges with its rounded corners cutting into nothing. */
+    margin: 0.85rem 0.75rem;
     padding: 2rem 1.35rem 2rem;
     border-radius: 12px;
   }
   .sm-masthead-inner {
-    padding: 0.7rem 1.25rem;
+    padding: 0.6rem 1.35rem;
   }
   .sm-nav {
     gap: 1.1rem;

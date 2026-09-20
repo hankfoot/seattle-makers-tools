@@ -72,8 +72,7 @@ verified in the browser at 1440 and 375, and on paper.
 
 Done:
 - Roboto replaces Lato on the tool pages, the palette was re-read off the live
-  site, and every page now carries the same dark masthead with the white
-  lockup. Fraunces is gone.
+  site, and every page now carries the same masthead. Fraunces is gone.
 - `/today` rebuilt around a time rail; `/` rebuilt as hairline rows; `/labels`
   chrome retokenised, its dotted ground dropped and its Print button made the
   website's green pill.
@@ -88,6 +87,8 @@ Done:
   the label-availability tags become tinted chips.
 - Printed labels are unchanged - still Roboto, insets identical to three
   decimals after the pass.
+- The masthead was then rebuilt a third time, light and sticky, because it was
+  the one element the facelift had skipped and it showed.
 
 Next:
 - Those 8 slideshow type errors.
@@ -176,10 +177,44 @@ sidebar h1, both screen chrome. A serif was also the single loudest thing
 saying "different organisation", since seattlemakers.org has no serif anywhere.
 Removing both uses took 33K of font with it.
 
-**The masthead's white lockup is `wordmark-black.png` inverted, not a second
-file.** That PNG is pure black on transparent - checked pixel by pixel, not
-assumed - so `filter: invert(1)` gives exactly the white lockup the real
-masthead uses. One asset, so the two can never drift apart.
+**The masthead is white, and it took three passes to get there.** It started
+as a faithful copy of seattlemakers.org's header - a near-black full-bleed slab
+with the lockup knocked out white via `filter: invert(1)` on
+`wordmark-black.png`, which is pure black on transparent so the invert gave
+exactly the right white. That was correct next to the first rebrand and wrong
+the moment the pages under it were lightened: it was the one element the
+refresh never touched, so it sat on top of the new design still wearing the old
+one. No amount of tuning its height or its green rule fixed it, because the
+problem was the material, not the proportions.
+
+It is now made of what the sheets are made of: white, a hairline instead of a
+2px green slab edge, ink nav that goes green on hover and for the current page.
+The lockup wears its own colours - `wordmark-header.png`, a 512px copy of
+`wordmark.png`, because the original is 2048px and 261K to render about 110px
+wide - which puts the brand green in the header for the first time rather than
+only in the accents. Losing the dark bar loses the most recognisable thing
+borrowed from the website, so the full-colour lockup is what pays for it.
+
+**The bar is sticky, which it could not have been before.** A dark full-bleed
+slab following you down the page is oppressive; a white one with a hairline
+just stays available. It earns its keep on `/labels`, whose sidebar is longer
+than most viewports.
+
+**`--sm-bar-h` exists because two things stick.** `/labels`' sidebar is
+`position: sticky` too, and at its old `top: 2rem` it slid straight under the
+masthead as soon as the masthead started sticking. It now offsets by
+`calc(var(--sm-bar-h) + 1.25rem)`. Note the sidebar only sticks at all when it
+is shorter than the viewport - it is ~1066px tall, so on a 800px-high window it
+scrolls away like anything else, which is how `top`-only sticky behaves and is
+not new.
+
+**The masthead cannot line up with the sheet, so it deliberately does not
+try.** The sheet is 52rem on `/`, 72rem on `/today` and 84rem on `/labels`;
+matching it per page is what used to make the lockup slide about between pages,
+and a header wider than its content is ordinary. What is *not* ordinary is a
+header almost aligned with it - at 1.5rem of padding the lockup sat 24px from
+the window edge while the card was inset 64px, which reads as a mistake rather
+than as a full-width band. 2rem, and the band reads as a band.
 
 **The masthead must be `display: none` in print, and its anchor must be
 `flex: 0 0 auto`.** The first because `/labels` positions its sheet in absolute
@@ -225,6 +260,11 @@ page's content width at first, and since `/` is 52rem, `/today` 72rem and
 `/labels` 84rem, the lockup slid left and right as you moved between them -
 the opposite of what a masthead is for. The bar is pinned at 84rem; only the
 sheet under it varies.
+
+**On mobile the sheet needs an explicit side margin, not `auto`.** Below the
+breakpoint it is wider than its own `max-width`, so `margin: 1rem auto`
+collapses the side margins to zero and the card sits flush against both window
+edges with its rounded corners cutting into nothing.
 
 **`.sm-foot` has no rule of its own.** Both pages that use it put it under a
 hairline-ruled list, so the list's closing rule was already the divider and the

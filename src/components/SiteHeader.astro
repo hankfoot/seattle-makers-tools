@@ -2,10 +2,17 @@
 /**
  * The masthead, on every tool page.
  *
- * This is the whole cohesion argument in one element: a near-black bar with
- * the white lockup at the left and tracked uppercase nav at the right is what
- * you see at the top of seattlemakers.org, so a page that carries it reads as
- * part of that site before anyone has looked at the content.
+ * It began as a copy of seattlemakers.org's header - a near-black full-bleed
+ * slab with the lockup knocked out in white - which read as correct next to
+ * the rest of the first rebrand and then stuck out badly once the pages around
+ * it were lightened. It was the one element the refresh never touched, so it
+ * was still carrying the old aesthetic on top of the new one.
+ *
+ * Now it is made of the same material as everything under it: white, a
+ * hairline instead of a slab edge, and the lockup in its own colours rather
+ * than inverted. The dark bar was the most recognisable thing borrowed from
+ * the website, so what replaces it has to work harder - hence the full-colour
+ * wordmark, which puts the brand green in the header for the first time.
  *
  * Styles live in global.css, not in a scoped block here, so the bar can be
  * reasoned about alongside the sheet it sits on.
@@ -25,7 +32,7 @@ const links = [
 <header class="sm-masthead no-print">
   <div class="sm-masthead-inner">
     <a href="/" aria-label="Seattle Makers tools — home">
-      <img class="sm-wordmark" src="/brand/wordmark-black.png" alt="Seattle Makers" />
+      <img class="sm-wordmark" src="/brand/wordmark-header.png" alt="Seattle Makers" />
     </a>
     <nav class="sm-nav" aria-label="Tools">
       {
@@ -35,8 +42,9 @@ const links = [
           </a>
         ))
       }
-      {/* Set apart by a rule, because it leaves the site rather than moving
-          around inside it, and at the same weight it read as a third tool. */}
+      {/* Quieter than the tools, because it leaves the site rather than moving
+          around inside it. The vertical divider that used to separate it has
+          gone with the dark bar - on white it was one line too many. */}
       <a class="sm-nav-out" href="https://seattlemakers.org" rel="noopener">
         seattlemakers.org
         <span aria-hidden="true">↗</span>
