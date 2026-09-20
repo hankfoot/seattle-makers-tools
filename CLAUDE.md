@@ -1,4 +1,4 @@
-# CLAUDE.md — seattle-makers-tools
+# CLAUDE.md — sm-digital-toolbox
 
 > Read this fully at the start of every session.
 

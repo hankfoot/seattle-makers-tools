@@ -1,4 +1,4 @@
-# seattle-makers-tools
+# sm-digital-toolbox
 
 Small web tools for Seattle Makers, all on one static site.
 

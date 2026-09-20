@@ -55,7 +55,7 @@ const MIN_IMAGE_WIDTH = 600;
 const MIN_BYTES_PER_PIXEL = 0.06;
 
 const res = await fetch(SOURCE, {
-  headers: { 'user-agent': 'seattle-makers-tools/0.1 (+https://github.com/seattlemakers/seattle-makers-tools)' },
+  headers: { 'user-agent': 'sm-digital-toolbox/0.1 (+https://github.com/seattlemakers/sm-digital-toolbox)' },
 });
 if (!res.ok) {
   console.error(`fetch-events: ${SOURCE} returned HTTP ${res.status}`);
@@ -193,7 +193,7 @@ mkdirSync(IMG_DIR, { recursive: true });
 
 /** Download an event's picture next to the other assets, keeping the reel local. */
 async function saveImage(candidate, title) {
-  const r = await fetch(candidate.url, { headers: { 'user-agent': 'seattle-makers-tools/0.1' } });
+  const r = await fetch(candidate.url, { headers: { 'user-agent': 'sm-digital-toolbox/0.1' } });
   if (!r.ok) return null;
   const buf = Buffer.from(await r.arrayBuffer());
 
@@ -217,7 +217,7 @@ async function saveImage(candidate, title) {
 
 async function enrich(e) {
   try {
-    const r = await fetch(e.url, { headers: { 'user-agent': 'seattle-makers-tools/0.1' } });
+    const r = await fetch(e.url, { headers: { 'user-agent': 'sm-digital-toolbox/0.1' } });
     if (!r.ok) { failed++; return; }
     const html = await r.text();
 

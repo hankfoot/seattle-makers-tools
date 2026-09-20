@@ -3,7 +3,13 @@
 # `main` handles /api/events; everything else is served from dist/ through the
 # ASSETS binding. Astro still builds a plain static site - this wraps it rather
 # than changing how it is built.
-name = "seattle-makers-tools"
+
+# `name` is the Worker's name, and the `*.workers.dev` hostname is built from
+# it. Changing it does not rename the deployed Worker - the next deploy creates
+# a second one under the new name and leaves the old one serving at the old
+# address. This was renamed from `seattle-makers-tools` on 2026-09-20 with that
+# understood; see HANDOVER.md, which carries the cleanup step.
+name = "sm-digital-toolbox"
 main = "worker/index.js"
 compatibility_date = "2026-09-19"
 

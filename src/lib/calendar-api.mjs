@@ -48,7 +48,7 @@ export async function calendarResponse({ day, init = {} } = {}) {
     const res = await fetch(SOURCE, {
       headers: {
         'user-agent':
-          'seattle-makers-tools/0.1 (+https://github.com/seattlemakers/seattle-makers-tools)',
+          'sm-digital-toolbox/0.1 (+https://github.com/seattlemakers/sm-digital-toolbox)',
       },
       ...init,
     });

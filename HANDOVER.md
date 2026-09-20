@@ -42,8 +42,9 @@ sidestepped it.
 
 ## Transfer steps
 
-**The repo moved to `seattlemakers/seattle-makers-tools` on 2026-09-20.** What
-that took, and what it left:
+**The repo moved to the `seattlemakers` org on 2026-09-20 and was renamed
+`sm-digital-toolbox` the same day.** It was `hankfoot/seattle-makers-tools`
+before that; both old URLs redirect. What the move took, and what it left:
 
 1. ~~**GitHub repo → the org.**~~ Done. Transferred by an org admin via the
    API; history, issues and stars came across, and GitHub redirects the old
@@ -51,16 +52,30 @@ that took, and what it left:
 
 2. ~~**Update the local remote.**~~ Done. The redirect works either way, but
    every clone should be pointed at the real URL:
-   `git remote set-url origin https://github.com/seattlemakers/seattle-makers-tools.git`
+   `git remote set-url origin https://github.com/seattlemakers/sm-digital-toolbox.git`
 
-3. **Reconnect Cloudflare to GitHub.** *Still to do, and it is the one thing
-   the move breaks.* The GitHub app authorisation does not follow a repo across
-   owners, so the Worker can no longer see its source and has stopped
-   auto-deploying. In the Cloudflare dashboard: re-authorise the Cloudflare
-   GitHub app against the `seattlemakers` org, then point the Worker at the
-   transferred repo. The Worker itself, its settings and its URL are untouched -
-   this is a reconnection, not a rebuild. **Until it is done, pushes to `main`
-   do not deploy.**
+3. **Reconnect Cloudflare to GitHub, and clean up the old Worker.** *Still to
+   do, and it is the one part of this that a push cannot finish.* Two separate
+   things, both in the Cloudflare dashboard:
+
+   - **The authorisation.** The GitHub app authorisation does not follow a repo
+     across owners, so the Worker can no longer see its source and has stopped
+     auto-deploying. Re-authorise the Cloudflare GitHub app against the
+     `seattlemakers` org and point the Worker at `sm-digital-toolbox`.
+     **Until this is done, pushes to `main` do not deploy.**
+
+   - **The orphan.** `wrangler.toml`'s `name` is the Worker's name, and it now
+     reads `sm-digital-toolbox`. A deploy does not rename a Worker - it creates
+     a new one and leaves the old `seattle-makers-tools` Worker running at its
+     own address, serving whatever it last built, for as long as nobody deletes
+     it. So: deploy, check the new hostname actually serves the site, then
+     delete the old Worker by hand. Two live copies of this is the bad outcome,
+     because the stale one keeps answering bookmarks.
+
+   **The `*.workers.dev` hostname changes with the name.** That was the accepted
+   cost of the rename, and it is the moment to attach the real subdomain (item
+   5) rather than publicise a second temporary address - see *The subdomain*
+   above for why the URL is load-bearing for the label maker.
 
 4. **Nothing to do for Cloudflare beyond that.** The Worker is already on the
    makerspace account. For reference, if one ever does need recreating, the
