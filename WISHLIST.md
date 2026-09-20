@@ -67,3 +67,26 @@ photographs. `laser_logo.jpg` appears 11 times and `tour_icon` 5, and the most
 reused actual photograph, `screenprinting-300x284.jpg`, is on 14 entries. Our
 market slideshow already drops the logo tiles and falls back to a studio icon,
 so a real photo per class is what would change what people see.
+
+## 5. Studio tags that match the studio archives
+
+`seattlemakers.org/events/types/<slug>/` works and is what the printed studio
+calendars point their QR codes at, so each sheet sends people to that studio's
+own events. Two things stop it working everywhere, and both are really item 2
+above showing up somewhere new.
+
+Metalworking and the a/v studio have no tag, so there is no archive for them -
+`/events/types/metalworking/` returns an empty page - and their sheets have to
+fall back to the whole calendar. This is worth knowing about generally: an
+unknown tag does not 404, it returns a normal-looking page with nothing on it,
+so a wrong or retired tag fails silently rather than loudly.
+
+CNC is split over two tags, and neither archive shows all of it. `cnc` has the
+certification series and `cnc-routing` has that plus the Big CNC certifications.
+Asking for both in one URL does not work - it quietly uses the first and drops
+the rest - so the sheets point at `cnc-routing` because it happens to be the
+larger of the two. Leatherworking is split the same way, though today both of
+its tags land on the same single event.
+
+One tag per studio, matching the room's name, would fix the door signs and a
+good deal else besides.

@@ -5,6 +5,7 @@ Small web tools for Seattle Makers, all on one static site.
 | Tool | Path | What it does |
 | --- | --- | --- |
 | Today | `/today` | What is on in the space today, refreshing itself. Built for a screen by the door. |
+| Studio calendar | `/calendar` | A month of one studio's sessions on a branded landscape sheet, to print and pin to that studio's door. |
 | Slideshow | `/slideshow` | A looping reel of studio photos and upcoming classes, for running full-screen at markets and tabling events. **Parked** - still serves, but off the index. |
 | Labels | `/labels` | Designs one label — title, subtitle, optional QR — and prints it onto the Label Station's sheets, skipping positions already peeled. |
 
@@ -321,6 +322,87 @@ Each card also carries its next few occurrences in the markup, and the browser
 reveals the first one still in the future. That way a build from a fortnight ago
 still shows a real date instead of advertising a class that already ran.
 
+## Printing a studio's month
+
+`/calendar` makes the sheet that goes on a studio door: one month of that
+studio's sessions, on the brand's green, with a QR to the booking page.
+
+Pick a studio, step to the month you want, and print. The defaults are the
+common case - portrait, open studio hours included, QR on - so most of the time
+it is two clicks.
+
+**Nothing is drawn until a studio is chosen.** The page opens on instructions
+rather than on a sheet, because the one thing the tool cannot guess is whose
+door this is for. The month, paper and note controls stay live meanwhile - they
+are settings for the sheet you are about to make, not properties of one that
+already exists.
+
+| Control | What it does |
+| --- | --- |
+| Studio | One studio, or **Everything at Seattle Makers** for a front-door sheet. Nothing is selected to begin with. |
+| Month | Steps a month at a time. The calendar runs about a year ahead. |
+| Open studio hours | The recurring guided-studio sessions, tours and orientations. On by default — on a studio door they are usually the most useful rows on the sheet. |
+| QR code | Points at seattlemakers.org/events. |
+| Note at the foot | One optional line, e.g. "Ask a steward if you need a hand". |
+
+**Everything is in the query string**, so a studio can bookmark its own sheet and
+come back to it on the first of every month:
+
+```
+/calendar?studio=woodshop&month=2026-10&open=0&qr=0&note=Ask+a+steward
+```
+
+`studio` is the slug, or `all` for the whole space. With it absent nothing is
+selected and the rest of the query string is dropped, so a link either names
+what it prints or prints nothing - there is no URL that quietly picks for you.
+
+**The sheet is landscape, and that is not a setting.** Both were offered at
+first; landscape simply renders better, for a reason that is arithmetic rather
+than taste. A cell is 1.46in wide landscape against 1.1in portrait, which at
+7pt is about 28 characters a line against 20 - and the calendar's median title
+is 27 characters. So titles that wrapped onto two lines in every cell now sit
+on one. Keeping portrait as an option was keeping a way to make a worse sign.
+
+**The QR goes to that studio's own events**, at
+`seattlemakers.org/events/types/<slug>/` - a real taxonomy archive on the site.
+The address is printed at the foot of the sheet as well, and it is always the
+same string the code encodes.
+
+Two studios are the exception. metalworking and the a/v studio carry no
+calendar tag at all, so there is no archive to link and their sheets fall back
+to the whole calendar. That is not a special case in the code: the slug comes
+from the studio's own `eventCategories`, so a studio with no tag has no slug.
+It matters because the archive **soft-404s** - an unknown term returns HTTP 200
+with an empty page rather than a 404, so a wrong link would look fine right up
+until someone scanned it.
+
+cnc is the other wrinkle: its events are split across `cnc` (3) and
+`cnc-routing` (5, a superset), and passing both silently resolves to the first.
+It is pinned to `cnc-routing` in `ARCHIVE_SLUG`. Both are
+[WISHLIST.md](WISHLIST.md) item 2 - one reliable tag per studio.
+
+**What the sheet deliberately does not say.** Cancelled classes are left off
+entirely - a sign printed three weeks ago advertising a class that is not
+happening is worse than one that never mentioned it. Sold-out ones stay, without
+saying so: availability printed on a door in week one is a lie by week three,
+which is what the QR is there to answer. Emoji are stripped from titles, because
+a cell is about an inch wide and the sheet already carries the studio's icon
+twenty times larger.
+
+**A day with more sessions than fit says so.** Each cell is measured after
+layout and shows "+3 more" rather than quietly clipping - which only ever
+happens on the whole-space sheet, since the busiest single studio-day on the
+calendar has two sessions on it.
+
+**A studio with nothing that month prints a sheet saying so**, rather than an
+empty grid. An empty grid reads as a tool that failed, and somebody then has to
+decide whether to pin it up.
+
+Two studios - metalworking and the a/v studio - carry no calendar tag that maps
+to them, so they can never match an event. The dropdown says so next to their
+names rather than showing them as quiet blanks. That is
+[WISHLIST.md](WISHLIST.md) item 2, not a bug here.
+
 ## Printing labels
 
 `/labels` prints onto the Label Station's stock. Pick a sheet, type a title and
@@ -460,10 +542,12 @@ scripts/make-qr.mjs        the reel's interest-form QR, generated at author time
 src/
   data/studios.ts          studio list + category mapping
   lib/events.ts            which events get a card
+  lib/month.ts             month grids and poster text (pure; `npm test`)
   lib/photos.ts            filesystem photo discovery
   lib/reel.ts              slide order
   components/              BrandSlide, PhotoSlide, EventSlide, StudioChip
   scripts/slideshow.ts     the runtime
+  scripts/calendar.ts      the studio calendar's runtime
 ```
 
 ## Provenance of the artwork

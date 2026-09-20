@@ -1,0 +1,1024 @@
+---
+/**
+ * A month of one studio's classes, as a sign for its door.
+ *
+ * The thing being made is a sheet of paper, so - exactly as on /labels - the
+ * poster is measured in inches and CSS does the rest: `in` and `pt` are pinned
+ * to 96px/in on screen and to real physical units in print, so one element is
+ * simultaneously the preview and the printed page. There is no second set of
+ * measurements to keep in step.
+ *
+ * Unlike /labels there is no die-cut to hit, so the geometry is a flex column
+ * inside a margin rather than absolute positioning from the page corner. That
+ * is what lets the same markup be portrait or landscape, and five weeks or six,
+ * without a single hardcoded row height: the grid takes whatever the header and
+ * footer leave it.
+ *
+ * Name, title and description come from data/tools.ts, so this page and its
+ * card on the index cannot describe the tool differently.
+ */
+import Base from '../layouts/Base.astro';
+import { STUDIOS } from '../data/studios';
+import { WEEKDAYS, WEEKDAYS_SHORT } from '../lib/month';
+import { toolById, pageTitle } from '../data/tools';
+
+const TOOL = toolById('calendar');
+
+/**
+ * Studios with no category mapping cannot ever match an event - metalworking
+ * and the a/v studio carry no tag the calendar emits, which is WISHLIST item 2
+ * rather than a bug here. They stay in the list and say so in the option, so
+ * the tool does not silently pretend the room has nothing on.
+ */
+const studios = STUDIOS.map((s) => ({ ...s, untagged: s.eventCategories.length === 0 }));
+---
+
+<Base
+  title={pageTitle(TOOL)}
+  description={TOOL.blurb}
+  bodyClass="cal-page"
+  shellWidth="84rem"
+>
+  <div class="cal-layout">
+    {/* Same shape as /labels: a sticky sidebar beside a scaled sheet. Below
+        the breakpoint the wrapper becomes display:contents so the sheet can
+        be ordered above the Print button. */}
+    <div class="cal-col no-print">
+      <a class="sm-back cal-crumb" href="/">← All tools</a>
+
+      <aside class="cal-editor">
+        <header class="sm-hero cal-head">
+          <h1>{TOOL.name}</h1>
+          <p class="cal-sub">{TOOL.blurb}</p>
+        </header>
+
+        <h2 class="cal-group">What to print</h2>
+
+        <label class="cal-field">
+          <span>Studio</span>
+          <select id="f-studio">
+            {/* The empty value is "nothing chosen yet", not "everything" -
+                they are different states and the sheet only exists for the
+                second. Deliberately not `disabled`: no selection is a designed
+                state with its own screen, not an invalid one, so it stays
+                reachable. */}
+            <option value="">Choose a studio…</option>
+            <option value="all">Everything at Seattle Makers</option>
+            {
+              studios.map((s) => (
+                <option value={s.slug}>
+                  {s.name}
+                  {s.untagged ? ' (not tagged on the calendar yet)' : ''}
+                </option>
+              ))
+            }
+          </select>
+        </label>
+
+        <fieldset class="cal-field">
+          <legend>Month</legend>
+          <div class="cal-step">
+            <button type="button" id="f-prev" aria-label="Previous month">←</button>
+            <span id="f-month" class="cal-step-label">—</span>
+            <button type="button" id="f-next" aria-label="Next month">→</button>
+          </div>
+        </fieldset>
+
+        <p id="f-count" class="cal-note">Loading the calendar…</p>
+
+        <label class="cal-check">
+          <input type="checkbox" id="f-guided" checked />
+          <span>
+            Open studio hours
+            <i>The recurring guided-studio sessions, tours and orientations.</i>
+          </span>
+        </label>
+
+        <h2 class="cal-group">The sheet</h2>
+
+        {/* No paper control. The sheet is landscape, full stop - a cell is
+            1.46in wide there against 1.1in portrait, which is the difference
+            between a class title sitting on one line and wrapping onto two,
+            down all 35 cells. Offering the worse one as an option was offering
+            a way to make a worse sign. */}
+
+        <label class="cal-check">
+          <input type="checkbox" id="f-qr" checked />
+          <span>
+            QR code
+            <i>Points at seattlemakers.org/events, for booking a place.</i>
+          </span>
+        </label>
+
+        <label class="cal-field">
+          <span>Note at the foot <i>optional</i></span>
+          <input
+            id="f-note"
+            type="text"
+            maxlength="90"
+            placeholder="Ask a steward if you need a hand"
+          />
+        </label>
+
+        <p id="warn" class="cal-warn" hidden></p>
+      </aside>
+
+      <div class="cal-actions">
+        <button id="f-print" type="button" class="cal-print" disabled>Print</button>
+        <p class="cal-hint">
+          Letter paper. In the print dialog set margins to <b>None</b> and scale
+          to <b>100%</b>, so the sheet lands at its true size. If the green panel
+          comes out blank, switch on <b>Background graphics</b>.
+        </p>
+      </div>
+    </div>
+
+    <div class="cal-preview">
+      <div id="pv-bar" class="cal-bar no-print">
+        <span id="pv-what" class="pv-what">—</span>
+        <span id="pv-size" class="pv-size">—</span>
+      </div>
+
+      {/* Stands in for the sheet until a studio is picked. The tool used to
+          open on a fully drawn "everything" sheet, which presented a choice
+          nobody had made as though they had made it - and buried the one
+          control that matters under a page of output. */}
+      <div id="pv-none" class="cal-placeholder no-print" hidden>
+        <p class="cal-placeholder-lead">Choose a studio to make its sheet.</p>
+        <p class="cal-placeholder-sub">
+          Pick the studio whose door this is going on, step to the month you
+          want, and print. Or choose <b>Everything at Seattle Makers</b> for a
+          front-door sheet.
+        </p>
+      </div>
+
+      <div id="preview-host">
+        <div id="page">
+          <div class="cal-poster">
+            <header class="cal-hd">
+              <img id="p-icon" class="cal-hd-icon" src="" alt="" hidden />
+              <div class="cal-hd-words">
+                <p class="cal-hd-eyebrow">Seattle Makers</p>
+                <h2 id="p-studio" class="cal-hd-studio">—</h2>
+                <p id="p-month" class="cal-hd-month">—</p>
+              </div>
+              {/* A white card, so the code's quiet zone comes from paper rather
+                  than from the green behind it. */}
+              <div id="p-qr-card" class="cal-hd-qr">
+                <div id="p-qr" class="cal-hd-qr-ink"></div>
+                <p class="cal-hd-qr-cap">Book a place</p>
+              </div>
+            </header>
+
+            <div id="p-dows" class="cal-dows">
+              {
+                WEEKDAYS.map((d, i) => (
+                  <span aria-label={d}>{WEEKDAYS_SHORT[i]}</span>
+                ))
+              }
+            </div>
+
+            <div id="p-grid" class="cal-grid"></div>
+
+            <p id="p-empty" class="cal-blank" hidden></p>
+
+            <footer class="cal-ft">
+              <img class="cal-ft-mark" src="/brand/wordmark-inline.png" alt="Seattle Makers" />
+              <p id="p-note" class="cal-ft-note"></p>
+              {/* Written from script, and always the same address the QR
+                  encodes - a sheet whose printed link and code disagree is a
+                  small lie that is very hard to notice. */}
+              <p id="p-url" class="cal-ft-url">seattlemakers.org/events</p>
+            </footer>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <template id="cal-cell-tpl">
+    <div class="cal-cell">
+      <span class="cal-dnum"></span>
+      <ul class="cal-evs"></ul>
+      <span class="cal-more" hidden></span>
+    </div>
+  </template>
+
+  <template id="cal-ev-tpl">
+    <li class="cal-ev">
+      <span class="cal-ev-t"></span>
+      <span class="cal-ev-n"></span>
+    </li>
+  </template>
+</Base>
+
+{/* Global, not scoped: the grid and the QR are built in the browser with
+    createElement and innerHTML, and Astro stamps its scoping attribute at build
+    time - so a scoped rule would style nothing that actually ends up on the
+    sheet. Same trap as the injected QR on /labels and the rows on /today. */}
+<style is:global>
+  /* ============================================================== sheet ===
+
+     Everything inside #page is in inches and points. On screen CSS pins those
+     to 96px/in, and #page is then transform-scaled to fit the column; in print
+     they are the real thing. The preview cannot drift from the paper because
+     they are one element.
+
+     `zoom` would not do: it re-lays-out text at the scaled size, so the
+     preview's line breaks would stop matching the print's. The cost of
+     `transform` is that the scaled element keeps its unscaled layout box,
+     which is why calendar.ts sets #preview-host's height by hand. */
+
+  /* Static again. While the sheet could be either way round this had to be
+     rewritten from script on every change - page context is not element
+     context, so `size` can read neither a custom property nor a class. With
+     one orientation it is just a rule. */
+  @page {
+    size: letter landscape;
+    margin: 0;
+  }
+
+  /* The sheet's whole geometry, in the units it is drawn in. These were set
+     from script while there were two orientations to switch between; with one
+     they are simply the sheet, and script sets only --weeks. */
+  #page {
+    --page-w: 11in;
+    --page-h: 8.5in;
+    --sheet-pad: 0.38in;
+    --icon: 0.8in;
+    /* 1.35in, up from 1.2in. The filtered archive links are ~50 characters
+       against the bare calendar's 32, which pushes the code from 37 modules to
+       41 - and at 1.2in that is 0.743mm per module, under print-qr.ts's 0.8mm
+       floor. 1.35in puts it back at 0.836mm. The header's vertical padding
+       came down to pay for most of the extra height. */
+    --qr: 1.35in;
+    --mark: 0.15in;
+    --pt-eyebrow: 7.5pt;
+    --pt-studio: 30pt;
+    --pt-month: 12.5pt;
+    --pt-dow: 7.5pt;
+    /* 11pt, not the 9.5pt the portrait sheet used. This is read standing in
+       front of a door rather than held, and the date is what you scan for -
+       it was the weakest element on the sheet at arm's length. It costs one
+       extra trimmed session on the whole-space sheet and nothing at all on a
+       studio's own, which is the sheet this tool is for. */
+    --pt-dnum: 11pt;
+    --pt-time: 6.8pt;
+    --pt-name: 7pt;
+    --pt-more: 5.8pt;
+    --pt-foot: 7.5pt;
+
+    position: relative;
+    width: var(--page-w);
+    height: var(--page-h);
+    background: #fff;
+    color: #000;
+    overflow: hidden;
+    /* Browsers drop backgrounds in print unless the viewer ticks "Background
+       graphics". A label can live without its grey box; this poster cannot -
+       the header is white type on green, so losing the green loses the words.
+       Set on the sheet and inherited, rather than per element. */
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  /* The safe area. Office printers cannot reach the paper edge, so nothing
+     bleeds: the green panel is a plate inside a white margin, which is the
+     same relationship every page on this site has to its ground. */
+  .cal-poster {
+    position: absolute;
+    inset: var(--sheet-pad, 0.4in);
+    display: flex;
+    flex-direction: column;
+    font-family: var(--font-sans);
+    color: var(--color-sm-ink);
+  }
+
+  /* ------------------------------------------------------------- header --- */
+
+  .cal-hd {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 0.22in;
+    /* 0.16in, trimmed from 0.2in when the QR grew to keep its modules
+       scannable - the card sets this band's height, so the padding is where
+       the extra inch-eighth had to come from. */
+    padding: 0.16in 0.26in;
+    background: var(--color-sm-green);
+    border-radius: 0.14in 0.14in 0 0;
+  }
+
+  /* The studio icons are dark line art inside a white disc, which is why they
+     work on the green without a knockout variant being drawn: the disc is the
+     badge. Sized off the header rather than fixed, so landscape shrinks it
+     with everything else. */
+  .cal-hd-icon {
+    flex: 0 0 auto;
+    width: var(--icon, 0.86in);
+    height: var(--icon, 0.86in);
+    object-fit: contain;
+  }
+
+  .cal-hd-words {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .cal-hd-eyebrow {
+    font-family: var(--font-display);
+    font-size: var(--pt-eyebrow, 8pt);
+    font-weight: 700;
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--color-sm-on-green);
+  }
+
+  .cal-hd-studio {
+    margin-top: 0.02in;
+    font-family: var(--font-display);
+    font-size: var(--pt-studio, 34pt);
+    font-weight: 800;
+    line-height: 1.02;
+    letter-spacing: -0.028em;
+    /* Left lowercase, which is how studios.ts spells them and how the brand
+       deck's chips read. Title-casing them here would mean owning a list of
+       exceptions - "3D", "A/V", "CNC" - in a second place, and it would put
+       the poster out of step with the reel's chips for no gain. */
+    color: #fff;
+    text-wrap: balance;
+  }
+
+  .cal-hd-month {
+    margin-top: 0.04in;
+    font-family: var(--font-display);
+    font-size: var(--pt-month, 13pt);
+    font-weight: 600;
+    color: var(--color-sm-on-green);
+  }
+
+  .cal-hd-qr {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.04in;
+    padding: 0.07in 0.07in 0.05in;
+    background: #fff;
+    border-radius: 0.08in;
+  }
+
+  .cal-hd-qr-ink {
+    width: var(--qr, 1.1in);
+    height: var(--qr, 1.1in);
+  }
+
+  .cal-hd-qr-ink svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* crispEdges is right at 600dpi and wrong in a preview scaled to a third of
+     that, where it makes whole module rows look thicker than their neighbours.
+     Same override the label sheet needs, for the same reason. */
+  @media screen {
+    .cal-hd-qr-ink svg {
+      shape-rendering: geometricPrecision;
+    }
+  }
+
+  .cal-hd-qr-cap {
+    font-family: var(--font-display);
+    font-size: 6pt;
+    font-weight: 700;
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--color-sm-green);
+  }
+
+  /* --------------------------------------------------------- the weekdays --- */
+
+  .cal-dows {
+    flex: 0 0 auto;
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    background: var(--color-sm-green-dark);
+  }
+
+  .cal-dows span {
+    padding: 0.05in 0 0.045in;
+    font-family: var(--font-display);
+    font-size: var(--pt-dow, 8pt);
+    font-weight: 700;
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    text-align: center;
+    color: #fff;
+  }
+
+  /* --------------------------------------------------------------- grid --- */
+
+  /* The grid takes whatever the header, the weekday strip and the footer leave
+     it, and divides that by however many weeks the month needs. Nothing here
+     is a fixed height, which is what lets one stylesheet serve portrait and
+     landscape, five rows and six. */
+  .cal-grid {
+    flex: 1 1 auto;
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    grid-template-rows: repeat(var(--weeks, 5), 1fr);
+    border-left: 0.5pt solid var(--color-sm-line);
+    border-top: 0;
+    min-height: 0;
+  }
+
+  .cal-cell {
+    display: flex;
+    flex-direction: column;
+    padding: 0.035in 0.045in 0.03in;
+    border-right: 0.5pt solid var(--color-sm-line);
+    border-bottom: 0.5pt solid var(--color-sm-line);
+    overflow: hidden;
+  }
+
+  /* Days belonging to the months either side. Kept rather than blanked -
+     a calendar that stops mid-row reads as a printing fault - but muted, and
+     with nothing in them. */
+  .cal-cell[data-out='1'] {
+    background: #fafbfa;
+  }
+
+  .cal-dnum {
+    flex: 0 0 auto;
+    font-family: var(--font-display);
+    font-size: var(--pt-dnum, 9.5pt);
+    font-weight: 700;
+    line-height: 1.1;
+    color: var(--color-sm-ink);
+  }
+
+  .cal-cell[data-out='1'] .cal-dnum {
+    color: #b8bfba;
+  }
+
+  /* Saturday and Sunday get the date in the brand green. A whole tinted column
+     was tried first and it fought the green header for attention on a page
+     that only has one thing to say. */
+  .cal-cell[data-weekend='1'][data-out='0'] .cal-dnum {
+    color: var(--color-sm-green);
+  }
+
+  .cal-evs {
+    flex: 1 1 auto;
+    min-height: 0;
+    margin-top: 0.02in;
+    list-style: none;
+  }
+
+  .cal-ev {
+    margin-bottom: 0.035in;
+  }
+
+  .cal-ev-t {
+    display: block;
+    font-family: var(--font-display);
+    font-size: var(--pt-time, 6.8pt);
+    font-weight: 700;
+    line-height: 1.15;
+    color: var(--color-sm-green);
+  }
+
+  .cal-ev-n {
+    display: block;
+    font-size: var(--pt-name, 7pt);
+    font-weight: 400;
+    line-height: 1.18;
+    color: var(--color-sm-ink);
+    /* Hyphenation rather than overflow: a cell is an inch wide and the
+       calendar is full of words like "Certification". */
+    hyphens: auto;
+    overflow-wrap: break-word;
+  }
+
+  .cal-more {
+    flex: 0 0 auto;
+    font-family: var(--font-display);
+    font-size: var(--pt-more, 6pt);
+    font-weight: 700;
+    color: var(--color-sm-slate);
+  }
+
+  /* Nothing at all this month. Said in words, in the middle of the sheet,
+     rather than by printing an empty grid - an empty grid looks like the tool
+     failed, and the studio has to decide whether to pin that up. */
+  .cal-blank {
+    flex: 1 1 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 0.6in;
+    font-family: var(--font-display);
+    font-size: 13pt;
+    font-weight: 600;
+    line-height: 1.5;
+    text-align: center;
+    text-wrap: balance;
+    color: var(--color-sm-slate);
+    /* All four sides: the weekday strip is hidden along with the grid, so
+       unlike the grid this panel has nothing above it to close its top. */
+    border: 0.5pt solid var(--color-sm-line);
+  }
+
+  /* ------------------------------------------------------------- footer --- */
+
+  .cal-ft {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 0.2in;
+    padding-top: 0.11in;
+  }
+
+  .cal-ft-mark {
+    flex: 0 0 auto;
+    width: auto;
+    height: var(--mark, 0.15in);
+  }
+
+  .cal-ft-note {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-size: var(--pt-foot, 8pt);
+    line-height: 1.3;
+    color: var(--color-sm-slate);
+  }
+
+  .cal-ft-url {
+    flex: 0 0 auto;
+    margin-left: auto;
+    font-family: var(--font-display);
+    font-size: var(--pt-foot, 8pt);
+    font-weight: 700;
+    color: var(--color-sm-green);
+  }
+
+  /* ============================================================== page ===
+
+     Everything below is screen chrome and never prints. */
+
+  .cal-layout {
+    display: flex;
+    align-items: flex-start;
+    gap: 2rem;
+    max-width: 84rem;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 4rem;
+  }
+
+  .cal-preview {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .cal-col {
+    position: sticky;
+    top: 2rem;
+    flex: 0 0 22rem;
+    width: 22rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  /* Base rules first, the breakpoint that overrides them second: media queries
+     do not raise specificity, so a stacked-layout rule written above its own
+     base rule loses on source order and silently does nothing. That has
+     already cost this repo two debugging sessions on /labels. */
+  @media (max-width: 66rem) {
+    .cal-layout {
+      flex-direction: column;
+      /* stretch, not the flex-start inherited from the row layout: in a column
+         container align-items governs *width*, and flex-start makes each child
+         size to its own content - which would put an 816px sheet inside a
+         345px window and overflow sideways instead of scaling. */
+      align-items: stretch;
+    }
+    .cal-col {
+      display: contents;
+    }
+    .cal-editor {
+      position: static !important;
+      width: 100% !important;
+      order: 1;
+    }
+    /* The sheet belongs above the button that commits it to paper. */
+    .cal-preview {
+      width: 100%;
+      order: 2;
+    }
+    .cal-actions {
+      order: 3;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+  }
+
+  #preview-host {
+    position: relative;
+  }
+
+  #page {
+    transform: scale(var(--preview-scale, 1));
+    transform-origin: top left;
+    border-radius: 2px;
+    box-shadow:
+      0 1px 2px rgb(0 0 0 / 0.16),
+      0 12px 34px rgb(0 0 0 / 0.13);
+  }
+
+  /* Sheet-shaped enough to read as "the sheet goes here", short enough not to
+     be a page of emptiness. A dashed edge rather than a solid one, so it does
+     not read as a blank sheet that failed to draw. */
+  .cal-placeholder {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    padding: 3.5rem 2.5rem;
+    border: 1px dashed var(--color-sm-line);
+    border-radius: 14px;
+    background: var(--color-sm-paper);
+    text-align: center;
+  }
+
+  .cal-placeholder-lead {
+    font-family: var(--font-display);
+    font-size: 1.15rem;
+    font-weight: 700;
+    letter-spacing: -0.015em;
+    color: var(--color-sm-ink);
+  }
+
+  .cal-placeholder-sub {
+    max-width: 34rem;
+    margin: 0 auto;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    color: var(--color-sm-slate);
+  }
+
+  .cal-bar {
+    display: flex;
+    align-items: baseline;
+    gap: 0.6rem;
+    margin-bottom: 0.7rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--color-sm-slate);
+  }
+
+  .pv-size {
+    color: var(--color-sm-green);
+  }
+
+  /* ------------------------------------------------------------- editor --- */
+
+  .cal-crumb {
+    margin-bottom: 0;
+  }
+
+  .cal-editor {
+    --pad-x: 1.6rem;
+    --pad-y: 1.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: var(--pad-y) var(--pad-x);
+    background: var(--color-sm-paper);
+    border-radius: 14px;
+    box-shadow:
+      0 1px 2px rgb(20 25 22 / 0.04),
+      0 10px 30px rgb(20 25 22 / 0.06);
+  }
+
+  .cal-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+
+  /* .cal-editor is a flex column with its own gap, so the hero's default
+     bottom margin would stack on top of it and leave a hole under the panel. */
+  .cal-head.sm-hero {
+    margin-bottom: 0;
+  }
+
+  .cal-editor h1 {
+    font-family: var(--font-display);
+    font-size: 2rem;
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -0.028em;
+    color: var(--color-sm-paper);
+  }
+
+  .cal-sub {
+    margin-top: 0.6rem;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    color: var(--color-sm-on-green);
+  }
+
+  .cal-group {
+    margin-top: 0.4rem;
+    font-family: var(--font-display);
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    color: var(--color-sm-green);
+  }
+
+  .cal-group + .cal-field,
+  .cal-group + .cal-note {
+    margin-top: -0.4rem;
+  }
+
+  .cal-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  .cal-field > span,
+  .cal-field > legend {
+    font-family: var(--font-display);
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    color: var(--color-sm-ink);
+  }
+
+  .cal-field > span i,
+  .cal-field > legend i {
+    font-style: normal;
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: 0;
+    color: var(--color-sm-slate);
+  }
+
+  .cal-field input[type='text'],
+  .cal-field select {
+    width: 100%;
+    padding: 0.55rem 0.7rem;
+    border: 1px solid var(--color-sm-line);
+    border-radius: 6px;
+    background: #fff;
+    font: inherit;
+    font-size: 0.95rem;
+    color: var(--color-sm-ink);
+  }
+
+  .cal-field input[type='text']:focus,
+  .cal-field select:focus {
+    outline: 2px solid var(--color-sm-green);
+    outline-offset: -1px;
+    border-color: transparent;
+  }
+
+  /* The month stepper. Two buttons and a label, rather than <input
+     type="month">, whose native picker is a different shape in every browser
+     and which offers a year 1900 nobody's calendar reaches. */
+  .cal-step {
+    display: flex;
+    align-items: stretch;
+    gap: 0.35rem;
+  }
+
+  .cal-step button {
+    flex: 0 0 auto;
+    width: 2.4rem;
+    border: 1px solid var(--color-sm-line);
+    border-radius: 6px;
+    background: #fff;
+    font: inherit;
+    font-size: 1rem;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--color-sm-ink);
+    cursor: pointer;
+    transition:
+      border-color 140ms ease,
+      color 140ms ease;
+  }
+
+  .cal-step button:hover {
+    border-color: var(--color-sm-green);
+    color: var(--color-sm-green);
+  }
+
+  .cal-step-label {
+    flex: 1 1 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem 0.4rem;
+    border: 1px solid var(--color-sm-line);
+    border-radius: 6px;
+    font-family: var(--font-display);
+    font-size: 0.95rem;
+    font-weight: 700;
+    text-align: center;
+  }
+
+  .cal-seg {
+    display: flex;
+    gap: 0.35rem;
+  }
+
+  .cal-seg button {
+    flex: 1 1 0;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    padding: 0.5rem 0.4rem;
+    border: 1px solid var(--color-sm-line);
+    border-radius: 6px;
+    background: #fff;
+    font: inherit;
+    font-family: var(--font-display);
+    font-size: 0.82rem;
+    font-weight: 700;
+    line-height: 1.15;
+    cursor: pointer;
+    transition:
+      border-color 140ms ease,
+      background-color 140ms ease,
+      color 140ms ease,
+      transform 140ms ease;
+  }
+
+  .cal-seg button i {
+    font-style: normal;
+    font-weight: 400;
+    font-size: 0.68rem;
+    color: var(--color-sm-slate);
+  }
+
+  .cal-seg button:hover {
+    border-color: var(--color-sm-green);
+    transform: translateY(-1px);
+  }
+
+  .cal-seg button[aria-pressed='true'] {
+    border-color: var(--color-sm-green);
+    background: var(--color-sm-green);
+    color: #fff;
+  }
+
+  .cal-seg button[aria-pressed='true'] i {
+    color: rgb(255 255 255 / 0.75);
+  }
+
+  .cal-check {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.55rem;
+    cursor: pointer;
+  }
+
+  .cal-check input {
+    flex: 0 0 auto;
+    margin-top: 0.15rem;
+    width: 1rem;
+    height: 1rem;
+    accent-color: var(--color-sm-green);
+  }
+
+  .cal-check > span {
+    font-family: var(--font-display);
+    font-size: 0.85rem;
+    font-weight: 600;
+    line-height: 1.3;
+  }
+
+  .cal-check > span i {
+    display: block;
+    margin-top: 0.15rem;
+    font-style: normal;
+    font-family: var(--font-sans);
+    font-size: 0.76rem;
+    font-weight: 400;
+    line-height: 1.4;
+    color: var(--color-sm-slate);
+  }
+
+  .cal-note,
+  .cal-warn {
+    font-size: 0.78rem;
+    line-height: 1.45;
+  }
+
+  .cal-note {
+    margin-top: -0.4rem;
+    color: var(--color-sm-slate);
+  }
+
+  .cal-warn {
+    padding: 0.55rem 0.75rem;
+    border-radius: 6px;
+    background: #fef3c7;
+    color: #713f12;
+  }
+
+  .cal-warn[data-level='error'] {
+    background: #fee2e2;
+    color: #7f1d1d;
+  }
+
+  /* The website's call to action, down to the 50px radius. */
+  .cal-print {
+    padding: 0.8rem 1.6rem;
+    border: 0;
+    border-radius: 50px;
+    background: var(--color-sm-green);
+    color: #fff;
+    font: inherit;
+    font-family: var(--font-display);
+    font-size: 0.95rem;
+    font-weight: 700;
+    letter-spacing: 0.015em;
+    cursor: pointer;
+    transition:
+      background-color 140ms ease,
+      box-shadow 140ms ease;
+  }
+
+  .cal-print:hover:not(:disabled) {
+    background: var(--color-sm-green-dark);
+    box-shadow: 0 4px 14px rgb(19 114 60 / 0.22);
+  }
+
+  .cal-print:disabled {
+    background: var(--color-sm-line);
+    color: #8d8e90;
+    box-shadow: none;
+    cursor: not-allowed;
+  }
+
+  .cal-hint {
+    font-size: 0.78rem;
+    line-height: 1.5;
+    color: var(--color-sm-slate);
+  }
+
+  /* ================================================================ print === */
+
+  @media print {
+    .no-print,
+    astro-dev-toolbar {
+      display: none !important;
+    }
+
+    /* global.css paints html with the mist, which prints as a grey page once
+       backgrounds are on; Base.astro's min-h-screen is 100vh in print and
+       emits a blank second page. Both have to be forced back. */
+    html,
+    body.cal-page {
+      background: #fff !important;
+      color: #000 !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      min-height: 0 !important;
+      height: auto !important;
+    }
+
+    .cal-layout {
+      display: block !important;
+      max-width: none !important;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+
+    #preview-host {
+      width: auto !important;
+      height: auto !important;
+    }
+
+    #page {
+      transform: none !important;
+      box-shadow: none !important;
+      border-radius: 0 !important;
+    }
+  }
+</style>
+
+<script>
+  import '../scripts/calendar';
+</script>

@@ -64,6 +64,21 @@ Done:
 - The slideshow is parked: its entry on the index is commented out, the page
   and `scripts/slideshow.ts` are untouched, and `/slideshow` still serves.
 
+Studio calendar (`/calendar`) is built and verified against a print-to-PDF,
+added 2026-09-20.
+
+Done:
+- A month of one studio's sessions on a letter sheet, for that studio's door.
+  Landscape only, five weeks or six, from one flex column - see *The poster*.
+- Reads `/api/events` once, whole, and filters in memory; every control after
+  that is free. `?day=` is deliberately not passed.
+- `lib/month.ts` is the pure half - month grids, compact times, the two title
+  rules - with 51 assertions in `npm test`.
+- A QR on the header's white card pointing at that studio's own events
+  (`/events/types/<slug>/`), at 0.836mm per module, decoded at 150dpi and
+  300dpi and checked against the address printed beside it.
+- The whole sheet lives in the query string, so a studio can bookmark its own.
+
 Label maker (`/labels`) is built and verified against a print-to-PDF. Most of
 the *Implementation notes* below are about it.
 
@@ -706,6 +721,236 @@ it is a real page's og:image and every `content-length` was measured against
 the live site, so the file doubles as the record of what those measurements
 were. No network: `fetch` is stubbed.
 
+### The poster
+
+**The sheet is a flex column inside a margin, not absolute positioning from the
+page corner.** /labels has to hit a die-cut, so every label is placed in
+absolute inches; this has nothing to hit, and paying that cost would buy a
+second set of measurements to keep in step. The column is header / weekday strip
+/ grid / footer, the grid is `flex: 1 1 auto` with `grid-template-rows:
+repeat(var(--weeks), 1fr)`, and everything else is `flex: 0 0 auto`.
+
+That one decision is what makes five weeks and six free. Measured rather than
+assumed: at both, the grid is 5.339in tall - *identical* - with the rows going
+1.068in -> 0.890in. The page cannot grow, because the grid has nowhere to grow
+into. The footer's bottom sits exactly `--sheet-pad` above the paper edge
+either way. It also made dropping portrait a deletion rather than a rework.
+
+**The green panel prints with "Background graphics" switched off, and that was
+checked rather than hoped.** `#page` sets `print-color-adjust: exact` and the
+verification prints with `printBackground: false` - Chrome's default, and the
+state a volunteer's print dialog is in before they touch anything. The header is
+white type on green, so losing the green loses the words; this is the one place
+on the site where a dropped background is not cosmetic. The UI hint says to
+switch Background graphics on only *if the panel comes out blank*, because
+demanding a step that is not needed is its own kind of wrong.
+
+**The sheet is landscape, and that is not a setting.** Both were offered at
+first and portrait was the default. Landscape renders better for a reason that
+is arithmetic rather than taste: a cell is 10.24in / 7 = 1.46in wide against
+portrait's 1.1in, which at 7pt is about 28 characters a line against 20, and
+the calendar's median title is 27 characters. The same sheet that wrapped onto
+two lines in every cell sits on one line landscape. Keeping the worse one as an
+option was keeping a way to make a worse sign.
+
+Removing it took `SHEETS`, the `Orient` type, `syncOrient()`, the `?paper=`
+parameter and `setPageRule()` with it. That last one is the nice part: `@page`
+size can read neither a custom property nor a class - page context is not
+element context - so while there were two orientations the whole rule had to be
+rewritten from script on every render. With one it is a static rule in the
+stylesheet, and so is the rest of the sheet's geometry, which now lives on
+`#page` rather than being pushed in as inline styles. Script sets only
+`--weeks`.
+
+**The date numerals are 11pt, not the 9.5pt the portrait sheet used.** This is
+read standing in front of a door rather than held in the hand, and the date is
+what the eye scans for. Measured before and after: it costs exactly one more
+trimmed session on the whole-space sheet (27 -> 28 hidden, still balanced) and
+nothing at all on any studio's own sheet, which is the sheet this tool is for.
+The *title* size was deliberately left alone - raising it to 8pt would take the
+line back under 27 characters and undo the one thing landscape bought.
+
+**The header is 1.9in of an 8.5in page, and the QR is why.** `encode()` bakes a
+4-module quiet zone inside the image, so a 37-module box is only 29 modules of
+ink - the code reads as about an inch inside a 1.2in box. Shrinking the box to
+what the ink looks like would put it under the 0.8mm warn threshold in
+print-qr.ts. The alternative was /labels' `--quiet-pull`
+trick, dragging the box out by the quiet zone; here the card is white and
+already supplies the quiet zone, so paying the 0.25in outright is simpler than
+a negative margin capped against the padding. Verified end to end: 0.858mm per
+module, and `BarcodeDetector` reads
+`https://seattlemakers.org/events` back off both a 150dpi and a 300dpi raster.
+
+**The QR goes to the studio's own events**, at
+`/events/types/<slug>/` - a real taxonomy archive. Verified per slug by
+parsing the response and counting rather than by loading it and nodding:
+laser-cutting 13, ceramics 18, sewing 27, print-making 20, woodworking 9, the
+same numbers those categories have in the full calendar.
+
+**It soft-404s, and that is the thing to remember.** An unknown term returns
+HTTP 200 with a 176,553-byte page titled just "Seattle Makers" and no events on
+it - identical for `/types/nonsense-slug/`, `/types/metalworking/` and
+`/types/av-studio/`. A 200 is not evidence a link works, which is why every
+slug here was checked by counting events rather than by status code.
+
+The trap is avoided by construction rather than by sniffing responses: the slug
+comes from the studio's own `eventCategories`, so a studio with no tag has no
+slug and falls back to the whole calendar. The two studios that would soft-404
+are exactly the two with an empty `eventCategories`.
+
+**cnc is pinned to `cnc-routing`, and that is the only entry in
+`ARCHIVE_SLUG`.** Its events are split over two archives and neither shows
+both - `/types/cnc/` has the 3 certification-series dates, `/types/cnc-routing/`
+has those 3 plus the 2 Big CNC ones - so the superset wins. Passing both does
+not work: `/types/cnc,cnc-routing/` silently resolves to `cnc` and drops the
+rest, which is the soft-404 problem wearing a different hat. leatherworking is
+split the same way but both of its tags land on the same single event, so it
+needs no entry.
+
+**The longer links cost modules, which is why `--qr` is 1.35in.** An archive
+link is about 50 characters against the bare calendar's 32, which pushes the
+code from 37 modules to 41. At the old 1.2in box that is 0.743mm per module,
+under print-qr.ts's 0.8mm floor; at 1.35in it is 0.836mm. Dropping the trailing
+slash does not help - every studio's link sits in the same version bucket. The
+header's vertical padding came down from 0.2in to 0.16in to pay for most of the
+extra height, so the header grew only 0.071in in the end.
+
+**Two bugs came out of making the link per-studio, and both were the same
+mistake.** The box size was a constant in the script *and* a value in the
+stylesheet; `--qr` grew to 1.35in and the constant stayed at 1.2in, so the size
+check measured a box that no longer existed and warned that every sheet was
+under the threshold when none of them was. It reads `--qr` off the computed
+style now. And the warning was raised from inside the encode, so it was never
+*cleared* - a warning about one studio stayed up after switching to another
+whose code was fine. It is recomputed on every render instead. A check that
+cries wolf is worse than no check, because the next person learns to ignore it.
+
+**The printed address and the encoded link are one value.** `displayUrl()` is
+the only difference between them. A sheet whose footer and QR disagree is a
+small lie that is very hard to notice and impossible to spot once it is on a
+door.
+
+**Nothing bleeds.** Office printers cannot reach the paper edge, so the green
+panel is a plate inside a 0.4in white margin rather than a full-bleed band -
+the same relationship every page on this site has to its ground. It also means
+`@page { margin: 0 }` is about controlling the geometry, not about bleeding.
+
+**`@page` size has to be rewritten, not set from a custom property.** Page
+context is not element context: `size` cannot read a variable and cannot be
+nested under a class. So `setPageRule()` replaces the whole rule when the
+orientation changes. Without it the sheet is laid out landscape and printed
+onto portrait paper, which Chrome resolves by cropping three inches off the
+right-hand side.
+
+**The trim pass is measured, and it has to balance.** A cell holds three or four
+sessions; per studio that is never reached - the busiest studio-day on the whole
+calendar has two - but "everything at Seattle Makers" hits six. `trimCells()`
+hides items from the end until the list stops overflowing and prints "+N more".
+The property worth testing is not that it fits but that **hidden === claimed**:
+on September's whole-space sheet, 69 sessions, 53 shown, 16 hidden, 16 claimed,
+nothing still overflowing. Silent clipping would make the sheet wrong in a way
+nothing on it admits to.
+
+Its 1px tolerance is *not* the fudge the label auto-fit warns about further up.
+There a genuine overflow can be one pixel of glyph side bearing, so `+ 1` hid
+real ink. Here the smallest possible overflow is a wrapped line - about nine
+pixels - and the tolerance only absorbs the rounding in
+scrollHeight/clientHeight, which are integers.
+
+**An empty month hides the weekday strip too.** Showing "SUN MON TUE…" across a
+blank sheet reads as a calendar that failed to draw its own rows, which is the
+exact impression the written empty state exists to replace. This was wrong in
+the first version and only showed up in the printed PDF. `.cal-blank` therefore
+carries a border on all four sides, unlike the grid, which has the weekday
+strip closing its top.
+
+**Which words the empty state uses matters, and it is the same rule as
+/today's.** "Nothing on the calendar" is a claim about the space. It must never
+stand in for "we have not looked yet" or "we could not reach the calendar" -
+so the poster says "Reading the calendar…" while `events` is null and "Could
+not reach the calendar" on a failure. This one gets printed and pinned to a
+door, which makes the distinction worth more here than anywhere else on the
+site.
+
+**The sheet is scaled by a ResizeObserver, not a `resize` listener.** A tab that
+lays out at zero width - loaded in the background, or in a hidden pane - makes
+`host.clientWidth` 0, so `fit()` computes a scale of 0 and draws the sheet at
+nothing. Becoming visible later does not resize the *window*, so nothing ever
+put it right. Found exactly that way: every measurement in a hidden preview pane
+came back 0. Same reason /today observes its board.
+
+**Cancelled classes are dropped here and kept on /today, and the difference is
+the point.** A board inside the space has to tell somebody who turned up for a
+class that it is off. A sheet printed three weeks earlier has no such duty, and
+a door sign advertising a class that is not happening is worse than one that
+never mentioned it. Sold-out sessions stay but are not marked: availability
+printed on a door in week one is a lie by week three. The poster is a schedule,
+not a booking system - that is what the QR answers.
+
+**The two title rules are narrow on purpose, and each was checked against the
+whole calendar.** Emoji come off the front and back of titles ("🪚 Woodshop
+Guided Studio") because a cell is an inch wide, an emoji is a character of it,
+and a colour emoji font is the one face on the page that is not self-hosted -
+so what lands on paper would depend on the machine. A redundant studio prefix
+comes off only when **colon-delimited**: "Sewing: Guided Studio" -> "Guided
+Studio". Matching the bare name as well would turn "Screen Printing
+Certification" into "Certification" and "Woodshop Basics (4 Part Series)" into
+"Basics". `npm test` pins both, including that "Big CNC: Industrial 4′ x 10′ …"
+is safe because the prefix is "Big CNC", not a studio name.
+
+**Studio names stay lowercase, as studios.ts spells them.** Title-casing on the
+poster would mean owning a list of exceptions - "3D", "A/V", "CNC" - in a second
+place, and `text-transform: capitalize` renders "a/v studio" inconsistently
+across browsers anyway. It also keeps the sheet in step with the reel's chips.
+
+**The studio icons work on green with no knockout variant, because they are
+already badges.** Each is dark line art inside a white disc, so the disc is the
+button. That is luck rather than design, and a future flat-artwork icon would
+disappear into the panel.
+
+**The whole-space sheet is headed "what's on", not "Seattle Makers".** The
+eyebrow above it already says Seattle Makers, and a heading that repeats it
+tells a reader nothing about the list underneath.
+
+**"Nothing chosen" is a third state, not an empty string.** The studio select's
+empty value used to mean *everything*, which made "no choice" unrepresentable -
+so the page opened on a finished 69-session sheet for a decision nobody had
+taken, and the one control that matters sat above a page of output nobody had
+asked for. `choice()` now returns `'none' | 'all' | Studio`, `?studio=all` is
+what asks for the whole space, and an unrecognised slug falls back to `'none'`
+rather than to everything: a mistyped link should land on the instructions, not
+quietly print something else.
+
+`render()` returns early on `'none'` - there is no sheet to draw, measure or
+print - and that early return has to clear `host.style.height`, because `fit()`
+sets it by hand and a stale 1056px leaves a hole under the placeholder where
+the sheet used to be. The ResizeObserver skips a hidden host for the same
+reason.
+
+**But the month, paper and note controls stay live with nothing chosen.** They
+are settings for the sheet you are about to make rather than properties of one
+that exists, and freezing them makes the page feel broken before it is used.
+The one thing that has to be lifted above the early return is the month label:
+left to the markup default it read "—" next to two working arrows, which is a
+bug rather than restraint.
+
+With nothing chosen `writeUrl()` writes a bare `/calendar` rather than a query
+string. A link carrying a month, a paper size and a note but printing nothing
+is a link that looks like it does something.
+
+**The sidebar CSS is duplicated from /labels rather than shared.** Roughly 200
+lines of `.cal-*` mirror `.lb-*`. That was deliberate: /labels is a verified
+print tool and a shared-stylesheet refactor would put it at risk for a cosmetic
+win. If a third tool wants the same chrome, that is the moment to extract it -
+two copies is a coincidence, three is a component.
+
+**The first six-week month with data will be January 2027.** The calendar
+currently runs to December 2026 and every month in it fits in five rows, so the
+six-row path was verified by forcing `--weeks` and measuring rather than by
+rendering real data into it. The geometry is proven; what has never been seen is
+a *full* six-row sheet, so check the trim pass on one when the calendar reaches
+it.
+
 ### The rest
 
 **`/today` is live via a Cloudflare Worker, not a rebuild.** The board
@@ -1182,6 +1427,25 @@ let called = 0; const real = window.print; window.print = () => { called++; };
 document.getElementById('f-print').click();
 window.print = real;
 ```
+
+**For /calendar the checks are measurements, not eyeballs.** Chrome was driven
+over CDP - `--remote-debugging-port`, then `Runtime.evaluate` and
+`Page.printToPDF` with `preferCSSPageSize: true` - which is a dozen lines using
+Node 22's global `WebSocket` and no packages. That is what made it possible to
+assert the things that matter rather than look at them: the grid is the same
+height at five and six weeks, the footer sits exactly `--sheet-pad` above the
+paper edge, hidden sessions equal claimed ones, no list is still overflowing
+after the trim, nothing overflows horizontally at 375 and 320, and the printed
+QR decodes off the raster.
+
+It also prints with `printBackground: false` deliberately - anything else would
+be testing a dialog nobody has touched yet.
+
+Two traps found only because the checks were numeric. A preview pane reporting
+zero layout turned every `getBoundingClientRect()` into 0, which is what
+surfaced the scale-to-zero bug behind the ResizeObserver note above; and the
+`and<b>Background graphics</b>` whitespace collapse was invisible in a
+description and obvious in a screenshot of the rendered hint.
 
 ## Keeping this file current
 
