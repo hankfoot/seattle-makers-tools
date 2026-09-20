@@ -13,7 +13,7 @@ import { existsSync } from 'node:fs';
  * only artwork in this repo is the stacked version (2048x634, and every copy
  * of it is that same 3.23:1 shape). Dropping the one-line lockup into
  * public/brand/wordmark-inline.png - or .svg, checked first - is all that is
- * needed: this picks it up at build time and sets it beside "Web Tools".
+ * needed: this picks it up at build time and sets it beside "Digital Toolbox".
  *
  * Until then it falls back to the monogram plus the full name as text, which
  * says the same thing and fits the same bar. The check is `existsSync` at
@@ -40,14 +40,14 @@ const INLINE = ['/brand/wordmark-inline.svg', '/brand/wordmark-inline.png'].find
         INLINE ? (
           <>
             <img class="sm-lockup" src={INLINE} alt="Seattle Makers" />
-            <span class="sm-brand-name sm-brand-product">Web Tools</span>
+            <span class="sm-brand-name sm-brand-product">Digital Toolbox</span>
           </>
         ) : (
           <>
             {/* Decorative: the title beside it already names the site, and a
                 screen reader announcing "Seattle Makers" twice helps nobody. */}
             <img class="sm-mark" src="/brand/mark.png" alt="" />
-            <span class="sm-brand-name">Seattle Makers <span>Web Tools</span></span>
+            <span class="sm-brand-name">Seattle Makers <span>Digital Toolbox</span></span>
           </>
         )
       }

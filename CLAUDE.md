@@ -205,7 +205,7 @@ and `Base`'s `current` prop went with the nav it fed.
 **The logo has two forms and a file decides which renders.** Dropping the
 one-line "SEATTLE makers" lockup into `public/brand/wordmark-inline.svg` or
 `.png` is all it takes: `SiteHeader` checks with `existsSync` at build time and
-sets it beside "Web Tools" with a divider. Without it, it falls back to the
+sets it beside "Digital Toolbox" with a divider. Without it, it falls back to
 monogram plus the full name as text. Verified both directions by putting a
 stand-in file in place, building, and taking it away again.
 
