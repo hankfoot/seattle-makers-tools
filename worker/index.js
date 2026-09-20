@@ -1,10 +1,4 @@
 import { parse, SOURCE } from '../src/lib/parse-calendar.mjs';
-// `with { type: 'json' }` is the standard form: Node refuses a bare JSON
-// import without it, and the Workers bundler accepts it either way.
-//
-// This is the *reel's* calendar, not a fallback for this endpoint. It is read
-// here for one thing only: event descriptions. See SUMMARIES below.
-import baked from '../src/data/events.json' with { type: 'json' };
 
 /**
  * The calendar, scraped on demand.
@@ -30,20 +24,6 @@ import baked from '../src/data/events.json' with { type: 'json' };
 
 /** Seconds the edge may serve a cached copy. A class list does not move faster. */
 const TTL = 120;
-
-/**
- * Summaries come from per-event pages the scraper visits; the calendar grid
- * this endpoint reads has none at all. Graft the known ones on by title so live
- * rows keep their blurb - about half of them match.
- *
- * This is the one thing the baked file still does for the board. It is content,
- * not freshness: a class description ages far more slowly than a schedule, and
- * a missing one costs a line of text rather than making the board wrong. The
- * *calendar* half of this file is no longer served here at all.
- */
-const SUMMARIES = new Map(
-  (baked.events ?? []).filter((e) => e.summary).map((e) => [e.title, e.summary]),
-);
 
 function envelope(events, fetchedAt, live) {
   return JSON.stringify({
@@ -79,10 +59,11 @@ async function events() {
     // it as a failure and fall back, exactly as the scraper exits non-zero.
     if (!events.length) throw new Error('parsed zero events');
 
-    for (const e of events) {
-      const s = SUMMARIES.get(e.title);
-      if (s) e.summary = s;
-    }
+    // No summaries. They came from per-event pages the scraper visited and
+    // were grafted on by title from the baked calendar, which is gone; the
+    // calendar grid this reads has none of its own. Rows now carry a title, a
+    // time and a kind. Getting them back means fetching each event's page from
+    // here, which is 160-odd requests per board refresh - see CLAUDE.md.
     return json(envelope(events, new Date().toISOString(), true));
   } catch (err) {
     // No fallback calendar. This endpoint used to hand back the build-time

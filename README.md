@@ -408,7 +408,10 @@ though with the git integration most contributors never need an account at all.
 
 There is no step four. No secrets to re-enter, no data to restore.
 
-**Refreshing the reel's calendar and the API's descriptions** is `npm run events`, which rewrites
+**`npm run events` currently writes a file nothing reads.** `src/data/events.json`
+was deleted; the board reads the live API instead. Re-running the script
+restores the file and, with it, the reel's event slides - see *Next* in
+CLAUDE.md for why that is not the intended fix. It rewrites
 `src/data/events.json` and the pictures in `public/events/`. It is manual, and
 it does not affect whether the board is live - it only refreshes what the board
 falls back to when the scrape fails. Commit the result.

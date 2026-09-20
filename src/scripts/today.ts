@@ -460,39 +460,36 @@ function fit(): void {
 
 /* ------------------------------------------------------------------ fetch */
 
-const MONTHS = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+/** "9/19 @ 10:00 pm" - one moment, date and time together. */
+function moment(d: Date): string {
+  const h = d.getHours();
+  const h12 = h % 12 === 0 ? 12 : h % 12;
+  const mm = String(d.getMinutes()).padStart(2, '0');
+  return `${d.getMonth() + 1}/${d.getDate()} @ ${h12}:${mm} ${h < 12 ? 'am' : 'pm'}`;
+}
 
 /**
- * Two different times, and conflating them is how a board quietly lies.
- * `checked` is when we last re-read the feed; `fetchedAt` is how old the data
- * in it actually is. Now that the only source is a live scrape they are the
- * same moment and one clock time says everything - but the split is kept,
- * because it is the thing that stops a future fallback being reported as
- * fresh. That is not hypothetical: it is what the baked file did for weeks.
+ * When this data was last updated.
+ *
+ * One time now, not two. The stamp used to read "Last updated 27 aug · checked
+ * 9:22 pm" because the two could be weeks apart: a five-minute poll kept
+ * succeeding against a calendar baked in at build time, so "checked" was fresh
+ * and the data was not. With the baked fallback gone, every success is a live
+ * scrape and the two collapse into the same moment, which one timestamp says
+ * honestly.
+ *
+ * **If a fallback is ever reintroduced, this has to go back to two parts.**
+ * Reporting stale data under a fresh "last updated" is the exact failure that
+ * structure existed to prevent, and this format cannot express the difference.
  */
-function stamp(fetchedAt?: string, live?: boolean): string {
-  // The real clock, never the debug override: this sentence is about a fetch
-  // that actually happened at a real moment.
-  const checked = clock(nowLocal(new Date()));
-
-  // `live` is set only by /api/events, and only when it really did just scrape
-  // the calendar. The static fallback has no such field, so it can never
-  // accidentally claim to be live. When it *is* live, the data and the check
-  // are the same moment, so one clock time says everything.
-  if (live) return `Last updated ${checked}`;
-
-  // No fetchedAt means we do not know when the data was last updated, so we do
-  // not claim to. All we can honestly report is when we looked.
-  if (!fetchedAt) return `Checked ${checked}`;
-  const f = new Date(fetchedAt);
-  if (Number.isNaN(f.getTime())) return `Checked ${checked}`;
-
-  // Two different times, and collapsing them is how a board quietly lies.
-  // "Last updated" is the calendar's own date - genuinely when this data last
-  // changed - and "checked" is when we last re-read it. A five-minute poll
-  // against a three-week-old file reported as "Last updated 9:22 pm" is
-  // exactly the lie this structure exists to prevent, so both stay.
-  return `Last updated ${f.getDate()} ${MONTHS[f.getMonth()]} · checked ${checked}`;
+function stamp(fetchedAt?: string, _live?: boolean): string {
+  if (fetchedAt) {
+    const f = new Date(fetchedAt);
+    if (!Number.isNaN(f.getTime())) return `Last updated ${moment(f)}`;
+  }
+  // No fetchedAt: we do not know when the data changed, so we report only when
+  // we looked, and do not call it an update.
+  return `Checked ${moment(new Date())}`;
 }
 
 let lastDay = today();

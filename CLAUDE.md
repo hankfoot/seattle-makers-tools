@@ -15,7 +15,9 @@ it, add studio photos, and refresh events.
 
 ## Current state
 
-Slideshow tool is built and verified against a production build.
+Slideshow tool is **broken as of 2026-09-19** - it builds and runs, but has
+lost every event slide. See *Broken: the reel's event slides* under Next. The
+rest of this section describes it as it was and as it should be again.
 
 Done:
 - 25-slide reel following the *Background Reel* deck's rhythm (brand card ->
@@ -96,6 +98,39 @@ Done:
   the crumb, the stamp and the stats arranged around it.
 
 Next:
+
+**Broken: the reel's event slides.** `src/data/events.json` was deleted on
+2026-09-19 because the board no longer needed it and nobody ever ran
+`npm run events` to keep it current - it was 24 events behind. `/slideshow`
+still builds and still runs, but `pickByStudio` now has nothing to pick from,
+so the reel is 21 slides instead of 28: brand card and studio photos, and not
+one "upcoming class". On a market table that is the slide that did the
+convincing.
+
+It cannot be fixed by calling /api/events. The reel is built to keep running
+where there is no wifi - that is why `output: 'static'` exists and why the
+fonts and photos are all local - so its calendar has to be baked in at build
+time. Three ways out, roughly in order of how much they cost:
+
+1. Re-run `npm run events` at build time, from CI, so the file exists in the
+   build but is never committed. Closest to the old behaviour without the
+   rotting. `.gitignore` it, and make the build tolerate the scrape failing.
+2. Keep the file committed but refresh it on a schedule - a daily GitHub Action
+   running `npm run events` and committing the diff. Simplest, and was already
+   on this list before any of this.
+3. Give the reel its own much smaller fixture: the handful of recurring classes
+   worth advertising, hand-maintained, with no dates. The reel does not really
+   need *today's* schedule - it needs "we teach this".
+
+**Broken: event descriptions on the board.** Live rows now carry a title, a
+time and a kind, and nothing else. The calendar grid the Worker scrapes has no
+descriptions at all; the ones the board used to show were grafted on by title
+from the baked file (83 of 166 matched). Getting them back means fetching each
+event's own page from the Worker, which is 160-odd requests per refresh and far
+too slow to do per request - so it wants the same build-time or scheduled
+treatment as the reel, writing a small title-to-description map rather than a
+whole calendar.
+
 - Those 8 slideshow type errors.
 - Photos for **leatherworking** and **a/v studio** - the only two studios still
   without any. Nothing suitable in the album's recent pages.

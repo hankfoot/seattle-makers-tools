@@ -7,7 +7,6 @@
  */
 import { sessionEnd, statuses, progress, gap, clock, statusNote, nowLocal }
   from '../src/lib/day-status.ts';
-import { readFileSync } from 'node:fs';
 
 let pass = 0, fail = 0;
 const eq = (got, want, label) => {
@@ -55,14 +54,29 @@ eq(clock('2026-09-19T14:30'), '2:30 pm', 'afternoon');
 eq(statusNote('live','2026-09-19T13:00','2026-09-19T15:00','2026-09-19T14:00'), '1h left', 'live note');
 eq(statusNote('next','2026-09-19T13:00','2026-09-19T15:00','2026-09-19T12:30'), 'starts in 30m', 'next note');
 
-// --- every real event yields a same-day, after-start session end ---
-const real = JSON.parse(readFileSync(new URL('../src/data/events.json', import.meta.url),'utf8')).events;
+// --- the shapes the real calendar actually contains ---
+// This used to sweep src/data/events.json. That file is gone, and a test that
+// depends on a data file is testing the data rather than the rule - so the
+// shapes it covered are written out instead, taken from measuring the calendar
+// while it still existed: 130 of 142 events under 4h, 8 multi-day series rows,
+// and a handful in between.
+const SHAPES = [
+  ['2026-08-01T12:00', '2026-08-01T13:00', '1h tour'],
+  ['2026-08-01T14:00', '2026-08-01T15:00', '1h orientation'],
+  ['2026-09-19T13:00', '2026-09-19T15:30', '2.5h class, the median'],
+  ['2026-09-05T09:00', '2026-09-05T17:00', '8h open studio'],
+  ['2026-09-09T18:30', '2026-09-30T21:30', '4-part series, 3h sessions'],
+  ['2026-08-24T19:00', '2026-09-14T21:00', '4-part series, 2h sessions'],
+  ['2026-08-05T18:30', '2026-08-19T21:30', 'series across a fortnight'],
+];
 let bad = 0;
-for (const e of real) {
-  const se = sessionEnd(e.start, e.end);
-  if (se.slice(0,10) !== e.start.slice(0,10) || se <= e.start) bad++;
+for (const [start, end, what] of SHAPES) {
+  const se = sessionEnd(start, end);
+  const sameDay = se.slice(0, 10) === start.slice(0, 10);
+  const after = se > start;
+  if (!sameDay || !after) { bad++; console.log(`  FAIL ${what}: ${start} + ${end} -> ${se}`); }
 }
-eq(bad, 0, `all ${real.length} real events -> a same-day end after their start`);
+eq(bad, 0, `every calendar shape -> a same-day end after its start`);
 
 console.log(`\n  ${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

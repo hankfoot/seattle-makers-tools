@@ -1,4 +1,3 @@
-import raw from '../data/events.json';
 import { STUDIOS, studiosForCategories, type Studio } from '../data/studios';
 
 export type SmEvent = {
@@ -20,8 +19,29 @@ export type SmEvent = {
   checked?: boolean;
 };
 
-export const EVENTS = raw.events as SmEvent[];
-export const FETCHED_AT = raw.fetchedAt as string;
+/**
+ * ============================ THE CALENDAR IS GONE ============================
+ *
+ * `src/data/events.json` was deleted. It only refreshed when somebody ran
+ * `npm run events`, and nobody did - it was 24 events behind - so everything
+ * built on it was quietly serving a schedule from weeks earlier.
+ *
+ * /today does not need it: it reads /api/events, which scrapes on demand, and
+ * says so plainly when it cannot. Nothing below is on that path.
+ *
+ * **The reel is broken as a result, deliberately and knowingly.** /slideshow
+ * still builds and still runs - brand card and studio photos - but every
+ * "upcoming class" slide is gone, because `pickByStudio` has nothing to pick
+ * from. That is a real loss to the market display and it is written up under
+ * *Next* in CLAUDE.md. The reel cannot simply call /api/events instead: it is
+ * built to keep running at a market with no wifi, which is why its data was
+ * baked in the first place.
+ *
+ * Everything else in this file is pure helpers over strings and needs no data.
+ * ============================================================================
+ */
+export const EVENTS: SmEvent[] = [];
+export const FETCHED_AT = '';
 
 /**
  * Operational scheduling, not programming worth putting on a market display:
