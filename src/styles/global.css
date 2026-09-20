@@ -99,6 +99,9 @@
      alert  the one non-green accent, for a cancelled class. Deliberately
             desaturated: a pure red next to this green reads as Christmas. */
   --color-sm-wash: #e8f1ea;
+  /* Supporting text on a brand-green panel. 4.86:1 against #13723C - checked,
+     not eyeballed. Sage would have been the obvious pick and fails at 2.78. */
+  --color-sm-on-green: #dcebe1;
   --color-sm-ink-2: #3a403d;
   --color-sm-alert: #a6272b;
 
@@ -309,9 +312,11 @@ body {
    had rounded cards; the website's own plates are hard-edged and flat, and
    that flatness was doing most of the "clunky". */
 .sm-sheet {
+  --pad-x: 3rem;
+  --pad-y: 3rem;
   max-width: var(--sm-shell-w, 64rem);
   margin: 2.25rem auto;
-  padding: 3rem 3rem 2.75rem;
+  padding: var(--pad-y) var(--pad-x) 2.75rem;
   background: var(--color-sm-paper);
   border-radius: 14px;
   box-shadow:
@@ -324,8 +329,10 @@ body {
     /* A gutter, not `auto`. At this width the sheet is wider than its
        max-width, so auto margins collapse to zero and the card sat flush
        against both edges with its rounded corners cutting into nothing. */
+    --pad-x: 1.35rem;
+    --pad-y: 1.75rem;
     margin: 0.85rem 0.75rem;
-    padding: 2rem 1.35rem 2rem;
+    padding: var(--pad-y) var(--pad-x) 2rem;
     border-radius: 12px;
   }
   .sm-masthead-inner {
@@ -335,6 +342,112 @@ body {
      and the title are what the bar is for. */
   .sm-nav-out {
     display: none;
+  }
+}
+
+/* ----------------------------------------------------------------- hero ---
+
+   Every page opens on a green panel that bleeds to the edges of the plate it
+   sits in. This is where the brand colour finally does some work: before it,
+   the pages were ink and hairlines with green rationed out in 11px doses, and
+   the single most distinctive thing Seattle Makers owns was barely on screen.
+
+   It cancels its parent's padding with a negative margin rather than the plate
+   being restructured around it, so /labels' sidebar can use the same component
+   at its own much smaller padding - both read `--pad-x` / `--pad-y` off the
+   plate, so the bleed can never be out by the difference. */
+
+.sm-hero {
+  position: relative;
+  overflow: hidden;
+  margin: calc(var(--pad-y) * -1) calc(var(--pad-x) * -1) 2.25rem;
+  padding: 2.4rem var(--pad-x) 2.1rem;
+  background: var(--color-sm-green);
+  border-radius: 14px 14px 0 0;
+}
+
+/* No watermark here. A blown-up monogram bled off the corner was tried at 7%
+   and again at 4.5%, and at both it read as a smudge rather than as texture -
+   a big soft shape in the corner of a flat panel looks like a rendering
+   artifact, not like a decision. The panel carries itself. */
+
+.sm-hero > * {
+  position: relative;
+  z-index: 1;
+}
+
+.sm-hero .sm-h1 {
+  color: var(--color-sm-paper);
+}
+
+.sm-hero .sm-lead {
+  margin-top: 0.7rem;
+  color: var(--color-sm-on-green);
+}
+
+/* The back link lives on the green now, so it cannot use the slate it used on
+   white. */
+.sm-hero .sm-back {
+  color: var(--color-sm-on-green);
+  opacity: 0.85;
+}
+
+.sm-hero .sm-back:hover {
+  color: var(--color-sm-paper);
+  opacity: 1;
+}
+
+/* The right-hand side of the hero, for a page that has one fact worth putting
+   level with its title - /today's freshness stamp. Wraps under on narrow. */
+.sm-hero-split {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.75rem 1.5rem;
+}
+
+.sm-hero-stamp {
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--color-sm-on-green);
+  white-space: nowrap;
+}
+
+/* A strip of what the site actually knows, on the index. It was in the footer
+   in small grey type, which is where facts go to be ignored; on the green it
+   gives the page something to say beyond listing two links. */
+.sm-hero-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.4rem;
+  margin-top: 1.6rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid rgb(255 255 255 / 0.22);
+}
+
+.sm-hero-stat {
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--color-sm-on-green);
+}
+
+.sm-hero-stat b {
+  font-weight: 800;
+  color: var(--color-sm-paper);
+}
+
+@media (max-width: 40rem) {
+  .sm-hero {
+    margin-bottom: 1.75rem;
+    padding: 1.9rem var(--pad-x) 1.7rem;
+    border-radius: 12px 12px 0 0;
   }
 }
 

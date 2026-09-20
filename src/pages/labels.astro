@@ -32,10 +32,9 @@ const stocks = STOCKS.map((s) => ({
       {/* No back link and no "seattle makers" eyebrow: the masthead above
           carries both, and repeating them here was the page saying its own
           name twice. */}
-      <header class="lb-head">
+      <header class="sm-hero lb-head">
         <a class="sm-back" href="/">← All tools</a>
         <h1>Labels</h1>
-        <hr class="sm-rule" />
         <p class="lb-sub">One design, printed onto the sheet you choose.</p>
       </header>
 
@@ -512,10 +511,12 @@ const stocks = STOCKS.map((s) => ({
   /* The editor is a white plate on the mist, the same relationship the sheet
      has to the ground on every other page. */
   .lb-editor {
+    --pad-x: 1.6rem;
+    --pad-y: 1.75rem;
     display: flex;
     flex-direction: column;
     gap: 1rem;
-    padding: 1.75rem 1.6rem;
+    padding: var(--pad-y) var(--pad-x);
     background: var(--color-sm-paper);
     border-radius: 14px;
     box-shadow:
@@ -527,8 +528,10 @@ const stocks = STOCKS.map((s) => ({
     flex-direction: column;
     gap: 0.6rem;
   }
-  .lb-head {
-    padding-bottom: 0.2rem;
+  /* .lb-editor is a flex column with its own 1rem gap, so the hero's default
+     bottom margin stacked on top of it and left a hole under the panel. */
+  .lb-head.sm-hero {
+    margin-bottom: 0;
   }
   .lb-editor h1 {
     font-family: var(--font-display);
@@ -536,15 +539,13 @@ const stocks = STOCKS.map((s) => ({
     font-weight: 800;
     line-height: 1.05;
     letter-spacing: -0.028em;
-    color: var(--color-sm-ink);
-  }
-  .lb-head .sm-rule {
-    margin: 0.85rem 0 0.9rem;
+    color: var(--color-sm-paper);
   }
   .lb-sub {
+    margin-top: 0.6rem;
     font-size: 0.9rem;
     line-height: 1.5;
-    color: var(--color-sm-slate);
+    color: var(--color-sm-on-green);
   }
 
   .lb-group {

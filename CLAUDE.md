@@ -90,6 +90,8 @@ Done:
 - The masthead was then rebuilt twice more: light and sticky, because it was
   the one element the facelift had skipped; then reduced to a monogram, a
   title and one outbound link, with the tool list moved back onto the page.
+- Finally every page gained a green hero panel, which is where the brand
+  colour stopped being a garnish.
 
 Next:
 - Those 8 slideshow type errors.
@@ -265,6 +267,47 @@ disconnected ticks with gaps between rows. The pseudo-element spans `top: 0` to
 `bottom: -1px`, taking it down through the row's own hairline into the next
 one, so the day reads as one continuous line. The rail offset and the grid's
 first column are the same `--rail` custom property, so they cannot drift.
+
+**Every page opens on a green panel, and that is where the brand colour
+finally does some work.** Before it the pages were ink and hairlines with green
+rationed out in 11px doses, which is a strange way to treat the most
+distinctive thing Seattle Makers owns. The panel bleeds to the edges of the
+plate it sits in by cancelling its parent's padding with a negative margin,
+rather than the plate being restructured around it - so `/labels`' sidebar uses
+the same component at its own much smaller padding. Both read `--pad-x` /
+`--pad-y` off the plate, so the bleed cannot be out by the difference between
+them. Verified by measuring: the hero's left, right and top edges sit within
+0.5px of the plate's on both layouts.
+
+`.lb-head.sm-hero` zeroes its bottom margin, because `.lb-editor` is a flex
+column with a 1rem gap of its own and the two stacked into a hole under the
+panel.
+
+**`--color-sm-on-green` is `#dcebe1`, and it was computed rather than picked.**
+Supporting text on `#13723C` needs 4.5:1; sage `#84BF80` is the obvious
+choice from the palette and comes out at 2.78:1. `#dcebe1` is 4.86:1. White is
+6.00:1 and carries the headings.
+
+**There is no watermark in the hero, and there were two attempts at one.** A
+blown-up monogram bled off the corner, at 7% white and again at 4.5%: at both
+it read as a smudge rather than as texture, because a big soft shape in the
+corner of a flat panel looks like a rendering artifact rather than a decision.
+The panel carries itself on colour, white Figtree and a rule.
+
+**The hero's right-hand side takes a fact, not an ornament.** On `/today` that
+is the freshness stamp, moved up out of the footer: on a board by the door, how
+current the thing is belongs where the eye already is, and this page goes to
+some lengths never to overstate it. `/today` has no footer left at all.
+
+**Neither list has a top rule any more.** The hero's edge is already the
+boundary, and a hairline sitting 2.25rem below it had nothing above it to
+divide - it read as an orphan.
+
+**The index's hero stats deliberately exclude "N today".** The Today row
+directly beneath already carries that number, and a hero that repeats the list
+under it is louder without being more informative. The two that are there -
+events on file, studios with photos - appear nowhere else on the page, and they
+came up out of the footer, where facts in 13px grey go to be ignored.
 
 **Green headings were the most dating thing on the page.** The website sets
 every h1 and h2 in solid `#13723C` over grey body copy, which is a 2012

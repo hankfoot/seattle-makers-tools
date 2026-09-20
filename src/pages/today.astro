@@ -37,10 +37,18 @@ function flag(e: (typeof initial)[number]): { text: string; tone: string } | nul
   shellWidth="72rem"
 >
   <main class="sm-sheet">
-    <a class="sm-back" href="/">← All tools</a>
-    <h1 class="sm-h1">Today</h1>
-    <hr class="sm-rule" />
-    <p id="t-date" class="sm-lead">{heading}</p>
+    {/* The freshness stamp sits level with the date rather than in a footer.
+        On a board by the door, how current the thing is belongs where the eye
+        already is - and this page goes to some lengths never to overstate it,
+        so it may as well be legible. */}
+    <header class="sm-hero sm-hero-split">
+      <div>
+        <a class="sm-back" href="/">← All tools</a>
+        <h1 class="sm-h1">Today</h1>
+        <p id="t-date" class="sm-lead">{heading}</p>
+      </div>
+      <p id="t-status" class="sm-hero-stamp">calendar {FETCHED_AT.slice(0, 10)}</p>
+    </header>
 
     <!-- Server-rendered floor. today.ts replaces the contents on a successful
          fetch; if it never does, this is what stays on screen. The two must
@@ -68,10 +76,6 @@ function flag(e: (typeof initial)[number]): { text: string; tone: string } | nul
     </ol>
 
     <p id="t-empty" class="t-empty" hidden={initial.length > 0}>Nothing on the calendar today.</p>
-
-    <footer class="sm-foot">
-      <span id="t-status" class="sm-label">calendar {FETCHED_AT.slice(0, 10)}</span>
-    </footer>
   </main>
 </Base>
 
@@ -85,9 +89,10 @@ function flag(e: (typeof initial)[number]): { text: string; tone: string } | nul
      information and the rail is what makes it legible from across a room -
      you find the time first, then read across. Bordered cards made it a list
      of things with no shape. */
+  /* No top rule: the hero panel's edge is already the boundary, and a hairline
+     hanging below it had nothing above it to divide. */
   .t-list {
-    margin-top: 2.25rem;
-    border-top: 1px solid var(--color-sm-line);
+    border-top: 0;
   }
 
   .t-row {
