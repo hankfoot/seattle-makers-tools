@@ -43,7 +43,11 @@ const body = bare
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
     <meta name="description" content={description} />
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    {/* The brand kit's own "Flavicon" - the outlined green m - replacing a
+        hand-drawn stand-in. The touch icon is the same mark flattened onto
+        white, because iOS ignores alpha and paints transparency black. */}
+    <link rel="icon" href="/favicon.png" type="image/png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <meta name="theme-color" content="#1a1a1a" />
     {/* The reel is the one page still set in Lato, so it is the one page that
         preloads it. Everywhere else the single variable Roboto covers every

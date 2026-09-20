@@ -117,7 +117,7 @@
   /* The masthead's height, as a number anything positioning itself under a
      sticky bar can read. /labels' sidebar is sticky too, and at its old
      top: 2rem it slid underneath the bar the moment the bar became sticky. */
-  --sm-bar-h: 2.85rem;
+  --sm-bar-h: 3rem;
 }
 
 /* Tailwind's display utilities outrank the UA rule for [hidden], so a flex
@@ -166,7 +166,7 @@ body {
    attribute is stamped on at build, so an element created by script never
    matches a scoped rule. Same trap as the injected QR on /labels. */
 
-/* White, hairline, sticky. The dark slab was the one element the refresh never
+/* White, green-ruled, sticky. The dark slab was the one element the refresh never
    touched - still seattlemakers.org's WordPress header sitting on pages that
    had been lightened around it - and no amount of tuning its height or its
    green rule was going to fix that, because the problem was the material. It
@@ -181,13 +181,21 @@ body {
   top: 0;
   z-index: 20;
   background: var(--color-sm-paper);
-  border-bottom: 1px solid var(--color-sm-line);
+  /* Green, not a neutral hairline. A white bar with a grey rule, a logo, a
+     vertical pipe and a grey product name is the Google product-header
+     pattern almost exactly; the brand's own colour along the bottom edge is
+     the cheapest way to stop looking like someone else's chrome. */
+  border-bottom: 2px solid var(--color-sm-green);
 }
 
 .sm-masthead-inner {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  /* Centred, like the plate below it and the footer below that. Left-aligned
+     with a wide empty right-hand side is the shape of an app's chrome bar;
+     everything else on these pages is a centred column, and the masthead was
+     the only thing not playing along. */
+  justify-content: center;
   gap: 1.5rem;
   /* Deliberately NOT --sm-shell-w. The bar was following each page's content
      width, so the lockup slid left and right as you moved between /, /today
@@ -216,7 +224,7 @@ body {
 .sm-brand {
   display: flex;
   align-items: center;
-  gap: 0.55rem;
+  gap: 0.8rem;
   text-decoration: none;
   min-width: 0;
 }
@@ -246,16 +254,22 @@ body {
 /* Must sit AFTER .sm-brand-name, not before it. The product label carries both
    classes, they have the same specificity, and source order decides - with
    this block first, .sm-brand-name's 700 ink won and "Digital Toolbox"
-   rendered as bold and dark as the org name it is supposed to sit under. */
+   rendered as bold and dark as the org name it is supposed to sit under.
+
+   The vertical rule that used to separate the two is gone. A logo, a pipe and
+   a grey product name is how every Google tool labels itself, and the label
+   now speaks this site's own dialect instead: the same tracked uppercase green
+   as ALL TOOLS, OPEN STUDIO and the kind labels on the board. */
 .sm-brand-product {
-  padding-left: 0.6rem;
-  border-left: 1px solid var(--color-sm-line);
-  font-weight: 500;
-  color: var(--color-sm-slate);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--color-sm-green);
 }
 
 .sm-brand:hover .sm-brand-product {
-  color: var(--color-sm-green);
+  color: var(--color-sm-green-dark);
 }
 
 /* Back to the index, on each tool page. This is what replaced the tool list in

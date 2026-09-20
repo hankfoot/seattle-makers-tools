@@ -235,11 +235,36 @@ Below 40rem it drops to 1.2rem: at the desktop height the brand ran 295px into
 285px of bar at 320px wide, and because a flex row simply clips, nothing
 overflowed the document and it was invisible unless you measured the pieces.
 
+**The bar was starting to look like a Google product header, and three things
+fixed it.** A white bar with a neutral hairline, a logo, a vertical pipe and a
+grey product name beside it is that pattern almost exactly. So: the bottom rule
+is 2px of brand green rather than a grey hairline; the pipe is gone; and
+"Digital Toolbox" is set in the same tracked uppercase green as ALL TOOLS,
+OPEN STUDIO and the kind labels on the board, so the bar speaks this site's own
+dialect instead of borrowing someone else's. The whole group is centred too -
+the plate and the footer are centred columns, and a left-aligned brand with a
+wide empty right-hand side was the only thing on the page shaped like app
+chrome.
+
+**The lockup and its label are optically centred, and it was measured rather
+than nudged.** The artwork carries 2.8% transparent padding top and bottom, so
+the obvious worry is that centring the boxes leaves the words sitting low
+against the logo's ink. Measured, the ink centre and the label's text centre
+are 0.35px apart - so a hand-tuned `translateY` was added, found to be moving
+it *away* from centre, and removed.
+
 **`.sm-brand-product` must come after `.sm-brand-name` in the file.** The
 product label carries both classes, they have equal specificity, and source
 order decides - with the product rules first, `.sm-brand-name`'s 700 ink won
 and "Digital Toolbox" rendered as bold and dark as the lockup it is meant to
 sit under.
+
+**The favicon is the kit's own `Logo final_Flavicon.png`** - the outlined green
+m - at 96px, replacing a hand-drawn green square with an M and an orange dot
+that never came from the brand at all. `apple-touch-icon.png` is the same mark
+at 180px **flattened onto white**, because iOS ignores alpha and paints
+transparency black. Both source variants are transparent, so the touch icon
+could not just be a copy.
 
 **Superseded assets were deleted with the swap**: `mark.png` (the monogram
 cropped out of the stacked lockup) and `wordmark-header.png` (a 512px copy of
@@ -268,8 +293,10 @@ slab following you down the page is oppressive; a white one with a hairline
 just stays available. It earns its keep on `/labels`, whose sidebar is longer
 than most viewports.
 
-**`--sm-bar-h` tracks the bar's height and has to be updated with it.** It
-went 3.2rem -> 2.85rem when the monogram replaced the stacked lockup.
+**`--sm-bar-h` tracks the bar's height and has to be updated with it.** It has
+been 3.2rem, 2.85rem and now 3rem as the logo changed shape. It only feeds a
+clearance gap, so being a couple of pixels out breaks nothing visibly - which
+is exactly why it drifts. The bar measures 48px; check it when the bar changes.
 
 **`--sm-bar-h` exists because two things stick.** `/labels`' sidebar is
 `position: sticky` too, and at its old `top: 2rem` it slid straight under the
