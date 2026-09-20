@@ -1,58 +1,40 @@
 ---
-import { existsSync } from 'node:fs';
-
 /**
  * The masthead, on every tool page.
  *
  * An identity strip, not a navigation bar: the logo and the name of the thing,
  * and nothing else. Navigation lives on the page - the index *is* the list of
  * tools, and each tool page carries a single `.sm-back` to it. The link out to
- * seattlemakers.org moved to the footer, where it sits inside a sentence that
- * gives it a reason to be there.
+ * seattlemakers.org lives in the footer, inside a sentence that gives it a
+ * reason to be there.
  *
- * **The logo has two forms, and which one renders depends on a file.** The
- * one-line "SEATTLE makers" lockup is the right thing in a 48px bar, but the
- * only artwork in this repo is the stacked version (2048x634, and every copy
- * of it is that same 3.23:1 shape). Dropping the one-line lockup into
- * public/brand/wordmark-inline.png - or .svg, checked first - is all that is
- * needed: this picks it up at build time and sets it beside "Digital Toolbox".
+ * The logo is the one-line lockup - "Skinny", in the brand kit's naming - which
+ * is the right shape for a 48px bar where the stacked one is not. Two things
+ * about that artwork are worth knowing:
  *
- * Until then it falls back to the monogram plus the full name as text, which
- * says the same thing and fits the same bar. The check is `existsSync` at
- * build rather than a runtime guess, so the output is one form or the other
- * with no broken image either way.
+ * - The kit's "dark" suffix means *for dark backgrounds*, not dark ink.
+ *   `Logo final_Skinny dark.png` sets SEATTLE in pure white and is invisible on
+ *   this white bar; `Logo final_Skinny.png` sets it in pure black. Established
+ *   by sampling pixels - the two are indistinguishable in a file listing, and
+ *   the white one looks like a blank canvas in a previewer.
+ * - It is a lockup, so it already says "Seattle Makers". "Digital Toolbox"
+ *   follows it as the product name, behind a divider, rather than the bar
+ *   setting the organisation's name twice.
  *
- * Do NOT composite a one-line lockup out of the stacked one. The two words can
- * be cropped cleanly, but their spacing and relative size in the real inline
- * lockup are not derivable from the stacked arrangement, and a logo assembled
- * from guesses is a wrong logo.
+ * This used to pick between the lockup and a monogram-plus-text fallback with
+ * an `existsSync` check, because the artwork was not in the repo. It is now,
+ * so there is one path.
  *
  * Styles live in global.css, not in a scoped block here, so the bar can be
  * reasoned about alongside the sheet it sits on.
  */
-const INLINE = ['/brand/wordmark-inline.svg', '/brand/wordmark-inline.png'].find((p) =>
-  existsSync(`public${p}`),
-);
 ---
 
 <header class="sm-masthead no-print">
   <div class="sm-masthead-inner">
     <a class="sm-brand" href="/">
-      {
-        INLINE ? (
-          <>
-            <img class="sm-lockup" src={INLINE} alt="Seattle Makers" />
-            <span class="sm-brand-name sm-brand-product">Digital Toolbox</span>
-          </>
-        ) : (
-          <>
-            {/* Decorative: the title beside it already names the site, and a
-                screen reader announcing "Seattle Makers" twice helps nobody. */}
-            <img class="sm-mark" src="/brand/mark.png" alt="" />
-            <span class="sm-brand-name">Seattle Makers <span>Digital Toolbox</span></span>
-          </>
-        )
-      }
+      <img class="sm-lockup" src="/brand/wordmark-inline.png" alt="Seattle Makers" />
+      <span class="sm-brand-name sm-brand-product">Digital Toolbox</span>
     </a>
   </div>
 </header>

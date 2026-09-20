@@ -211,21 +211,8 @@ body {
   flex: 0 0 auto;
 }
 
-/* No invert any more: on white the lockup wears its own colours, which is the
-   first time the brand green appears in the header rather than only in the
-   accents. wordmark-header.png is the 512px copy - the full-size original is
-   2048px and 261K to render about 110px wide. */
-/* Small, because it is a mark beside a title rather than the title itself.
-   The "m" of "makers", cropped out of wordmark.png - the real letterform,
-   outline and all, not something redrawn. The full stacked lockup was here
-   before and it was the loudest thing in the bar, as well as setting the words
-   "Seattle Makers" a second time right next to the title. */
-.sm-mark {
-  display: block;
-  width: auto;
-  height: 1.35rem;
-}
-
+/* On white the lockup wears its own colours - no inverting, which is what the
+   dark bar needed. */
 .sm-brand {
   display: flex;
   align-items: center;
@@ -234,25 +221,16 @@ body {
   min-width: 0;
 }
 
-/* The one-line lockup, when public/brand/wordmark-inline.* exists. Taller than
-   the monogram because it carries words rather than a single letter, and
-   followed by a divider so "Digital Toolbox" reads as the product rather than
-   as part of the logo. */
+/* The one-line lockup, followed by a divider so "Digital Toolbox" reads as the
+   product name rather than as part of the logo.
+
+   1.4rem looks too tall written down and is not: the artwork is one line of
+   type at 7.9:1, so its cap height is a small fraction of the box, and at
+   1.1rem it read as smaller than the 0.95rem text beside it. */
 .sm-lockup {
   display: block;
   width: auto;
-  height: 1.1rem;
-}
-
-.sm-brand-product {
-  padding-left: 0.6rem;
-  border-left: 1px solid var(--color-sm-line);
-  font-weight: 500;
-  color: var(--color-sm-slate);
-}
-
-.sm-brand:hover .sm-brand-product {
-  color: var(--color-sm-green);
+  height: 1.4rem;
 }
 
 .sm-brand-name {
@@ -264,14 +242,19 @@ body {
   color: var(--color-sm-ink);
 }
 
-/* "Digital Toolbox" sits lighter than the organisation that owns it - one
-   title, with the org first and the thing you are actually in second. */
-.sm-brand-name span {
+
+/* Must sit AFTER .sm-brand-name, not before it. The product label carries both
+   classes, they have the same specificity, and source order decides - with
+   this block first, .sm-brand-name's 700 ink won and "Digital Toolbox"
+   rendered as bold and dark as the org name it is supposed to sit under. */
+.sm-brand-product {
+  padding-left: 0.6rem;
+  border-left: 1px solid var(--color-sm-line);
   font-weight: 500;
   color: var(--color-sm-slate);
 }
 
-.sm-brand:hover .sm-brand-name span {
+.sm-brand:hover .sm-brand-product {
   color: var(--color-sm-green);
 }
 
@@ -373,6 +356,19 @@ body {
   }
   .sm-masthead-inner {
     padding: 0.7rem 1.1rem;
+  }
+  /* The one-line lockup is ~177px at its desktop height, and with the divider
+     and "Digital Toolbox" beside it the brand ran 295px into 285px of bar at
+     320px wide - no document overflow, because the flex row just clipped, so
+     this only shows up if you measure the pieces rather than the page. */
+  .sm-lockup {
+    height: 1.2rem;
+  }
+  .sm-brand {
+    gap: 0.45rem;
+  }
+  .sm-brand-product {
+    padding-left: 0.5rem;
   }
 }
 

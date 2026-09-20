@@ -213,22 +213,45 @@ full-bleed sheet on the page and anything else on it is ink in the wrong place
 - checked by printing with the footer in place and confirming zero ink outside
 the die-cut cells, not by assuming the rule fired.
 
-**The logo has two forms and a file decides which renders.** Dropping the
-one-line "SEATTLE makers" lockup into `public/brand/wordmark-inline.svg` or
-`.png` is all it takes: `SiteHeader` checks with `existsSync` at build time and
-sets it beside "Digital Toolbox" with a divider. Without it, it falls back to
-monogram plus the full name as text. Verified both directions by putting a
-stand-in file in place, building, and taking it away again.
+**The masthead logo is the one-line lockup, and the brand kit's naming is a
+trap.** `Logo - versions/Logo - clear/` holds the set; the one-line variants
+are called "Skinny" (3545x451, 7.86:1) and the stacked ones "Official"
+(3.23:1). **"dark" in these filenames means *for dark backgrounds*, not dark
+ink**: `Logo final_Skinny dark.png` sets SEATTLE in pure white and is invisible
+on this white bar, `Logo final_Skinny.png` sets it in pure black. The two are
+indistinguishable in a file listing and the white one looks like a blank canvas
+in a previewer, so this was settled by decoding both and counting pixel
+colours - white came back `(255,255,255)`, black `(0,0,0)`, and the green in
+both is `#0F723B`, near enough to the site's `#13723C`.
 
-The one-line lockup is the right artwork for a 48px bar and **this repo does
-not have it** - every wordmark asset on disk is the stacked version at the same
-3.23:1 shape. Do **not** composite one out of the stacked lockup: both words
-crop cleanly, but their spacing and relative size in the real inline lockup are
-not derivable from the stacked arrangement, and a logo assembled from guesses
-is a wrong logo.
+`public/brand/wordmark-inline.png` is `Logo final_Skinny.png` scaled to 600px
+wide (19K), which covers the ~177px it renders at better than 3x. The canvas
+needed no trimming: measured padding is 0.4% on the sides.
 
-**The mark is the "m" of "makers" cropped out of `wordmark.png`, not redrawn.**
-Found by profiling the artwork rather than by eye: the two lines of the lockup
+`.sm-lockup` is `1.4rem` tall, which looks too big written down and is not -
+the artwork is one line of type at 7.9:1, so its cap height is a small fraction
+of the box, and at 1.1rem it read as smaller than the 0.95rem text beside it.
+Below 40rem it drops to 1.2rem: at the desktop height the brand ran 295px into
+285px of bar at 320px wide, and because a flex row simply clips, nothing
+overflowed the document and it was invisible unless you measured the pieces.
+
+**`.sm-brand-product` must come after `.sm-brand-name` in the file.** The
+product label carries both classes, they have equal specificity, and source
+order decides - with the product rules first, `.sm-brand-name`'s 700 ink won
+and "Digital Toolbox" rendered as bold and dark as the lockup it is meant to
+sit under.
+
+**Superseded assets were deleted with the swap**: `mark.png` (the monogram
+cropped out of the stacked lockup) and `wordmark-header.png` (a 512px copy of
+it for the white bar) were both stopgaps for not having the one-line artwork,
+along with the `existsSync` branch in `SiteHeader` that chose between them.
+`wordmark-black.png` is still unreferenced but kept - it is a brand asset
+rather than something this repo generated.
+
+**How the monogram was made, for the record** - it is gone now, replaced by
+the real one-line lockup, but the technique is worth keeping. The "m" of
+"makers" was cropped out of `wordmark.png` rather than redrawn, and found by
+profiling the artwork rather than by eye: the two lines of the lockup
 overlap vertically, so there is no clean horizontal split, but within the `m`'s
 own column band (x 35-514) the rows fall into exactly two runs - y 22-271 is
 the "SE" above it and y 292-612 is the glyph, whose dominant colour comes back
