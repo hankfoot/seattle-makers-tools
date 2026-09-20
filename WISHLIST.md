@@ -67,25 +67,3 @@ photographs. `laser_logo.jpg` appears 11 times and `tour_icon` 5, and the most
 reused actual photograph, `screenprinting-300x284.jpg`, is on 14 entries. Our
 market slideshow already drops the logo tiles and falls back to a studio icon,
 so a real photo per class is what would change what people see.
-
----
-
-## Ideas for the tools
-
-Move one into CLAUDE.md under *Next* when it turns into work with a clear shape.
-
-- **A content report.** A script listing which upcoming events have no studio
-  tag and which are running on a generated summary, so the notes above ship
-  with a worklist.
-- **Directions on the board.** Needs a studio-to-location map, which is ours to
-  write whichever way 2 and 3 land.
-- **Prices on the board.** Member and non-member prices are in the event editor,
-  $95 and $125 on the class we looked at, but they cannot be parsed cleanly from
-  the public page.
-- **A view of the whole week.** The board answers what is on today.
-
-## Housekeeping
-
-Add something when it is wanted but is not yet work, and take it out when it
-becomes either: into CLAUDE.md under *Next* if we are building it, or into a
-message if somebody else is acting on it.
