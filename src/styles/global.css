@@ -339,11 +339,12 @@ body {
    Full colour on hover, because it is a link. */
 .sm-footer-logo {
   display: inline-block;
-  /* Measured against the text's glyph bottom rather than its line box - the
-     line box carries ~2px of leading below the descenders, so the optical gap
-     is always larger than the margin says. 0.4rem here reads as about 8px,
-     which keeps the lockup attached to the sentence it finishes. */
-  margin-top: 0.4rem;
+  /* Set from the rendered ink, not the boxes. The line box carries ~2px of
+     leading under the descenders and the artwork about 0.6px of its own
+     padding, so the gap you see is always ~2.6px more than this number: at
+     0.4rem it measured 9px ink-to-ink, which still read as two stacked things
+     rather than one sentence. 0.1rem lands at about 4px. */
+  margin-top: 0.1rem;
   line-height: 0;
 }
 
