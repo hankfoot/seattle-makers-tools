@@ -222,12 +222,22 @@ at full strength the green pulled more attention to the bottom of the page than
 the tools above it. Full colour on hover and focus, because it is a link, and
 it carries the only outbound link to seattlemakers.org.
 
-**The artwork there is the kit's "No outline" variant, and that is not
-cosmetic.** Every other lockup carries a black keyline around the letters,
-which under `grayscale()` becomes a dark outline around a grey fill and reads
-as muddy rather than quiet. Flat colour greys down cleanly. It is the stacked
-shape (3.23:1), so `.sm-footer-logo img` is 2.6rem tall - roughly twice what
-the one-line lockup needed to read at the same size.
+**The artwork there is the one-line "Skinny" variant at 1.15rem** (1.05rem
+below 40rem), about 146px wide - three quarters of the line of text above it,
+which reads as a sign-off rather than as a second logo. The stacked "No
+outline" lockup was tried at this size and is worse: stacked, a footer-sized
+mark puts "SEATTLE" on its own line at about 9px and it goes fuzzy, where one
+line buys roughly double that letter height for the same footprint. The
+keyline on the Skinny variant was the argument for "No outline" - under
+`grayscale()` a black outline round a grey fill can read muddy - and at 18px
+it simply does not show.
+
+**`.sm-footer-logo img`'s breakpoint override must sit below the base rule.**
+It was written into the `@media (max-width: 40rem)` block next to `.sm-sheet`'s,
+about 80 lines *above* the rule it overrides; media queries do not raise
+specificity, so the base rule won on source order and the logo rendered at its
+desktop height on a phone. Nothing looked broken enough to catch without
+measuring it.
 
 **On mobile the sheet needs an explicit side margin, not `auto`.** Below the
 breakpoint it is wider than its own `max-width`, so `margin: 1rem auto`

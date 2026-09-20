@@ -268,9 +268,6 @@ body {
     padding: var(--pad-y) var(--pad-x) 2rem;
     border-radius: 12px;
   }
-  .sm-footer-logo img {
-    height: 2.2rem;
-  }
 }
 
 /* ----------------------------------------------------------------- hero ---
@@ -349,9 +346,10 @@ body {
 .sm-footer-logo img {
   display: block;
   width: auto;
-  /* Stacked, so it needs roughly twice the height the one-line lockup did to
-     read at the same size. */
-  height: 2.6rem;
+  /* One line at 7.9:1, so a small height still runs ~140px wide - which is
+     about two thirds of the line of text above it, and reads as a sign-off
+     rather than as a second logo. */
+  height: 1.15rem;
   filter: grayscale(1);
   opacity: 0.42;
   transition:
@@ -371,9 +369,17 @@ body {
   vertical-align: -0.02em;
 }
 
+/* This block has to stay below the rules it overrides. It was in the
+   breakpoint block ~80 lines up, next to .sm-sheet's, where it had the same
+   specificity as the base rule and lost on source order - so the footer logo
+   rendered at its desktop height on a phone and nothing looked broken enough
+   to notice without measuring. Media queries do not raise specificity. */
 @media (max-width: 40rem) {
   .sm-footer {
     padding: 0.25rem 1.25rem 2.25rem;
+  }
+  .sm-footer-logo img {
+    height: 1.05rem;
   }
 }
 
