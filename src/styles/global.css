@@ -339,7 +339,11 @@ body {
    Full colour on hover, because it is a link. */
 .sm-footer-logo {
   display: inline-block;
-  margin-top: 0.85rem;
+  /* Measured against the text's glyph bottom rather than its line box - the
+     line box carries ~2px of leading below the descenders, so the optical gap
+     is always larger than the margin says. 0.4rem here reads as about 8px,
+     which keeps the lockup attached to the sentence it finishes. */
+  margin-top: 0.4rem;
   line-height: 0;
 }
 
