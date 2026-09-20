@@ -2,58 +2,63 @@
 
 ## 1. Short summaries for each class
 
-Nobody writes a summary for an event today, so WordPress generates one by
-taking the beginning of the event body, stripping out the formatting and
-cutting it off at a character count. Two examples from the live calendar:
+The List view on the [Event Calendar](https://seattlemakers.org/events/) prints
+the Excerpt field underneath each event title. Where an event has one, that is
+a single readable line. Where it does not, the list prints the whole event body
+instead, run-together headings and all:
 
-> …required prior to using the woodshop Working on a project and want a bit of
-> backup?
+> Welcome to the fascinating art of analog screen printing! The purpose of this
+> course is to gain necessary knowledge of the screen printing studio, while
+> expanding and experimenting with advanced techniques & tools in a relaxed and
+> encouraging atmosphere! What's covered Printing films & burning screens Films
+> Choosing proper mesh count Screen exposure and washout Printing & Curing How
+> to tape screens Ink basics and overview …
 
-> …in a relaxed and encouraging atmosphere! What's covered 🌞 Printing films &
-> burning screens Films Choosing proper mesh count Screen exposure and […]
+Of the 100 entries currently in the List view, 68 have an excerpt and 32 print
+their entire body. The longest runs to 2,142 characters.
 
-The first fix is to begin the event body with one or two ordinary sentences,
-with no heading, no bullet list and no "Prerequisites:" line above them. It
-needs no new fields and nothing to remember afterwards. If only one thing
-changes, this should be it.
+[Ceramics Wheel](https://seattlemakers.org/events/ceramics-wheel-4-part-series-13/)
+is the model:
 
-The second is to fill in the Excerpt box for the classes where the opening
-paragraph does not work on its own. It sits at the bottom right of the event
-editor, it is blank on every event today, and whatever is typed there is used
-exactly as written. Two of your own pages already have good examples:
+> Get hands-on with clay in this four-session beginner series! You'll learn the
+> foundations of wheel throwing and how the full ceramic process works,
+> including glazing and firing. Leave with a beautiful finished piece, hand
+> crafted by you.
 
-> Stop by and chat with local screen printing enthusiasts.
+That is three sentences and 237 characters, which is a little longer than it
+needs to be. Two sentences and around 150 characters sits better in the list
+and on the board in the space:
 
-> Become certified to use the 3D printers at Seattle Makers!
+> Get hands-on with clay in this four-session beginner series! You'll learn
+> wheel throwing and the whole ceramic process, from glazing to firing.
 
-One or two complete sentences of roughly 180 characters, saying what the class
-does. The first six words carry most of the weight, and there is no need to
-repeat the name of the class.
+The first six words carry most of the weight, and there is no need to repeat
+the name of the class.
 
-Where the excerpt appears:
+Where the field shows up:
 
-| Surface | Uses the excerpt |
+| Surface | What it prints |
 | --- | --- |
-| Site search results | yes, underneath each result title |
-| Link previews in Slack, iMessage and Facebook | yes, as `og:description` |
-| The events RSS feed | yes, and 6 of 10 items end in `[…]` |
-| The calendar grid at `/events` | no |
-| The `/event_type/…` archives and `/events/list/` | no |
+| The List view on the Event Calendar | the excerpt, or the entire body if there is none |
+| Link previews in Slack, iMessage and Facebook | the excerpt |
+| The events RSS feed | the excerpt |
+| The board in the space | the excerpt, trimmed to two lines |
+| The Calendar view on the Event Calendar | title, time and availability only |
 
-It is one field behind all three, so writing it once fixes all three.
+Writing the field once fixes all of them.
 
 Yoast's SEO and Facebook descriptions would each override the excerpt for link
-previews, and neither is set today. Write in the Excerpt box instead: it is a
-core WordPress field, so it survives a change of SEO plugin, and it is the only
-one of the three that also reaches search results and the feed.
+previews, and neither is set on any event. Write in the Excerpt box instead: it
+is a core WordPress field, so it survives a change of SEO plugin, and it is the
+only one of the three that also reaches the List view and the feed.
 
 One open question. When a recurring class goes back on the calendar, is the
 previous instance duplicated or is a new event created from scratch? Duplicated
 means the excerpt carries over and costs nothing the second time. Created fresh
-means it has to be written every time, and the first fix matters far more than
-the second.
+means it has to be written every time.
 
-*Re-check: `curl -s "$API?day=YYYY-MM-DD" | python3 -m json.tool | grep summary`*
+*Re-check: open the Event Calendar, switch it to List, and look for entries
+that run past a couple of lines.*
 
 ## 2. Studio tags
 
