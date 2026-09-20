@@ -10,6 +10,19 @@
  */
 import Base from '../layouts/Base.astro';
 import { eventsOn, localDay, FETCHED_AT, isCancelled, kindLabel, formatWhen } from '../lib/events';
+import { toolById, pageTitle } from '../data/tools';
+
+/**
+ * Name, title and description all come from data/tools.ts, so this page and
+ * its card on the index cannot disagree about what the tool is.
+ *
+ * The one thing that does not: the visible subtitle is the date, not the
+ * blurb. This is a board on a wall - what someone standing in front of it
+ * needs under the heading is which day they are looking at, and a description
+ * of the tool would be telling them about the thing they are already using.
+ * The blurb is still the page's meta description, where it does its job.
+ */
+const TOOL = toolById('today');
 
 const day = localDay();
 const initial = eventsOn(day);
@@ -31,11 +44,7 @@ function flag(e: (typeof initial)[number]): { text: string; tone: string } | nul
 }
 ---
 
-<Base
-  title="Daily Events — Seattle Makers"
-  description="What is on at Seattle Makers today."
-  shellWidth="72rem"
->
+<Base title={pageTitle(TOOL)} description={TOOL.blurb} shellWidth="72rem">
   {/* Crumb and freshness stamp sit above the plate, so the green panel holds
       the title and the date and nothing else. The stamp stays near the top of
       the board, which is the point of it - this page goes to some lengths
@@ -47,7 +56,7 @@ function flag(e: (typeof initial)[number]): { text: string; tone: string } | nul
 
   <main class="sm-sheet">
     <header class="sm-hero">
-      <h1 class="sm-h1">Daily Events</h1>
+      <h1 class="sm-h1">{TOOL.name}</h1>
       <p id="t-date" class="sm-lead">{heading}</p>
     </header>
 

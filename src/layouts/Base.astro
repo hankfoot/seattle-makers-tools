@@ -42,6 +42,24 @@ const body = bare
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
     <meta name="description" content={description} />
+
+    {/* Link previews - Slack, iMessage, anything that unfurls a URL - read
+        these rather than <title>/<description>. They are fed from the same two
+        props, so a preview cannot say something different from the page.
+
+        og:url, <link rel="canonical"> and og:image are deliberately absent:
+        they need an absolute origin, and HANDOVER.md has the domain as an open
+        decision ("pick the address you want to keep before publicising it").
+        Set `site` in astro.config.mjs once it is chosen and add them here -
+        a guessed hostname in og:image is worse than no og:image, because
+        scrapers cache what they fetch. */}
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Seattle Makers Digital Toolbox" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
     {/* The brand kit's own "Flavicon" - the outlined green m - replacing a
         hand-drawn stand-in. The touch icon is the same mark flattened onto
         white, because iOS ignores alpha and paints transparency black. */}

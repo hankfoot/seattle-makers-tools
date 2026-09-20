@@ -1,5 +1,6 @@
 ---
 import Base from '../layouts/Base.astro';
+import { TOOLS, SITE } from '../data/tools';
 
 /**
  * The index is a door, not a dashboard.
@@ -10,41 +11,22 @@ import Base from '../layouts/Base.astro';
  * sheet sizes in the label tool's own controls, and `npm run events` in the
  * README. What is left is each tool's name and what it is for.
  *
- * It also no longer imports events.json or the reel, which it was pulling in
- * at build time purely to compute numbers nobody read.
+ * The names and blurbs come from data/tools.ts, which each tool page reads too
+ * - so a card and the page it opens cannot describe the same tool differently.
  */
-const tools = [
-  // Parked while the today board is built out. The page and its runtime are
-  // untouched and /slideshow still serves - this only takes it off the index.
-  // {
-  //   name: 'Slideshow',
-  //   href: '/slideshow',
-  //   blurb:
-  //     'A looping reel of studio photos and upcoming classes, built to run full-screen on a laptop at markets and tabling events.',
-  // },
-  {
-    name: 'Daily Events',
-    href: '/today',
-    blurb: "Show off what's happening at the makerspace on a dedicated display.",
-  },
-  {
-    name: 'Label Generator',
-    href: '/labels',
-    blurb: 'Create custom labels and QR codes to print on sticker paper.',
-  },
-];
 ---
 
-<Base title="Digital Toolbox — Seattle Makers" shellWidth="52rem">
+
+<Base title={SITE.name} description={SITE.blurb} shellWidth="52rem">
   <main class="sm-sheet">
     <header class="sm-hero">
-      <h1 class="sm-h1">Seattle Makers Digital Toolbox</h1>
-      <p class="sm-lead">A handy collection of web tools to help out around the makerspace</p>
+      <h1 class="sm-h1">{SITE.name}</h1>
+      <p class="sm-lead">{SITE.blurb}</p>
     </header>
 
     <ul class="tools">
       {
-        tools.map((t) => (
+        TOOLS.map((t) => (
           <li>
             <a href={t.href}>
               <span class="t-name">{t.name}</span>

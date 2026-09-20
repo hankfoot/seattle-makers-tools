@@ -1,6 +1,11 @@
 ---
 import Base from '../layouts/Base.astro';
 import { SHEETS, STOCKS, perSheet } from '../data/labelSheets';
+import { toolById, pageTitle } from '../data/tools';
+
+/** Name, title, description and the subtitle under the heading all come from
+    data/tools.ts, so this page and its card on the index say the same thing. */
+const TOOL = toolById('labels');
 
 /**
  * Label sheets.
@@ -17,8 +22,8 @@ const stocks = STOCKS.map((s) => ({
 ---
 
 <Base
-  title="Label Generator — Seattle Makers"
-  description="Design a label and print it onto the Label Station's sheets."
+  title={pageTitle(TOOL)}
+  description={TOOL.blurb}
   bodyClass="lb-page"
   shellWidth="84rem"
 >
@@ -34,8 +39,8 @@ const stocks = STOCKS.map((s) => ({
           carries both, and repeating them here was the page saying its own
           name twice. */}
       <header class="sm-hero lb-head">
-        <h1>Label Generator</h1>
-        <p class="lb-sub">One design, printed onto the sheet you choose.</p>
+        <h1>{TOOL.name}</h1>
+        <p class="lb-sub">{TOOL.blurb}</p>
       </header>
 
       <h2 class="lb-group">Sheet</h2>
