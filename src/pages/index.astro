@@ -1,18 +1,18 @@
 ---
 import Base from '../layouts/Base.astro';
-import { buildReel } from '../lib/reel';
-import { FETCHED_AT, EVENTS, eventsOn, localDay } from '../lib/events';
-import { studiosWithPhotos } from '../lib/photos';
 
-const reel = buildReel();
-const counts = {
-  slides: reel.length,
-  photos: reel.filter((s) => s.type === 'photo').length,
-  events: reel.filter((s) => s.type === 'event').length,
-  studios: studiosWithPhotos().length,
-  today: eventsOn(localDay()).length,
-};
-
+/**
+ * The index is a door, not a dashboard.
+ *
+ * It carried counts, per-tool metadata and the command for refreshing the
+ * calendar. None of that helped anyone choose between two tools, and all of it
+ * lives somewhere it actually applies: the counts on the board itself, the
+ * sheet sizes in the label tool's own controls, and `npm run events` in the
+ * README. What is left is each tool's name and what it is for.
+ *
+ * It also no longer imports events.json or the reel, which it was pulling in
+ * at build time purely to compute numbers nobody read.
+ */
 const tools = [
   // Parked while the today board is built out. The page and its runtime are
   // untouched and /slideshow still serves - this only takes it off the index.
@@ -21,93 +21,59 @@ const tools = [
   //   href: '/slideshow',
   //   blurb:
   //     'A looping reel of studio photos and upcoming classes, built to run full-screen on a laptop at markets and tabling events.',
-  //   meta: `${counts.slides} slides · ${counts.photos} photos · ${counts.events} events`,
-  //   ready: true,
   // },
   {
     name: 'Today',
     href: '/today',
     blurb:
       'What is on in the space today — classes, certifications, open studio and tours — refreshing itself on a screen by the door.',
-    meta:
-      counts.today === 1 ? '1 event today' : `${counts.today} events today`,
   },
   {
     name: 'Labels',
     href: '/labels',
     blurb:
       "Design one label — title, subtitle, optional QR — and print it onto the Label Station's sheets, skipping any that have already been peeled.",
-    meta: '4 stocks · 2 to 20 per sheet',
   },
 ];
 ---
 
 <Base title="Tools — Seattle Makers" shellWidth="52rem">
   <main class="sm-sheet">
-    {/* No rule under the heading: the panel's own edge is the separator, and
-        the two together were one line too many. */}
     <header class="sm-hero">
       <h1 class="sm-h1">Tools</h1>
       <p class="sm-lead">Small web tools for the space.</p>
-      {/* Pulled up out of the footer. These are the only facts the index
-          actually knows, and in 13px grey at the bottom nobody read them. */}
     </header>
 
-    {/* On the white, under the panel. Inside it these were a third block with
-        a rule of their own, which is what made the green too tall.
-        Deliberately not "N today" - the Today row below already says that. */}
-    <div class="sm-stats">
-      <span class="sm-stat"><b>{EVENTS.length}</b> events on file</span>
-      <span class="sm-stat"><b>{counts.studios}</b> studios with photos</span>
-    </div>
-
-    {/* Hairline-separated rows rather than bordered cards. Two items do not
-        need four boxes drawn round them, and the row is wide enough that the
-        name, the blurb and the state all sit on one reading line. */}
     <ul class="tools">
       {
         tools.map((t) => (
           <li>
             <a href={t.href}>
               <span class="t-name">{t.name}</span>
-              <span class="t-meta sm-label">{t.meta}</span>
               <span class="t-blurb">{t.blurb}</span>
             </a>
           </li>
         ))
       }
     </ul>
-
-    {/* The counts moved to the hero; what is left is the how-to-refresh note,
-        which is genuinely footer material. */}
-    <footer class="sm-foot">
-      <p>
-        Calendar fetched {FETCHED_AT.slice(0, 10)} from seattlemakers.org — refresh with <code
-          >npm run events</code
-        >. Studio photos live in public/studios/.
-      </p>
-    </footer>
   </main>
 </Base>
 
 <style>
-  .tools {
-    margin-top: 0;
-  }
-
   .tools li {
     border-bottom: 1px solid var(--color-sm-line);
   }
 
-  /* A grid so the name and the state sit on one baseline and the blurb runs
-     under both, indented to nothing - the row reads top-down without any of
-     the three pieces needing a box to belong to. */
+  /* Nothing follows the list any more, so the last row's rule would be a line
+     drawn under the bottom of the card. */
+  .tools li:last-child {
+    border-bottom: 0;
+  }
+
+  /* One column. With the meta gone there is nothing to sit opposite the name,
+     so the grid that used to hold the two apart went with it. */
   .tools a {
-    position: relative;
-    display: grid;
-    grid-template-columns: 1fr auto;
-    align-items: baseline;
-    gap: 0.5rem 1.5rem;
+    display: block;
     padding: 1.7rem 1.1rem;
     margin: 0 -1.1rem;
     border-radius: 10px;
@@ -123,6 +89,7 @@ const tools = [
   }
 
   .t-name {
+    display: block;
     font-family: var(--font-display);
     font-size: 1.5rem;
     font-weight: 700;
@@ -134,7 +101,7 @@ const tools = [
 
   /* The arrow rides with the name rather than sitting in a corner of its own.
      A whole row that is a link does not also need the word "Open" in it -
-     the hover and the arrow say it, and one of the three had to go. */
+     the hover and the arrow say it. */
   .t-name::after {
     content: '→';
     margin-left: 0.5rem;
@@ -152,37 +119,12 @@ const tools = [
     transform: translateX(4px);
   }
 
-  .t-meta {
-    justify-self: end;
-  }
-
   .t-blurb {
-    grid-column: 1 / -1;
+    display: block;
+    margin-top: 0.5rem;
     max-width: 58ch;
     font-size: 0.9375rem;
     line-height: 1.6;
     color: var(--color-sm-slate);
-  }
-
-  .sm-foot p + p {
-    margin-top: 0.25rem;
-  }
-
-  .sm-foot code {
-    padding: 0.1em 0.35em;
-    border-radius: 3px;
-    background: var(--color-sm-mist);
-    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-    font-size: 0.8125rem;
-  }
-
-  @media (max-width: 34rem) {
-    .tools a {
-      grid-template-columns: 1fr;
-    }
-    .t-meta {
-      justify-self: start;
-      order: 3;
-    }
   }
 </style>

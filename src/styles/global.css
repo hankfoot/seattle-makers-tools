@@ -235,6 +235,27 @@ body {
   min-width: 0;
 }
 
+/* The one-line lockup, when public/brand/wordmark-inline.* exists. Taller than
+   the monogram because it carries words rather than a single letter, and
+   followed by a divider so "Web Tools" reads as the product rather than as
+   part of the logo. */
+.sm-lockup {
+  display: block;
+  width: auto;
+  height: 1.1rem;
+}
+
+.sm-brand-product {
+  padding-left: 0.6rem;
+  border-left: 1px solid var(--color-sm-line);
+  font-weight: 500;
+  color: var(--color-sm-slate);
+}
+
+.sm-brand:hover .sm-brand-product {
+  color: var(--color-sm-green);
+}
+
 .sm-brand-name {
   font-family: var(--font-display);
   font-size: 0.95rem;
@@ -426,32 +447,6 @@ body {
   color: var(--color-sm-on-green);
 }
 
-/* A strip of what the site actually knows. It sits on the white under the
-   panel, not inside it: on the green it was a third block with a rule of its
-   own and it made the panel noticeably taller than the two lines it is
-   supposed to hold. */
-.sm-stats {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem 1.4rem;
-  padding-bottom: 1.5rem;
-  border-bottom: 1px solid var(--color-sm-line);
-}
-
-.sm-stat {
-  font-family: var(--font-display);
-  font-size: 0.7rem;
-  font-weight: 600;
-  letter-spacing: var(--tracking-label);
-  text-transform: uppercase;
-  color: var(--color-sm-slate);
-}
-
-.sm-stat b {
-  font-weight: 800;
-  color: var(--color-sm-green);
-}
-
 @media (max-width: 40rem) {
   .sm-hero {
     margin-bottom: 1.6rem;
@@ -476,42 +471,8 @@ body {
   color: var(--color-sm-ink);
 }
 
-/* The short rule the website sets between a heading and its paragraph. It is
-   the one piece of decoration on the page, so it is the only one - and now
-   that the heading is ink, it is also where the green lives. */
-.sm-rule {
-  width: 2.5rem;
-  height: 3px;
-  margin: 1.15rem 0 1.2rem;
-  background: var(--color-sm-green);
-  border: 0;
-  border-radius: 2px;
-}
-
 .sm-lead {
   font-size: 1.0625rem;
-  line-height: 1.6;
-  color: var(--color-sm-slate);
-}
-
-/* Eyebrows, tags, meta - anything small enough that tracking it open is what
-   makes it read as a label rather than as shrunken prose. */
-.sm-label {
-  font-family: var(--font-display);
-  font-size: 0.6875rem;
-  font-weight: 700;
-  letter-spacing: var(--tracking-label);
-  text-transform: uppercase;
-  color: var(--color-sm-slate);
-}
-
-/* No rule of its own. Both pages that use it put it under a hairline-ruled
-   list, so the list's own closing rule was already the divider and the
-   footer's added a second one - with an empty band between them that read as
-   a blank row in the list. Space alone separates it now. */
-.sm-foot {
-  margin-top: 1.75rem;
-  font-size: 0.8125rem;
   line-height: 1.6;
   color: var(--color-sm-slate);
 }

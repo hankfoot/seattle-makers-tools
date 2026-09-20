@@ -202,6 +202,20 @@ page: the index *is* the list of tools, and each tool page carries a single
 `.sm-back` to it. Chrome that duplicates the page's own content earns nothing,
 and `Base`'s `current` prop went with the nav it fed.
 
+**The logo has two forms and a file decides which renders.** Dropping the
+one-line "SEATTLE makers" lockup into `public/brand/wordmark-inline.svg` or
+`.png` is all it takes: `SiteHeader` checks with `existsSync` at build time and
+sets it beside "Web Tools" with a divider. Without it, it falls back to the
+monogram plus the full name as text. Verified both directions by putting a
+stand-in file in place, building, and taking it away again.
+
+The one-line lockup is the right artwork for a 48px bar and **this repo does
+not have it** - every wordmark asset on disk is the stacked version at the same
+3.23:1 shape. Do **not** composite one out of the stacked lockup: both words
+crop cleanly, but their spacing and relative size in the real inline lockup are
+not derivable from the stacked arrangement, and a logo assembled from guesses
+is a wrong logo.
+
 **The mark is the "m" of "makers" cropped out of `wordmark.png`, not redrawn.**
 Found by profiling the artwork rather than by eye: the two lines of the lockup
 overlap vertically, so there is no clean horizontal split, but within the `m`'s
@@ -313,11 +327,17 @@ plate rather than inside the green. `/today` has no footer left at all.
 boundary, and a hairline sitting 2.25rem below it had nothing above it to
 divide - it read as an orphan.
 
-**The index's stats sit on the white under the panel, and deliberately exclude
-"N today".** The Today row directly beneath already carries that number, and
-repeating the list above it is louder without being more informative. The two
-that are there - events on file, studios with photos - appear nowhere else, and
-they came up out of the footer, where facts in 13px grey go to be ignored.
+**The index is a door, not a dashboard.** It carried counts, per-tool metadata
+and the calendar-refresh command, and none of it helped anyone choose between
+two tools - all of it lives where it actually applies: the counts on the board
+itself, the sheet sizes in the label tool's own controls, `npm run events` in
+the README. What is left is each tool's name and what it is for. It no longer
+imports `events.json` or the reel either, which it was pulling in at build time
+purely to compute numbers nobody read.
+
+That cleanup killed `.sm-foot`, `.sm-stats`, `.sm-stat`, `.sm-label` and
+`.sm-rule` outright, and they were deleted rather than left in global.css. A
+shared stylesheet is exactly where dead selectors rot quietly.
 
 **Green headings were the most dating thing on the page.** The website sets
 every h1 and h2 in solid `#13723C` over grey body copy, which is a 2012

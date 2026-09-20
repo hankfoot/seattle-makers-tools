@@ -1,37 +1,56 @@
 ---
+import { existsSync } from 'node:fs';
+
 /**
  * The masthead, on every tool page.
  *
- * Third shape, and the first one that is not trying to be a navigation bar.
+ * An identity strip, not a navigation bar: the logo, the name of the thing,
+ * and the one link that leaves. Navigation lives on the page - the index *is*
+ * the list of tools, and each tool page carries a single `.sm-back` to it.
  *
- * It began as a copy of seattlemakers.org's header - a near-black full-bleed
- * slab with the lockup knocked out in white - then went light so it matched
- * the pages under it. What was left over was the listing of every tool across
- * the top, which is a lot of chrome for a site with two of them, and a stacked
- * two-line lockup big enough to be the loudest thing in the bar.
+ * **The logo has two forms, and which one renders depends on a file.** The
+ * one-line "SEATTLE makers" lockup is the right thing in a 48px bar, but the
+ * only artwork in this repo is the stacked version (2048x634, and every copy
+ * of it is that same 3.23:1 shape). Dropping the one-line lockup into
+ * public/brand/wordmark-inline.png - or .svg, checked first - is all that is
+ * needed: this picks it up at build time and sets it beside "Web Tools".
  *
- * So it is an identity strip now: the monogram, the name of the thing, and the
- * one link that leaves. Navigation lives on the page - the index *is* the list
- * of tools, and each tool page carries a single `.sm-back` to it. Chrome that
- * duplicates the page's own content earns nothing.
+ * Until then it falls back to the monogram plus the full name as text, which
+ * says the same thing and fits the same bar. The check is `existsSync` at
+ * build rather than a runtime guess, so the output is one form or the other
+ * with no broken image either way.
  *
- * The mark is the "m" of "makers" cropped straight out of wordmark.png rather
- * than drawn fresh, so it is the real letterform, outline and all. Using the
- * full lockup here would have set "Seattle Makers" twice - once as artwork and
- * again as the title beside it.
+ * Do NOT composite a one-line lockup out of the stacked one. The two words can
+ * be cropped cleanly, but their spacing and relative size in the real inline
+ * lockup are not derivable from the stacked arrangement, and a logo assembled
+ * from guesses is a wrong logo.
  *
  * Styles live in global.css, not in a scoped block here, so the bar can be
  * reasoned about alongside the sheet it sits on.
  */
+const INLINE = ['/brand/wordmark-inline.svg', '/brand/wordmark-inline.png'].find((p) =>
+  existsSync(`public${p}`),
+);
 ---
 
 <header class="sm-masthead no-print">
   <div class="sm-masthead-inner">
     <a class="sm-brand" href="/">
-      {/* Decorative: the title beside it already names the site, and a screen
-          reader announcing "Seattle Makers" twice helps nobody. */}
-      <img class="sm-mark" src="/brand/mark.png" alt="" />
-      <span class="sm-brand-name">Seattle Makers <span>Web Tools</span></span>
+      {
+        INLINE ? (
+          <>
+            <img class="sm-lockup" src={INLINE} alt="Seattle Makers" />
+            <span class="sm-brand-name sm-brand-product">Web Tools</span>
+          </>
+        ) : (
+          <>
+            {/* Decorative: the title beside it already names the site, and a
+                screen reader announcing "Seattle Makers" twice helps nobody. */}
+            <img class="sm-mark" src="/brand/mark.png" alt="" />
+            <span class="sm-brand-name">Seattle Makers <span>Web Tools</span></span>
+          </>
+        )
+      }
     </a>
     <a class="sm-nav-out" href="https://seattlemakers.org" rel="noopener">
       seattlemakers.org
