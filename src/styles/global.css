@@ -324,9 +324,14 @@ body {
    of the site rather than as the last row of whatever page you are on. It is
    the only shared chrome left, so it carries the lockup as well as the line. */
 .sm-footer {
+  /* A centred column, so the line, the lockup and the repo mark stack without
+     any of them needing to be block-level on their own. */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   max-width: var(--sm-shell-w, 64rem);
   margin: 0 auto;
-  padding: 1.5rem 2rem 3.5rem;
+  padding: 0.25rem 2rem 3.5rem;
   text-align: center;
   font-family: var(--font-display);
   font-size: 0.8125rem;
@@ -365,6 +370,32 @@ body {
 .sm-footer-logo:hover img,
 .sm-footer-logo:focus-visible img {
   filter: none;
+  opacity: 1;
+}
+
+/* The repo, under the sign-off. Muted to sit with the greyed lockup rather
+   than competing with it - at full strength a solid black mark was the darkest
+   thing on the page. */
+.sm-footer-gh {
+  display: inline-flex;
+  margin-top: 0.8rem;
+  color: var(--color-sm-slate);
+  opacity: 0.5;
+  transition:
+    color 160ms ease,
+    opacity 160ms ease;
+}
+
+.sm-footer-gh svg {
+  display: block;
+  width: 1.05rem;
+  height: 1.05rem;
+  fill: currentColor;
+}
+
+.sm-footer-gh:hover,
+.sm-footer-gh:focus-visible {
+  color: var(--color-sm-green);
   opacity: 1;
 }
 
