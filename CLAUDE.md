@@ -222,11 +222,17 @@ at full strength the green pulled more attention to the bottom of the page than
 the tools above it. Full colour on hover and focus, because it is a link, and
 it carries the only outbound link to seattlemakers.org.
 
-**The repo link under it 404s for anyone without access.**
-`hankfoot/seattle-makers-tools` is private, checked unauthenticated. The link
-is right and works the moment the repo is public or the viewer is a
-collaborator - it is not a typo, and it is worth knowing before someone
-"fixes" it.
+**The repo link under it points at public source.**
+`hankfoot/seattle-makers-tools` was private when the link was added, so it
+404d for visitors; it was made public on 2026-09-19 rather than the link being
+removed. Before that flip the whole history was scanned for anything that
+should not ship - tracked filenames, every blob ever committed, and the list of
+files deleted along the way. It came back clean: `wrangler.toml` carries no
+account id or bindings, there are no `.env` files, and the only matches for
+"secret" were HANDOVER.md saying there are none, a transitive dependency called
+`@azure/keyvault-secrets`, and a `.gitignore` line. Worth repeating that scan
+before making any other project here public - deleted files stay in history,
+and going public publishes the history, not the checkout.
 
 **The artwork there is the one-line "Skinny" variant at 1.15rem** (1.05rem
 below 40rem), about 146px wide - three quarters of the line of text above it,
