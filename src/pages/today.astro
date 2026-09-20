@@ -184,11 +184,25 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
      you find the time first, then read across. */
 
   .t-row {
-    /* One number, so the rule and the column it divides can never drift. */
+    /* One number each, so a rule and the column it divides can never drift. */
     --rail: 13cqmin;
+    --shot: 13cqmin;
     position: relative;
     display: grid;
-    grid-template-columns: var(--rail) 1fr;
+    /* Three tracks: the rail, the picture, the words - and the picture's track
+       is reserved rather than `auto`, so it is there whether or not the row has
+       one.
+
+       `auto` was tried first and is the obvious answer, since about half the
+       calendar's events have no picture and the track then collapses to
+       nothing. What it actually produces is a board whose titles start on two
+       different verticals, jumping by the width of a picture from row to row -
+       and this thing is read from across a room, where a straight left edge is
+       most of what makes a list scannable. The cost of reserving it is a blank
+       indent on the rows with no picture, which is why the picture is 13cqmin
+       here and not the 20cqmin it was when it sat on the right: at this width
+       the gap reads as a margin rather than as a hole. */
+    grid-template-columns: var(--rail) calc(var(--shot) + 2.4cqmin) 1fr;
     padding: 2cqmin 0;
     border-bottom: 1px solid var(--color-sm-line);
   }
@@ -222,6 +236,7 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
   }
 
   .t-body {
+    grid-column: 3;
     padding-left: 2.4cqmin;
   }
 
@@ -389,8 +404,61 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
     color: var(--color-sm-slate);
   }
 
+  /* The event's own picture, from its page's og:image.
+
+     Sized off the board like everything else in here, so the miniature on the
+     page drops and wraps exactly where the wall screen does - 13cqmin is about
+     140px on a 1080p portrait screen and 280px on a 4K panel, which is why
+     /api/events serves the 768px variant rather than the 1220px original: the
+     larger panel at 2x device pixels is what sets the size, not this one.
+
+     Square, and no taller than the words beside it, so the pictures cost the
+     board no vertical room - a row is as tall as its text was before. `cover`
+     because these are other people's photographs at whatever aspect they were
+     shot; letterboxed into a fixed box they would read as a mistake rather
+     than as a picture.
+
+     `align-self: center` and not `stretch`: an image has an intrinsic aspect
+     ratio, so a grid item with one treats `stretch` as `start` and the picture
+     would hang off the top of a tall row instead. */
+  .t-thumb {
+    /* Row as well as column. An item that names only a column is auto-placed
+       into the next row whose column 2 is free, which - with the body already
+       occupying row 1 - is row 2: the picture ends up under the words and the
+       row doubles in height. */
+    grid-column: 2;
+    grid-row: 1;
+    align-self: center;
+    width: var(--shot);
+    aspect-ratio: 1;
+    margin-left: 2.4cqmin;
+    object-fit: cover;
+    border-radius: 1.4cqmin;
+    /* Something to look at for the moment between layout and decode, rather
+       than a white hole on a green-and-white board. */
+    background: var(--color-sm-mist);
+  }
+
+  /* No photograph, so the studio's icon instead - `contain` and padded, because
+     these are badges drawn to sit on a ground rather than photographs to fill
+     a frame, and the tint is what says so: a tile the eye reads as a label
+     rather than as a picture of the class. Green rather than the mist above,
+     which against white paper is too faint to draw the tile at all. */
+  .t-thumb.is-icon {
+    padding: 1.4cqmin;
+    object-fit: contain;
+    background: var(--color-sm-wash);
+  }
+
   /* Cancelled stays on the board, dimmed - someone who came for it needs to
-     see that it is off, not find no trace of it. */
+     see that it is off, not find no trace of it. A photograph does not dim
+     with `opacity` the way text does, so the colour comes out instead: the
+     row's one bright rectangle should not be the event that is not happening. */
+  .t-row.is-off .t-thumb {
+    filter: grayscale(1);
+    opacity: 0.55;
+  }
+
   .t-row.is-off .t-time,
   .t-row.is-off .t-title {
     color: var(--color-sm-slate);
@@ -440,19 +508,40 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
      while leaving it on a miniature of the same size. */
   @container (max-width: 480px) {
     .t-row {
-      grid-template-columns: 1fr;
+      grid-template-columns: 1fr auto;
       gap: 0.4rem;
     }
     /* No column, so no rail to divide it. */
     .t-row::before {
       display: none;
     }
+    /* The time stacks above the text now, so both are placed explicitly -
+       left to auto-placement the body would land beside the time rather than
+       under it. */
     .t-time {
+      grid-column: 1;
       padding-right: 0;
       text-align: left;
     }
     .t-body {
+      grid-column: 1;
       padding-left: 0;
+    }
+    /* The one place the picture stays on the right, and it is not an
+       inconsistency: there is no rail here, so a leading picture indents the
+       *time* as well, and half the rows have no picture - which reads as two
+       different row shapes rather than as one list. On the right it is beside
+       a stacked block and every row still starts on the same edge.
+
+       Aligned to the top of that stack, and square: at this width a 4:3
+       picture beside two short lines is most of the row. */
+    .t-thumb {
+      grid-column: 2;
+      grid-row: 1 / span 2;
+      align-self: start;
+      width: 22cqmin;
+      margin-left: 2.4cqmin;
+      aspect-ratio: 1;
     }
   }
 

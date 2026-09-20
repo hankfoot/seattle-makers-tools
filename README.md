@@ -64,6 +64,16 @@ subject to that rule, so the function does the fetch and hands the result back
 from our own origin, which the page *is* allowed to read. No amount of
 JavaScript in the page can substitute for it.
 
+**For the one day being shown, it also opens each event's own page**, which is
+where the description and the picture live - the calendar grid carries neither.
+That is three to six extra requests behind one board refresh, capped so a
+malformed `day` cannot fan out further. About half the calendar's events have a
+usable picture; the rest are studio badges, icon sheets and pages with no image
+at all, and [`src/lib/event-image.mjs`](src/lib/event-image.mjs) sorts them by
+size and compression density. A row with no usable picture falls back to its
+studio's icon on a tinted tile, and a row belonging to no studio - a tour, an
+orientation, game night - shows nothing.
+
 It runs the same parser as the scraper - [`src/lib/parse-calendar.mjs`](src/lib/parse-calendar.mjs),
 which is pure string-handling with no filesystem access precisely so it can run
 in both places. One parser, so a calendar redesign cannot break one while the

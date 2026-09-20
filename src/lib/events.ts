@@ -15,6 +15,15 @@ export type SmEvent = {
   summary?: string;
   /** Local path to the event's own picture, when its page had one big enough. */
   image?: string;
+  /**
+   * The event's own picture on seattlemakers.org, for the board's thumbnails.
+   *
+   * Not `image`: that one is a path under public/events/ written by the
+   * scraper so the reel keeps working with no wifi. This is an absolute URL on
+   * the site, produced per request by /api/events, because the board is online
+   * by definition - it cannot draw a row at all without reaching the calendar.
+   */
+  thumb?: string;
   /** The event page was fetched; absence of summary/image is a fact, not a gap. */
   checked?: boolean;
 };

@@ -51,6 +51,8 @@ Done:
 - Everything on today's calendar, with studio, kind, fullness and cancellation,
   fetched live from /api/events. Refreshes every five
   minutes and on `visibilitychange`.
+- Each row carries the event's own picture where its page has one - about half
+  of them do. See *Pictures* below.
 - `/events-dummy.json` is a prerendered endpoint, not a file in public/. Its
   times are generated at build time relative to the build's clock, so it is
   always "today" with something running rather than a fixture that rots.
@@ -536,6 +538,127 @@ seven byte-identical.
 them, in parallel, capped at `MAX_DESCRIBED` so a malformed `day` cannot fan
 out to a hundred fetches behind one request. Without `day` the response comes
 back bare, which is what a caller wanting the whole calendar should get.
+
+### Pictures
+
+**`og:image` is the only picture an event page states about itself, and about
+half of them have none.** Measured across 34 distinct events on the live
+calendar: 20 carried one. So a row without a picture is the normal case rather
+than a fault, and the layout has to be built around that.
+
+**The fallback chain is photo, then the studio's icon, then nothing** - which
+is the reel's chain, for the reel's reason: a generic studio photo in this
+frame reads as a picture *of the class*, which it is not, while an icon reads
+as a label. `studiosForCategories` is already imported here for the studio
+name, so the icon costs nothing. The tile is tinted `--color-sm-wash` and the
+icon is `contain`-ed and padded, because these are badges drawn to sit on a
+ground rather than photographs to fill a frame - and because a tile the eye
+reads as a symbol is not a tile it reads as a picture of the room. Mist, which
+the reel uses, is too faint against the board's white paper to draw the tile at
+all.
+
+The last tier really is nothing. Whole-building events - tours, orientations,
+meetups, game night, 51 of 166 on the calendar - belong to no studio, and the
+only mark that would fit is the wordmark, which on a Seattle Makers board says
+something true of every row and therefore nothing about this one. An event in
+two studios takes the first; the pair it happens to is leatherworking + sewing,
+and one icon beside both names is not a claim about which room it is in, where
+two tiles would be.
+
+**The picture leads the row, and its column is reserved.** Both of those were
+arrived at by looking rather than by argument:
+
+- *On the right* was the first version, and it is the one that needs no
+  reserved column - a row with no picture simply gives the width to the words,
+  and every title still starts on the same vertical.
+- *Leading, with an `auto` column* is what "put the picture first" means
+  literally, and it makes the board's left edge ragged: titles start on two
+  different verticals, jumping by the width of a picture from row to row. On a
+  thing read from across a room that straight edge is most of what makes the
+  list scannable.
+- *Leading, with the column reserved* keeps the edge and costs a blank indent
+  on the rows with no picture. At the 20cqmin the picture was when it sat on
+  the right, that indent is a void; at **13cqmin** it reads as a margin. So the
+  picture is smaller than it would be on the right - that is the trade, and it
+  is the reason for the size.
+
+**The narrow layout keeps the picture on the right, and that is not an
+inconsistency.** Below the board's 480px container query there is no time rail
+and the row stacks, so a leading picture indents the *time* as well - with half
+the rows unindented, it reads as two different row shapes rather than as one
+list.
+
+**An item that names only a grid column is auto-placed into a new grid *row*.**
+The picture is `grid-column: 2` with the body at 3; with the body already
+occupying row 1, the placement cursor has passed column 2, so the picture went
+to row 2 - under the words, doubling the height of every row carrying one and
+pushing two rows off the bottom of the board. `grid-row: 1` fixes it, and the
+element is appended between the time and the body so the DOM order matches what
+is on screen.
+
+**A thumbnail costs nothing beyond what the description already cost.** Both
+come out of the same HTML, so `calendar-api.mjs` fetches each event page once
+and hands it to `summarise.mjs` and `event-image.mjs`. That is also why
+`describeEvent()` is gone from summarise.mjs: two fetchers meant two requests
+for one page.
+
+**What og:image hands back is often not a photograph, and size cannot tell.**
+Three kinds of thing turn up, all of them live right now:
+
+1. Real class photos and promotional artwork, 564-1220px.
+2. Studio badges: `laser_logo.jpg` and `woodshop_saw_logo.jpg`, both 300x300.
+3. Full-size flat artwork: `tour_icon.jpg` at 768x768,
+   `Website-black-icons-20.png` at 1219x1220, and Yoast's emoji fallback
+   `1f600.svg`.
+
+(2) is caught by `MIN_IMAGE_WIDTH`, the svg by the extension test, and (3) only
+by compression density - the reel's `MIN_BYTES_PER_PIXEL = 0.06`, measured on
+the same calendar: those two icons land at 0.018 and 0.028 against 0.080-0.492
+for every photograph. It costs one visible false negative, `screenprinting.jpg`
+at 0.054, which is a real photo of a flat evenly-lit print.
+
+**The density test weighs the original and the board is served a variant.** A
+HEAD on the og:image gives bytes, and the page states that file's dimensions
+exactly; the row then gets the smallest srcset variant at or above 640px -
+768px in practice, against a 1220px original. Weighing the variant instead
+would compare a downscale against a threshold calibrated on originals, and a
+downscaled photograph carries *more* detail per pixel than the file it came
+from. On today's calendar the variants are 250K of pictures rather than 700K.
+
+**An image that cannot be weighed is kept.** Losing every thumbnail on the
+board because a CDN stopped sending `content-length` is a worse failure than
+the occasional icon sheet getting through, and by that point the width test has
+already removed the badges. A *missing stated width* is the opposite case and
+rejects the image: every page carrying an og:image carries the width beside it,
+so its absence means the markup moved, and there is then no way to tell a badge
+from a photo without downloading it.
+
+**A thumbnail that fails to load falls down the same chain**, to the studio
+icon and then to nothing. It is the one element on the board whose source is a
+third-party URL that can 404 long after the row was drawn, and this board is
+read from across a room and left up for days - a grey box with a torn-page icon
+is worse than no picture. A flag stops a failing icon from retrying forever.
+
+**The images are eager, and `loading="lazy"` is a trap here.** It looks like a
+free saving, because `fit()` hides rows rather than removing them and a lazy
+image in a hidden row is never fetched - but it hands the decision to the
+browser's idea of "near the viewport", and this board lives in the contexts
+that idea gets wrong: element fullscreen, a backgrounded tab, an embedded
+frame. Left lazy it loaded *nothing at all* in a preview pane - every tile
+blank, no error, no way to tell why from looking at it - which found the bug
+that would otherwise have been found on the wall. A dozen 40K thumbnails that
+all fit on one screen are not worth that risk.
+
+**The URL is checked before it goes in an `src`.** Same-origin paths (the dummy
+fixture) or `https://seattlemakers.org/wp-content/uploads/`, nothing else. The
+feed is scraped from a page we do not control, so a URL out of it is untrusted
+text exactly as the titles are - the same reasoning as `?src=` accepting only
+same-origin paths. Checked in `event-image.mjs` and again in `today.ts`.
+
+**`scripts/test-event-image.mjs` carries real byte counts.** Every fixture in
+it is a real page's og:image and every `content-length` was measured against
+the live site, so the file doubles as the record of what those measurements
+were. No network: `fetch` is stubbed.
 
 ### The rest
 

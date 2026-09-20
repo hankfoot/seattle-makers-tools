@@ -84,6 +84,18 @@ type Row = {
   available: number | null;
   soldOut?: boolean;
   summary?: string;
+  /**
+   * A picture, on half the rows - which is the proportion the live calendar
+   * has. A fixture where every row had one would never show the mixed board
+   * that /api/events actually produces, and the mix is the case the layout has
+   * to survive: the picture column is `auto`, so a row without one gives its
+   * width back to the words.
+   *
+   * These are local files under public/events/, left over from the reel, so
+   * the fixture stays usable with no network - which is the whole point of
+   * having one.
+   */
+  thumb?: string;
 };
 
 const ROWS: Row[] = [
@@ -118,6 +130,7 @@ const ROWS: Row[] = [
     o: -45,
     d: 120,
     title: '⚡Programmable LEDs',
+    thumb: '/events/programmable-leds.jpg',
     kinds: ['class'],
     categories: ['electronics'],
     available: 3,
@@ -127,6 +140,7 @@ const ROWS: Row[] = [
     o: 45,
     d: 120,
     title: 'Intro to the Sewing Room',
+    thumb: '/events/serger-coverstitch-certification-sewing.jpg',
     kinds: ['class'],
     categories: ['sewing'],
     available: 0,
@@ -137,6 +151,7 @@ const ROWS: Row[] = [
     o: 150,
     d: 150,
     title: 'Ceramics Hand-building (CANCELLED)',
+    thumb: '/events/intro-to-slip-casting.jpg',
     kinds: ['class'],
     categories: ['ceramics'],
     available: null,
@@ -156,6 +171,7 @@ const ROWS: Row[] = [
     o: 330,
     d: 120,
     title: 'Electronics & Robotics Meetup',
+    thumb: '/events/electronics-and-robotics-meetup-guided-studio.jpg',
     kinds: ['meetup'],
     categories: ['electronics'],
     available: 20,
@@ -188,6 +204,7 @@ const events = ROWS.map((r, i) => ({
   kinds: r.kinds,
   categories: r.categories,
   summary: r.summary,
+  thumb: r.thumb,
   checked: true,
 }));
 

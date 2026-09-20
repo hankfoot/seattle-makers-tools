@@ -26,7 +26,7 @@
  * kilobyte rather than the whole calendar.
  */
 import type { SmEvent } from '../lib/events';
-import { studiosForCategories } from '../data/studios';
+import { studiosForCategories, type Studio } from '../data/studios';
 import {
   statuses,
   sessionEnd,
@@ -144,13 +144,30 @@ function kindOf(e: SmEvent): string {
  * shown: which of the two rooms it is actually in is a question for the
  * organiser, and picking one silently would answer it wrongly some of the time.
  */
-function studioOf(e: SmEvent): string {
-  return studiosForCategories(e.categories)
-    .map((s) => s.name)
-    .join(' + ');
+function studioLabel(studios: Studio[]): string {
+  return studios.map((s) => s.name).join(' + ');
 }
 
 const CANCELLED = /\s*\(?\bcancell?ed\b\)?\s*/i;
+
+/**
+ * Where a thumbnail is allowed to come from.
+ *
+ * The feed is scraped from a page we do not control, so a URL out of it is
+ * untrusted text exactly as the titles are - and an unchecked one would let
+ * anything that reached the calendar put an arbitrary image on a screen in the
+ * space. Same-origin paths are allowed because that is what the dummy fixture
+ * uses; everything else has to be the calendar's own uploads.
+ */
+const THUMB_HOST = /^https:\/\/seattlemakers\.org\/wp-content\/uploads\//;
+
+function thumbOf(e: SmEvent): string | null {
+  const u = e.thumb;
+  if (typeof u !== 'string' || !u) return null;
+  if (u.startsWith('/')) return u.startsWith('//') ? null : u;
+  return THUMB_HOST.test(u) ? u : null;
+}
+
 const BADGE: Partial<Record<Status, string>> = { live: 'On now', next: 'Up next' };
 
 function el(tag: string, cls: string, text?: string): HTMLElement {
@@ -179,11 +196,13 @@ function row(e: SmEvent, st: Status, now: string): HTMLLIElement {
 
   const body = el('div', 't-body');
 
+  const studios = studiosForCategories(e.categories);
+
   const tags = el('p', 't-tags');
   const badge = BADGE[st];
   if (badge) tags.append(el('span', 't-badge', badge));
   tags.append(el('span', 't-kind', kindOf(e)));
-  const studio = studioOf(e);
+  const studio = studioLabel(studios);
   if (studio) tags.append(el('span', 't-studio', studio));
   if (cancelled) {
     tags.append(el('span', 't-flag is-off', 'cancelled'));
@@ -208,6 +227,66 @@ function row(e: SmEvent, st: Status, now: string): HTMLLIElement {
     fill.style.width = `${progress(e.start, end, now).toFixed(1)}%`;
     bar.append(fill);
     body.append(bar);
+  }
+
+  /**
+   * The picture: the event's own where its page had one, else the studio's
+   * icon on a tinted tile, else nothing.
+   *
+   * That chain is the reel's, for the reel's reason - a generic studio photo
+   * in this frame reads as a picture *of the class*, which it is not, while an
+   * icon reads as a label. Only about half the calendar's events carry a
+   * usable picture, so without the icon tier the fallback would be doing most
+   * of the work on a normal day.
+   *
+   * The last tier really is nothing. Whole-building events - tours,
+   * orientations, meetups, game night - belong to no studio, and the only mark
+   * that would fit is the wordmark, which on a Seattle Makers board says
+   * something true of every row and therefore nothing about this one.
+   *
+   * An event in two studios takes the first. The pair it happens to is
+   * leatherworking + sewing, and one icon beside both names is not a claim
+   * about which room it is in - two tiles would be.
+   *
+   * Appended between the time and the body, which is where it sits on screen.
+   * The CSS places it explicitly as well, and needs to: left to auto-placement
+   * an item that names only a column is pushed to a *new grid row* whenever
+   * the cursor has already passed that column, which put the picture under the
+   * words and doubled the height of every row carrying one.
+   */
+  const photo = thumbOf(e);
+  const icon = studios[0]?.icon ?? null;
+  if (photo || icon) {
+    const img = document.createElement('img');
+    img.className = photo ? 't-thumb' : 't-thumb is-icon';
+    img.src = photo ?? icon!;
+    // Decorative: the title is the accessible name of this row and sits right
+    // beside it, so announcing the picture as well would only repeat it.
+    img.alt = '';
+    // Eager, deliberately. Lazy looks like the obvious saving - fit() hides
+    // rows rather than removing them, so their pictures would never be
+    // fetched - but it hands the decision to the browser's idea of "near the
+    // viewport", and this board lives in exactly the contexts that idea gets
+    // wrong: element fullscreen, a backgrounded tab, an embedded frame. Left
+    // lazy it loaded nothing at all in a preview pane, which on a wall is a
+    // board of empty tiles with no way to tell why. A dozen 40K thumbnails
+    // that all fit on one screen are not worth that.
+    img.decoding = 'async';
+    // A photo that fails falls down the same chain rather than leaving a torn
+    // page on a screen that stays up for days - this is the one element whose
+    // source is a third-party URL, and it can 404 long after the row was
+    // drawn. The flag is what stops a failing icon from retrying forever.
+    let fellBack = false;
+    img.addEventListener('error', () => {
+      if (!fellBack && photo && icon) {
+        fellBack = true;
+        img.className = 't-thumb is-icon';
+        img.src = icon;
+      } else {
+        img.remove();
+      }
+    });
+    li.append(img);
   }
 
   li.append(body);

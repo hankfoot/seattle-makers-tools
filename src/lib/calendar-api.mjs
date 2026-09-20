@@ -1,5 +1,6 @@
 import { parse, SOURCE } from './parse-calendar.mjs';
-import { describeEvent } from './summarise.mjs';
+import { summarise, ogDescription } from './summarise.mjs';
+import { eventImage } from './event-image.mjs';
 
 /**
  * The /api/events response, in one place.
@@ -18,9 +19,9 @@ import { describeEvent } from './summarise.mjs';
 export const TTL = 120;
 
 /**
- * How many event pages one response may fetch for descriptions.
+ * How many event pages one response may fetch for descriptions and pictures.
  *
- * The calendar grid carries none, so each one costs a subrequest. A day has 3
+ * The calendar grid carries neither, so each one costs a subrequest. A day has 3
  * to 6 events, and the busiest on file has 6, so this is generous - but it is
  * a hard bound rather than a hope: without it a malformed `day` that matched
  * a hundred rows would fan out to a hundred fetches behind one request.
@@ -28,6 +29,34 @@ export const TTL = 120;
 const MAX_DESCRIBED = 10;
 
 export { SOURCE };
+
+/** The page fetch both enrichments share. */
+const UA = 'sm-digital-toolbox/0.1 (+https://github.com/seattlemakers/sm-digital-toolbox)';
+
+/**
+ * A description and a thumbnail for one event, from a single fetch of its page.
+ *
+ * Both come out of the same HTML, so the picture is free: the board's
+ * thumbnails cost one HEAD request each on top of what the descriptions were
+ * already costing, and nothing at all for the half of the calendar whose
+ * events have no picture.
+ *
+ * Never throws. An enrichment is a nicety - losing one costs a line of text or
+ * a thumbnail, letting it throw would cost the whole board.
+ */
+async function enrichEvent(url, fetchImpl = fetch) {
+  try {
+    const res = await fetchImpl(url, { headers: { 'user-agent': UA } });
+    if (!res.ok) return null;
+    const html = await res.text();
+    return {
+      summary: summarise(ogDescription(html)),
+      thumb: await eventImage(html, fetchImpl),
+    };
+  } catch {
+    return null;
+  }
+}
 
 /**
  * Fetch and parse the calendar.
@@ -37,19 +66,17 @@ export { SOURCE };
  *
  * @param {object} [opts]
  * @param {string} [opts.day] - "YYYY-MM-DD". Events on this day get a
- *   description fetched from their own page; everything else is returned
- *   bare. The board asks for the day it is rendering, which keeps this to a
- *   handful of subrequests instead of one per event in the calendar.
+ *   description and a thumbnail fetched from their own page; everything else
+ *   is returned bare. The board asks for the day it is rendering, which keeps
+ *   this to a handful of subrequests instead of one per event in the
+ *   calendar.
  * @param {object} [opts.init] - passed to fetch; the Worker uses it for its
  *   `cf` cache hints. Node ignores them.
  */
 export async function calendarResponse({ day, init = {} } = {}) {
   try {
     const res = await fetch(SOURCE, {
-      headers: {
-        'user-agent':
-          'sm-digital-toolbox/0.1 (+https://github.com/seattlemakers/sm-digital-toolbox)',
-      },
+      headers: { 'user-agent': UA },
       ...init,
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -60,14 +87,15 @@ export async function calendarResponse({ day, init = {} } = {}) {
     // it as a failure, exactly as the scraper exits non-zero.
     if (!events.length) throw new Error('parsed zero events');
 
-    // Descriptions, for the one day being looked at.
+    // Descriptions and thumbnails, for the one day being looked at.
     if (day && /^\d{4}-\d{2}-\d{2}$/.test(day)) {
       const wanted = events.filter((e) => e.start.slice(0, 10) === day).slice(0, MAX_DESCRIBED);
       // In parallel: sequentially this would be six round trips to a WordPress
       // site stacked behind one board refresh.
-      const texts = await Promise.all(wanted.map((e) => describeEvent(e.url)));
+      const extra = await Promise.all(wanted.map((e) => enrichEvent(e.url)));
       wanted.forEach((e, i) => {
-        if (texts[i]) e.summary = texts[i];
+        if (extra[i]?.summary) e.summary = extra[i].summary;
+        if (extra[i]?.thumb) e.thumb = extra[i].thumb;
       });
     }
 

@@ -100,20 +100,12 @@ function decodeEntities(s) {
     .replace(/&amp;/g, '&');
 }
 
-/** Fetch one event page and reduce it to a sentence or two. Never throws. */
-export async function describeEvent(url, fetchImpl = fetch) {
-  try {
-    const res = await fetchImpl(url, {
-      headers: {
-        'user-agent':
-          'sm-digital-toolbox/0.1 (+https://github.com/seattlemakers/sm-digital-toolbox)',
-      },
-    });
-    if (!res.ok) return null;
-    return summarise(ogDescription(await res.text()));
-  } catch {
-    // A description is a nicety. Losing one costs a line of text; letting it
-    // throw would cost the whole board.
-    return null;
-  }
-}
+/*
+ * There is no fetcher here any more.
+ *
+ * `describeEvent()` fetched an event page and summarised it, which was right
+ * while a description was the only thing we wanted from that page. The board
+ * now also wants the event's picture, and two fetchers would mean two requests
+ * for one page - so the fetch moved up to calendar-api.mjs, which reads the
+ * HTML once and hands it to this module and to event-image.mjs.
+ */
