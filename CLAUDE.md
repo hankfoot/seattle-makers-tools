@@ -403,6 +403,16 @@ rather than today. The board shows "live · checked 3:10 pm" or "calendar 27 aug
 "updated 3:01 pm" off a five-minute poll against a three-week-old file, which
 is exactly the lie this structure exists to prevent.
 
+**Nothing but `npm run serve` exercises the API locally.** `astro dev` and
+`astro preview` serve static files, so `/api/events` 404s under both and the
+board silently falls back to the baked `/events.json`. Every local check
+therefore shows a stale board with a "Last updated 27 aug"-style stamp, which
+reads exactly like the live path being broken. It is not - verified through
+`wrangler dev`: the API returns `live: true`, 166 events against the baked
+142, and 3 events today against the baked 2, and the board's stamp becomes
+"Last updated 9:41 pm". Do not conclude anything about freshness from a
+preview server.
+
 **The today board's live data must come from our own origin.** The browser
 cannot fetch seattlemakers.org/events: it returns 200 with no
 `access-control-allow-origin` (checked with an `Origin:` header, not assumed),

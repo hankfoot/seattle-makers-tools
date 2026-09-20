@@ -84,6 +84,25 @@ too - that means the markup moved, not that the space has nothing on.
 `npm run events` is still the thing that refreshes the baked fallback, and it
 is still manual. It no longer gates whether the board is current.
 
+### Running it locally with the live API
+
+`npm run dev` and `npm run preview` serve static files only. The Worker is not
+running under either, so `/api/events` 404s and the board falls back to the
+baked `/events.json` - which means **the board always looks stale locally, and
+the stamp reads "Last updated 27 aug" or whenever you last ran `npm run
+events`.** That is the fallback working as designed, not a bug, but it is easy
+to mistake for one.
+
+To exercise the real thing:
+
+```
+npm run serve
+```
+
+That builds and runs the Worker (fetching wrangler on first use). `/api/events`
+then scrapes the calendar per request, and the stamp reads "Last updated 9:41
+pm" - the live wording. Worth doing before believing anything about freshness.
+
 ### Testing with a dummy calendar
 
 `/today?src=/events-dummy.json` points the board at a fake busy day, which is
