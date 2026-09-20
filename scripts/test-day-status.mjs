@@ -5,7 +5,7 @@
  * Run with `npm test`. Node strips the types; there is no test framework and
  * no build step, which is the whole reason this is a plain .mjs.
  */
-import { sessionEnd, statuses, progress, gap, clock, statusNote, nowLocal }
+import { sessionEnd, statuses, progress, gap, clock, statusNote }
   from '../src/lib/day-status.ts';
 
 let pass = 0, fail = 0;

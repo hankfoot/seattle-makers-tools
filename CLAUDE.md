@@ -448,15 +448,25 @@ empty state has two different sentences depending on which happened.
 The `live` flag survives for the same reason the two-part stamp does: it is
 what stops a future fallback being reported as fresh.
 
-**Nothing but `npm run serve` exercises the API locally.** `astro dev` and
-`astro preview` serve static files, so `/api/events` 404s under both and the
-board silently falls back to the baked `/events.json`. Every local check
-therefore shows a stale board with a "Last updated 27 aug"-style stamp, which
-reads exactly like the live path being broken. It is not - verified through
-`wrangler dev`: the API returns `live: true`, 166 events against the baked
-142, and 3 events today against the baked 2, and the board's stamp becomes
-"Last updated 9:41 pm". Do not conclude anything about freshness from a
-preview server.
+**`/api/events` is served by two runtimes from one module.** The Cloudflare
+Worker in production, and a middleware in the Astro dev server via an
+integration in `astro.config.mjs`. Both call `calendarResponse()` in
+`src/lib/calendar-api.mjs`, so they cannot answer differently.
+
+That middleware exists because `astro dev` used to 404 on the path. It was
+invisible while the board could fall back to a baked calendar, and became
+"every day I pick is empty" the moment the fallback was removed - which is
+exactly how it was found. `astro preview` is a different server and still does
+not get it; use `npm run serve` for a production-shaped check.
+
+`calendar-api.mjs` is plain `.mjs` with no Node built-ins, for the same reason
+`parse-calendar.mjs` is: a Workers runtime has none.
+
+**Annotate `astro.config.mjs` rather than reaching for `@ts-ignore`.** It
+carries `// @ts-check`, so an untyped middleware callback puts four implicit-any
+errors into `npm run check` - which matters here because that command's output
+is only useful as a *number* compared against the known 8 pre-existing ones.
+JSDoc on the integration and the request handler keeps it at 8.
 
 **The today board's live data must come from our own origin.** The browser
 cannot fetch seattlemakers.org/events: it returns 200 with no

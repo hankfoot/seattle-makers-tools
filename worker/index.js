@@ -1,4 +1,4 @@
-import { parse, SOURCE } from '../src/lib/parse-calendar.mjs';
+import { calendarResponse, TTL } from '../src/lib/calendar-api.mjs';
 
 /**
  * The calendar, scraped on demand.
@@ -20,75 +20,28 @@ import { parse, SOURCE } from '../src/lib/parse-calendar.mjs';
  * Worker entry point - a Pages-shaped `functions/` directory fails the deploy
  * outright. Workers with static assets is also the platform Cloudflare is
  * actually developing, so this is the form the makerspace should inherit.
+ *
+ * The response itself is built in src/lib/calendar-api.mjs, shared with the
+ * dev-server middleware in astro.config.mjs so `npm run dev` serves the same
+ * thing. There is no baked fallback: see that file, and CLAUDE.md.
  */
-
-/** Seconds the edge may serve a cached copy. A class list does not move faster. */
-const TTL = 120;
-
-function envelope(events, fetchedAt, live) {
-  return JSON.stringify({
-    ok: true,
-    source: SOURCE,
-    fetchedAt,
-    live,
-    count: events.length,
-    events,
-  });
-}
-
-const json = (body, status = 200) =>
-  new Response(body, {
-    status,
-    headers: {
-      'content-type': 'application/json; charset=utf-8',
-      'cache-control': `public, max-age=${TTL}`,
-    },
-  });
-
-async function events() {
-  try {
-    const res = await fetch(SOURCE, {
-      headers: { 'user-agent': 'seattle-makers-tools/0.1 (+https://github.com/hankfoot/seattle-makers-tools)' },
-      cf: { cacheTtl: TTL, cacheEverything: true },
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
-    const events = parse(await res.text());
-    // A zero-event parse means the calendar's markup moved, not that the space
-    // has nothing on. Serving that would silently empty every board, so treat
-    // it as a failure and fall back, exactly as the scraper exits non-zero.
-    if (!events.length) throw new Error('parsed zero events');
-
-    // No summaries. They came from per-event pages the scraper visited and
-    // were grafted on by title from the baked calendar, which is gone; the
-    // calendar grid this reads has none of its own. Rows now carry a title, a
-    // time and a kind. Getting them back means fetching each event's page from
-    // here, which is 160-odd requests per board refresh - see CLAUDE.md.
-    return json(envelope(events, new Date().toISOString(), true));
-  } catch (err) {
-    // No fallback calendar. This endpoint used to hand back the build-time
-    // copy, which meant a board could sit on a wall quietly showing a schedule
-    // from weeks earlier; the file only refreshed when somebody remembered to
-    // run `npm run events`, and nobody did.
-    //
-    // So a failure is now reported as a failure. What must never happen is
-    // returning an empty list with `ok: true` - the board would render
-    // "Nothing on the calendar today", which is a confident lie about the
-    // space rather than an admission that we could not look.
-    return json(
-      JSON.stringify({ ok: false, error: String(err && err.message ? err.message : err) }),
-      502,
-    );
-  }
-}
-
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
-    // Only this one path is dynamic. Everything else - pages, the prerendered
-    // /events.json fallback, fonts, photos - is a static file, served by the
-    // assets binding rather than by anything we write.
-    if (url.pathname === '/api/events') return events();
+    // Only this one path is dynamic. Everything else - pages, fonts, photos -
+    // is a static file, served by the assets binding rather than by us.
+    if (url.pathname === '/api/events') {
+      const { status, body } = await calendarResponse({
+        cf: { cacheTtl: TTL, cacheEverything: true },
+      });
+      return new Response(body, {
+        status,
+        headers: {
+          'content-type': 'application/json; charset=utf-8',
+          'cache-control': `public, max-age=${TTL}`,
+        },
+      });
+    }
     return env.ASSETS.fetch(request);
   },
 };

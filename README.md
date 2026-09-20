@@ -90,11 +90,15 @@ API grafts onto live rows (about half of them match by title).
 
 ### Running it locally with the live API
 
-`npm run dev` and `npm run preview` serve static files only. The Worker is not
-running under either, so `/api/events` 404s and the board falls back to the
+`npm run dev` now serves `/api/events` itself, using the same module the Worker
+does, so the board works normally while you edit - including picking other
+dates in the debug panel.
+
+`npm run preview` does not: it is a different server and still serves static
+files only, so `/api/events` 404s there and the board falls back to the
 nothing at all - which means **the board shows "Cannot reach the calendar right
-now." under `npm run dev` and `npm run preview`.** That is correct behaviour,
-not a bug: there is no source without the Worker.
+now." under `npm run preview`.** That is correct behaviour, not a bug: there is
+no source there.
 
 To exercise the real thing:
 
