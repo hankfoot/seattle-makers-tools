@@ -13,6 +13,7 @@
     "preview": "astro preview",
     "events": "node scripts/fetch-events.mjs",
     "check": "astro check",
+    "test": "node --experimental-strip-types --no-warnings scripts/test-day-status.mjs",
     "qr": "node scripts/make-qr.mjs"
   },
   "dependencies": {

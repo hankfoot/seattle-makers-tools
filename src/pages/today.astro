@@ -1,31 +1,36 @@
 ---
 /**
- * What is on in the space today.
+ * What is on in the space today, as a live board.
  *
  * Rendered at build time from the baked calendar, then refetched from
  * /api/events (or /events.json) in the browser so a screen left up overnight is
  * right in the morning without anyone touching it. The build-time render is the
  * floor: if the fetch fails - no network, host down, a redeploy mid-request -
  * the board keeps showing the last known good day rather than going blank.
+ *
+ * Rows carry a status - past / live / next / later - from lib/day-status.ts,
+ * and scripts/today.ts re-stamps them on a timer so the board walks through
+ * the day by itself with no network involved. A refetch changes *what* is on;
+ * the clock changes *where* it stands.
+ *
+ * Name, title and description come from data/tools.ts, so this page and its
+ * card on the index cannot disagree about what the tool is. The one thing that
+ * does not follow that: the visible subtitle is the date, not the blurb. This
+ * is a board on a wall - what someone standing in front of it needs under the
+ * heading is which day they are looking at, and a description of the tool
+ * would be telling them about the thing they are already using.
  */
 import Base from '../layouts/Base.astro';
-import { eventsOn, localDay, FETCHED_AT, isCancelled, kindLabel, formatWhen } from '../lib/events';
+import { eventsOn, localDay, FETCHED_AT, isCancelled, kindLabel } from '../lib/events';
 import { toolById, pageTitle } from '../data/tools';
+import { statuses, sessionEnd, clock, progress, statusNote, nowLocal } from '../lib/day-status';
 
-/**
- * Name, title and description all come from data/tools.ts, so this page and
- * its card on the index cannot disagree about what the tool is.
- *
- * The one thing that does not: the visible subtitle is the date, not the
- * blurb. This is a board on a wall - what someone standing in front of it
- * needs under the heading is which day they are looking at, and a description
- * of the tool would be telling them about the thing they are already using.
- * The blurb is still the page's meta description, where it does its job.
- */
 const TOOL = toolById('today');
 
 const day = localDay();
 const initial = eventsOn(day);
+const now = nowLocal();
+const marks = statuses(initial, now);
 
 const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
   weekday: 'long',
@@ -42,42 +47,54 @@ function flag(e: (typeof initial)[number]): { text: string; tone: string } | nul
   }
   return null;
 }
+
+const BADGE: Record<string, string> = { live: 'On now', next: 'Up next' };
+const CANCELLED = /\s*\(?\bcancell?ed\b\)?\s*/i;
 ---
 
 <Base title={pageTitle(TOOL)} description={TOOL.blurb} shellWidth="72rem">
   {/* Crumb and freshness stamp sit above the plate, so the green panel holds
-      the title and the date and nothing else. The stamp stays near the top of
-      the board, which is the point of it - this page goes to some lengths
-      never to overstate how current it is, so it may as well be legible. */}
+      the title and the date and nothing else. Both are hidden in display mode -
+      a wall board has nothing to navigate to. */}
   <div class="sm-crumb-row">
     <a class="sm-back" href="/">← All tools</a>
     <p id="t-status" class="sm-stamp">calendar {FETCHED_AT.slice(0, 10)}</p>
   </div>
 
-  <main class="sm-sheet">
+  <main class="sm-sheet t-board">
     <header class="sm-hero">
       <h1 class="sm-h1">{TOOL.name}</h1>
       <p id="t-date" class="sm-lead">{heading}</p>
     </header>
 
     <!-- Server-rendered floor. today.ts replaces the contents on a successful
-         fetch; if it never does, this is what stays on screen. The two must
-         build the same markup, which is why the row classes are plain names
-         defined once below rather than utility strings in two places. -->
+         fetch and re-stamps statuses on a timer; if neither ever runs, this is
+         what stays on screen. The two must build identical markup - see the
+         note at the top of today.ts. -->
     <ol id="t-list" class="t-list">
       {
-        initial.map((e) => {
+        initial.map((e, i) => {
           const f = flag(e);
+          const st = marks[i]!;
+          const end = sessionEnd(e.start, e.end);
+          const note = statusNote(st, e.start, end, now);
           return (
-            <li class={`t-row${isCancelled(e) ? ' is-off' : ''}`}>
-              <span class="t-time">{formatWhen(e.start).time}</span>
+            <li class={`t-row${isCancelled(e) ? ' is-off' : ''}`} data-status={st}>
+              <span class="t-time">{clock(e.start)}</span>
               <div class="t-body">
                 <p class="t-tags">
+                  {BADGE[st] && <span class="t-badge">{BADGE[st]}</span>}
                   <span class="t-kind">{kindLabel(e)}</span>
                   {f && <span class={`t-flag is-${f.tone}`}>{f.text}</span>}
                 </p>
-                <h2 class="t-title">{e.title.replace(/\s*\(?\bcancell?ed\b\)?\s*/i, ' ').trim()}</h2>
+                <h2 class="t-title">{e.title.replace(CANCELLED, ' ').trim()}</h2>
                 {e.summary && <p class="t-sum">{e.summary}</p>}
+                {note && <p class="t-note">{note}</p>}
+                {st === 'live' && (
+                  <div class="t-progress" role="presentation">
+                    <i style={`width:${progress(e.start, end, now).toFixed(1)}%`} />
+                  </div>
+                )}
               </div>
             </li>
           );
@@ -86,6 +103,9 @@ function flag(e: (typeof initial)[number]): { text: string; tone: string } | nul
     </ol>
 
     <p id="t-empty" class="t-empty" hidden={initial.length > 0}>Nothing on the calendar today.</p>
+
+    {/* Filled by the fit pass when a display cannot show every row. */}
+    <p id="t-more" class="t-more" hidden></p>
   </main>
 </Base>
 
@@ -97,10 +117,7 @@ function flag(e: (typeof initial)[number]): { text: string; tone: string } | nul
   /* The board's one structural idea: a rail of times down the left with the
      day's events hanging off it. A day is a real sequence, so the order is
      information and the rail is what makes it legible from across a room -
-     you find the time first, then read across. Bordered cards made it a list
-     of things with no shape. */
-  /* No top rule: the hero panel's edge is already the boundary, and a hairline
-     hanging below it had nothing above it to divide. */
+     you find the time first, then read across. */
   .t-list {
     border-top: 0;
   }
@@ -117,8 +134,7 @@ function flag(e: (typeof initial)[number]): { text: string; tone: string } | nul
 
   /* The rail runs the full height of the row and down through the hairline
      into the next one, so the day reads as one continuous line with events
-     hung off it. A border on .t-body only covered the text and left the line
-     broken into ticks. */
+     hung off it. */
   .t-row::before {
     content: '';
     position: absolute;
@@ -157,7 +173,8 @@ function flag(e: (typeof initial)[number]): { text: string; tone: string } | nul
   }
 
   .t-kind,
-  .t-flag {
+  .t-flag,
+  .t-badge {
     font-family: var(--font-display);
     font-size: 0.6875rem;
     font-weight: 700;
@@ -193,7 +210,78 @@ function flag(e: (typeof initial)[number]): { text: string; tone: string } | nul
     background: #fbeaea;
   }
 
-  /* Sized for a screen you read from across the room, not from a chair. */
+  /* ------------------------------------------------- where the day stands ---
+
+     Four states, and only two of them announce themselves. "Later" is the
+     default and needs no decoration; "past" recedes rather than shouting. The
+     two carrying what someone walking in actually wants - what is running, and
+     what is next - get a badge. */
+
+  .t-badge {
+    padding: 0.15rem 0.55rem;
+    border-radius: 999px;
+    color: #fff;
+    background: var(--color-sm-green);
+  }
+
+  /* Outlined, not filled: "up next" is a smaller claim than "on now", and two
+     solid green chips in a column would compete. */
+  .t-row[data-status='next'] .t-badge {
+    padding: 0.08rem 0.48rem;
+    color: var(--color-sm-green-dark);
+    background: transparent;
+    border: 1px solid var(--color-sm-green-mid);
+  }
+
+  /* The live row is the only thing on the board with a filled green rail, so
+     the eye lands on it before reading a word. */
+  .t-row[data-status='live']::before {
+    width: 3px;
+    background: var(--color-sm-green);
+  }
+
+  .t-row[data-status='live'] .t-time {
+    color: var(--color-sm-green-dark);
+  }
+
+  /* Finished, not gone. Someone who turns up late needs to see that they
+     missed it, which a vanished row cannot tell them. */
+  .t-row[data-status='past'] {
+    opacity: 0.42;
+  }
+
+  .t-note {
+    margin-top: 0.3rem;
+    font-family: var(--font-display);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: var(--color-sm-slate);
+  }
+
+  .t-row[data-status='live'] .t-note {
+    color: var(--color-sm-green-dark);
+  }
+
+  /* How far through the running session we are. Presentational only - the same
+     fact is in .t-note as words, which is what a screen reader gets. */
+  .t-progress {
+    height: 4px;
+    max-width: 22rem;
+    margin-top: 0.55rem;
+    border-radius: 999px;
+    background: var(--color-sm-wash);
+    overflow: hidden;
+  }
+
+  .t-progress i {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--color-sm-green);
+    transition: width 600ms ease;
+  }
+
   .t-title {
     font-family: var(--font-display);
     font-size: clamp(1.2rem, 1rem + 0.7vw, 1.7rem);
@@ -238,6 +326,17 @@ function flag(e: (typeof initial)[number]): { text: string; tone: string } | nul
     color: var(--color-sm-slate);
   }
 
+  /* What the fit pass had to leave off. */
+  .t-more {
+    margin-top: 1rem;
+    font-family: var(--font-display);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--color-sm-slate);
+  }
+
   @media (max-width: 34rem) {
     .t-row {
       grid-template-columns: 1fr;
@@ -254,6 +353,88 @@ function flag(e: (typeof initial)[number]): { text: string; tone: string } | nul
     .t-body {
       padding-left: 0;
     }
+  }
+
+  /* =================================================== display (TV) mode ===
+
+     A vertical screen showing the board full-bleed with nothing to scroll,
+     which is the whole constraint. Everything here serves filling exactly one
+     viewport: no page margin, no rounded plate, no crumb, no footer, and a
+     list told to stop at the bottom edge rather than run past it.
+
+     today.ts decides when this applies - ?tv=1 forces it on, ?tv=0 off,
+     otherwise a large portrait viewport - and hides whatever will not fit. */
+
+  html.t-tv,
+  html.t-tv body {
+    height: 100%;
+    overflow: hidden;
+  }
+
+  html.t-tv .sm-crumb-row,
+  html.t-tv .sm-footer {
+    display: none;
+  }
+
+  html.t-tv .sm-sheet {
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+    max-width: none;
+    margin: 0;
+    padding: 0 clamp(1.5rem, 3vw, 3.5rem) clamp(1rem, 2vh, 2rem);
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  html.t-tv .sm-hero {
+    flex: 0 0 auto;
+    margin: 0 calc(clamp(1.5rem, 3vw, 3.5rem) * -1) clamp(1rem, 2.2vh, 2.25rem);
+    padding: clamp(1.4rem, 3vh, 2.6rem) clamp(1.5rem, 3vw, 3.5rem);
+    border-radius: 0;
+  }
+
+  /* The list owns whatever is left, and never more. */
+  html.t-tv .t-list {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  html.t-tv .t-more {
+    flex: 0 0 auto;
+  }
+
+  /* Sized off vh, not vw: on a portrait screen the scarce axis is vertical,
+     so type that scales with width would overflow the very screen it is for. */
+  html.t-tv .sm-h1 {
+    font-size: clamp(2.6rem, 3.4vh, 4.6rem);
+  }
+  html.t-tv .sm-lead {
+    font-size: clamp(1.1rem, 1.5vh, 2rem);
+  }
+  html.t-tv .t-row {
+    --rail: clamp(8rem, 12vh, 15rem);
+    padding: clamp(0.9rem, 1.8vh, 2rem) 0;
+  }
+  html.t-tv .t-time {
+    font-size: clamp(1.3rem, 2vh, 2.6rem);
+  }
+  html.t-tv .t-title {
+    font-size: clamp(1.5rem, 2.4vh, 3.2rem);
+  }
+  html.t-tv .t-sum {
+    font-size: clamp(1rem, 1.4vh, 1.8rem);
+  }
+  html.t-tv .t-kind,
+  html.t-tv .t-flag,
+  html.t-tv .t-badge,
+  html.t-tv .t-note {
+    font-size: clamp(0.8rem, 1.1vh, 1.3rem);
+  }
+  html.t-tv .t-progress {
+    height: 6px;
+    max-width: none;
   }
 </style>
 

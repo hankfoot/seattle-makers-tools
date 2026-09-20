@@ -274,6 +274,72 @@ distance this board is actually read from.
 accidental - it is one token - but it is a change to a page that is otherwise
 deliberately frozen, and it is the only one.
 
+### The board
+
+**The feed's `end` is not the session's end, and this is the single thing here
+most likely to bite someone.** A multi-part course carries the end of its
+*last* session: "Woodshop Basics (4 Part Series)" runs
+`2026-09-09T18:30 -> 2026-09-30T21:30`. Taken literally, that event is "on now"
+for three weeks and owns the top of the board every day for a month.
+
+The clock time survives the encoding, though - `18:30 -> 21:30` is the real
+three-hour session with the series' final *date* stamped on it. So
+`sessionEnd()` puts the end's clock time on the start's date. Checked against
+the whole calendar rather than assumed: all 8 multi-day rows imply a sane 2-3h
+session that way, and the one with a same-title single-day twin ("CNC
+Certification Series") implies 2.0h against a twin that runs exactly 2.0h. 130
+of 142 events are under four hours, so the rule only fires on the handful that
+need it.
+
+**`lib/day-status.ts` imports no data, and that is the point.** `lib/events.ts`
+pulls `events.json` - 72K - so `scripts/today.ts` cannot touch it without
+dragging the whole calendar into the browser bundle, which is exactly what the
+live fetch exists to avoid. A data-free module lets the build-time render and
+the runtime re-render share one implementation instead of keeping two copies of
+the same rules in step by hand. `npm test` covers it: 26 assertions, no
+framework, Node strips the types.
+
+**`refresh()` and `tick()` are separate on purpose.** Refresh (5 min, network)
+changes *what* is on. Tick (30s, no network) changes *where the day stands* -
+past / live / next / later - which is what makes this a live view rather than a
+list that reloads. Tick mutates in place rather than re-rendering: rebuilding
+would throw away the progress bar's CSS transition twice a minute and fight any
+text the viewer has selected. Verified by stubbing the clock 90 minutes forward
+and waiting one real tick - the two live rows went past, their badges and
+progress bars were removed, and the "checked" stamp did **not** change, which
+is the proof no fetch was involved.
+
+**Exactly one row is ever `next`.** "Up next" has to mean one thing on a board,
+or it is a synonym for "not yet" repeated down the page.
+
+**The fit is what makes a wall screen possible, and what it gives up is
+ordered.** A TV cannot be scrolled, so anything past the bottom edge is
+invisible with no way to reveal it - worse than absent, because the board
+silently looks like the day ends early. `fit()` hides rows until the list fits:
+finished events first (oldest first), then the far end of the day (latest
+first), and **never the live row or the next one** - those are the two facts
+the board exists to show. Rows are hidden rather than removed, so the next pass
+can bring them back without a re-render.
+
+**Display mode's thresholds sit deliberately above a tablet.** Portrait, at
+least 700px wide *and* 1200px tall - an iPad Pro 11" is 834x1194 and so stays a
+normal page. `?tv=1` forces it on and `?tv=0` off, which is how to check the
+layout without a TV. Verified at 1080x1920: document height exactly equals the
+viewport, so nothing scrolls.
+
+**Type in display mode scales off `vh`, not `vw`.** The scarce axis on a
+portrait screen is the vertical one; type sized off width overflows the very
+screen it was written for.
+
+**The dummy fixture is anchored to the build clock, not to fixed hours.** Pinned
+at 09:00-19:00 it was a board of nothing but "finished" by evening - exactly
+when someone is most likely to be checking that the live states work. The
+anchor is clamped so the whole 10.5-hour schedule fits inside one day; clamping
+each row individually instead piles three of them onto 23:30 with ends reading
+"26:00", which is not a time and which `Date` silently rolls into tomorrow. It
+also carries real durations and a series row now, because a fixture where every
+`end` is null cannot exercise the rule at the top of this section.
+
 ### The rest
 
 **`/today` is live via a Cloudflare Worker, not a rebuild.** The board
