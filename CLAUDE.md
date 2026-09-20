@@ -53,6 +53,8 @@ Done:
   minutes and on `visibilitychange`.
 - Each row carries the event's own picture where its page has one - about half
   of them do. See *Pictures* below.
+- A help strip along the bottom: sign in at the check-in PC, and the shop
+  number to call for a staff member in the building.
 - `/events-dummy.json` is a prerendered endpoint, not a file in public/. Its
   times are generated at build time relative to the build's clock, so it is
   always "today" with something running rather than a fixture that rots.
@@ -502,6 +504,27 @@ function returns early when the panel is not mounted, and `?now=` works without
 `?debug=1` - so with the marker tied to the panel, a board opened on just
 `?now=` showed a simulated day with nothing saying so. That is the single
 outcome the red bar exists to prevent, and it was broken the first time.
+
+**The help strip is part of the board, not of the page.** Someone standing in
+front of this screen has two questions the schedule cannot answer - what do I
+do now I am here, and how do I find a person - so the answers belong on the
+wall rather than on a web page nobody in the building is looking at. It is
+static markup in today.astro, because today.ts only ever replaces the rows.
+
+It is `flex: 0 0 auto` above a list that is `1 1 auto`, so it takes its height
+first and `fit()` drops rows to suit. That order is deliberate: a dropped row
+is still counted in "+ N later not shown", while "call this number" has no
+smaller version of itself. It also survives the empty board, which is when it
+earns its place - a screen reading "Nothing on the calendar today" and nothing
+else tells someone who just walked in exactly nothing.
+
+**The phone number is copied from seattlemakers.org and has to follow it.**
+`(206) 659-1726`, published identically on the home, about and contact pages
+(and as `tel:+12066591726`), checked rather than remembered. A stale number on
+a wall is worse than no number, because it gets dialled before anyone thinks to
+doubt it. It is plain text rather than a `tel:` link: the screen it is written
+for has no pointer, and a person with a phone is keying it in from across the
+room anyway.
 
 ### Descriptions
 

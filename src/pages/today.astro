@@ -81,6 +81,32 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
           happens in the miniature exactly as it does on the wall, because both
           are the same board at different sizes. */}
       <p id="t-more" class="t-more" hidden></p>
+
+      {/* What to do on arriving, and how to reach a person - the two questions
+          someone standing in front of this screen has that the schedule cannot
+          answer. Part of the board rather than the page, so it is on the wall
+          where it is needed; static markup, because today.ts only ever
+          replaces the rows.
+
+          It stays put when the day is empty, which is when it matters most:
+          a board reading "Nothing on the calendar today" and nothing else
+          tells someone who just walked in exactly nothing.
+
+          The number is read off seattlemakers.org, where the home, about and
+          contact pages all publish the same one. If the space ever changes it,
+          it changes there first and this has to follow - a stale number on a
+          wall is worse than no number, because it is tried before anyone
+          thinks to doubt it. Kept as plain text, not a `tel:` link: this
+          screen has no pointer, and the people who can tap a number are
+          reading it off the wall into their own phone anyway. */}
+      <footer class="t-help">
+        <p class="t-help-item">
+          <span class="t-help-label">New here?</span> Sign in at the check-in PC when you arrive.
+        </p>
+        <p class="t-help-item">
+          <span class="t-help-label">Need a hand?</span> Call <b class="t-phone">(206) 659-1726</b> to reach a staff member in the building.
+        </p>
+      </footer>
     </section>
 
     <div class="t-actions">
@@ -500,6 +526,49 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
     letter-spacing: var(--tracking-label);
     text-transform: uppercase;
     color: var(--color-sm-slate);
+  }
+
+  /* ------------------------------------------------------------- the help ---
+
+     A strip along the bottom of the board, in the board's own units so it
+     scales with everything else. Mist rather than white so it reads as a
+     footer to the schedule and not as another row of it, and the ink-coloured
+     opener is what makes the two items scannable as questions.
+
+     `flex: 0 0 auto` is what keeps it honest: the list above is `1 1 auto`, so
+     this takes its height first and fit() then hides whatever rows no longer
+     fit. That is the right order - a row of the schedule can be dropped and
+     counted in "+ N later not shown", while "call this number" has no smaller
+     version of itself. */
+  .t-help {
+    flex: 0 0 auto;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.8cqmin 5cqmin;
+    padding: 2.2cqmin max(3.4cqmin, calc((100% - 168cqmin) / 2));
+    border-top: 1px solid var(--color-sm-line);
+    background: var(--color-sm-mist);
+    font-size: 1.9cqmin;
+    line-height: 1.5;
+    color: var(--color-sm-slate);
+  }
+
+  .t-help-label {
+    font-family: var(--font-display);
+    font-weight: 700;
+    color: var(--color-sm-ink);
+  }
+
+  /* Bigger than the sentence around it, because it is the one thing here
+     somebody has to read across a room and key into a phone correctly. */
+  .t-phone {
+    font-family: var(--font-display);
+    font-size: 2.6cqmin;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    color: var(--color-sm-green-dark);
+    white-space: nowrap;
   }
 
   /* A container query, not a media query: what decides whether there is room
