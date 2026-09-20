@@ -96,7 +96,7 @@ function flag(e: (typeof initial)[number]): { text: string; tone: string } | nul
     position: relative;
     display: grid;
     grid-template-columns: var(--rail) 1fr;
-    padding: 1.5rem 0;
+    padding: 1.6rem 0;
     border-bottom: 1px solid var(--color-sm-line);
   }
 
@@ -119,8 +119,10 @@ function flag(e: (typeof initial)[number]): { text: string; tone: string } | nul
   .t-time {
     padding-right: 1.5rem;
     text-align: right;
+    font-family: var(--font-display);
     font-size: clamp(1.05rem, 0.9rem + 0.5vw, 1.4rem);
     font-weight: 700;
+    letter-spacing: -0.01em;
     line-height: 1.45;
     font-variant-numeric: tabular-nums;
     color: var(--color-sm-ink);
@@ -134,12 +136,14 @@ function flag(e: (typeof initial)[number]): { text: string; tone: string } | nul
   .t-tags {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.75rem;
-    margin-bottom: 0.15rem;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.3rem;
   }
 
   .t-kind,
   .t-flag {
+    font-family: var(--font-display);
     font-size: 0.6875rem;
     font-weight: 700;
     letter-spacing: var(--tracking-label);
@@ -147,25 +151,40 @@ function flag(e: (typeof initial)[number]): { text: string; tone: string } | nul
     text-transform: uppercase;
   }
 
+  /* What kind of thing this is stays plain text: it is true of every row, so
+     giving all of them a chip would be a wall of chips saying nothing. */
   .t-kind {
     color: var(--color-sm-green);
   }
 
+  /* Whether you can still get in is the exception, so it gets the chip. On a
+     board read from a few metres away a tinted block is findable at a glance
+     in a way that another line of small tracked caps is not. */
+  .t-flag {
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+  }
+
   .t-flag.is-go {
-    color: var(--color-sm-green-mid);
+    color: var(--color-sm-green-dark);
+    background: var(--color-sm-wash);
   }
   .t-flag.is-mute {
     color: var(--color-sm-slate);
+    background: var(--color-sm-mist);
   }
   .t-flag.is-off {
-    color: #a6272b;
+    color: var(--color-sm-alert);
+    background: #fbeaea;
   }
 
   /* Sized for a screen you read from across the room, not from a chair. */
   .t-title {
+    font-family: var(--font-display);
     font-size: clamp(1.2rem, 1rem + 0.7vw, 1.7rem);
     font-weight: 700;
-    line-height: 1.3;
+    letter-spacing: -0.018em;
+    line-height: 1.25;
     color: var(--color-sm-ink);
   }
 
@@ -174,7 +193,7 @@ function flag(e: (typeof initial)[number]): { text: string; tone: string } | nul
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
     overflow: hidden;
-    margin-top: 0.35rem;
+    margin-top: 0.4rem;
     max-width: 68ch;
     font-size: clamp(0.9rem, 0.84rem + 0.2vw, 1.05rem);
     line-height: 1.55;
@@ -194,10 +213,13 @@ function flag(e: (typeof initial)[number]): { text: string; tone: string } | nul
   .t-empty {
     margin-top: 2.25rem;
     padding: 3.5rem 1.5rem;
-    border-top: 1px solid var(--color-sm-line);
-    border-bottom: 1px solid var(--color-sm-line);
+    border: 1px solid var(--color-sm-line);
+    border-radius: 12px;
+    background: var(--color-sm-mist);
     text-align: center;
+    font-family: var(--font-display);
     font-size: 1.125rem;
+    font-weight: 500;
     color: var(--color-sm-slate);
   }
 

@@ -19,6 +19,22 @@
   font-display: swap;
 }
 
+/* Figtree carries the headings. Picked by setting the same line in Figtree,
+   Archivo and Roboto directly under the lockup and looking: the wordmark's
+   'makers' is a heavy geometric with big round bowls and a straight-legged k,
+   which Figtree echoes, Archivo squares off, and Roboto flattens into
+   something anonymous. It is also the honest midpoint of this repo's own
+   history - geometric-humanist like the Lato that was sampled off the
+   wordmark, modern and neutral like the Roboto that replaced it - and at 20K
+   variable it is smaller than either. */
+@font-face {
+  font-family: 'Figtree';
+  src: url('/fonts/figtree.woff2') format('woff2');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* Lato belongs to the reel alone now, which is why /slideshow names it
    explicitly rather than inheriting it. The reel's 25 slides were laid out and
    verified against Lato's metrics; the tool pages were not, and they have a
@@ -68,18 +84,33 @@
   --color-sm-green-mid: #43aa6d;
   --color-sm-sage: #84bf80;
   --color-sm-ink: #1a1a1a;
-  --color-sm-slate: #606164;
-  --color-sm-line: #dcdddf;
-  --color-sm-mist: #e5e5e5;
+  --color-sm-slate: #5c6360;
+  --color-sm-line: #e4e7e4;
+  --color-sm-mist: #f2f4f2;
   --color-sm-paper: #ffffff;
 
+  /* Added by the refresh, not read off the live site:
+
+     wash   a tinted surface for chips and quiet highlights. The site has no
+            equivalent - it fills with solid green or nothing - and solid green
+            on a small tag is far too loud for something you read at a glance.
+     ink-2  secondary headings and the row meta, so not everything that is not
+            body copy has to be full-strength ink.
+     alert  the one non-green accent, for a cancelled class. Deliberately
+            desaturated: a pure red next to this green reads as Christmas. */
+  --color-sm-wash: #e8f1ea;
+  --color-sm-ink-2: #3a403d;
+  --color-sm-alert: #a6272b;
+
   --font-sans: 'Roboto', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-display: 'Figtree', 'Roboto', ui-sans-serif, system-ui, sans-serif;
   --font-reel: 'Lato', ui-sans-serif, system-ui, sans-serif;
 
   /* The site's one typographic tic: small labels and nav items are tracked
-     wide open (2px at 15px, 1px at 16px). Named so it stays consistent rather
-     than being re-eyeballed per component. */
-  --tracking-label: 0.14em;
+     wide open (2px at 15px, 1px at 16px). Pulled in from 0.14em, which is the
+     live site's value and reads as strained at 11px - wide tracking dates a
+     design faster than almost anything else. */
+  --tracking-label: 0.1em;
 }
 
 /* Tailwind's display utilities outrank the UA rule for [hidden], so a flex
@@ -130,7 +161,10 @@ body {
 
 .sm-masthead {
   background: var(--color-sm-ink);
-  border-bottom: 3px solid var(--color-sm-green);
+  /* 2px, not 3. At 3 the rule stops reading as an accent and starts reading
+     as a border the page is boxed in by, which was most of what made the bar
+     feel heavy. */
+  border-bottom: 2px solid var(--color-sm-green);
 }
 
 .sm-masthead-inner {
@@ -138,9 +172,13 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: 1.5rem;
-  max-width: var(--sm-shell-w, 64rem);
+  /* Deliberately NOT --sm-shell-w. The bar was following each page's content
+     width, so the lockup slid left and right as you moved between /, /today
+     and /labels - three different widths - which is the opposite of what a
+     masthead is for. One constant, and only the sheet under it varies. */
+  max-width: 84rem;
   margin: 0 auto;
-  padding: 0.85rem 1.5rem;
+  padding: 0.7rem 1.5rem;
 }
 
 /* The lockup must never give up width to the nav. As a plain flex item it
@@ -168,8 +206,11 @@ body {
 }
 
 .sm-nav a {
+  position: relative;
+  padding: 0.35rem 0;
+  font-family: var(--font-display);
   font-size: 0.75rem;
-  font-weight: 500;
+  font-weight: 600;
   letter-spacing: var(--tracking-label);
   text-transform: uppercase;
   text-decoration: none;
@@ -183,6 +224,18 @@ body {
 
 .sm-nav a[aria-current='page'] {
   color: var(--color-sm-paper);
+}
+
+/* The current page is underlined in green rather than only brightened. White
+   alone had to carry both "this is the page you are on" and "you are hovering
+   me", so hovering a link made it look selected. */
+.sm-nav a[aria-current='page']::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 -0.15rem 0;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--color-sm-green-mid);
 }
 
 /* Specific enough to beat `.sm-nav a` without !important, which would have
@@ -215,17 +268,29 @@ body {
 
 /* The white sheet the content sits on, floating on the mist - the boxed
    layout the website uses, where the grey shows as a gutter all the way
-   round rather than only at the sides. */
+   round rather than only at the sides.
+
+   The refresh lifts it off the ground: a radius and a two-part shadow, close
+   and far, instead of a hard-edged rectangle butted against the masthead.
+   That is the one place this borrows back from the pre-rebrand design, which
+   had rounded cards; the website's own plates are hard-edged and flat, and
+   that flatness was doing most of the "clunky". */
 .sm-sheet {
   max-width: var(--sm-shell-w, 64rem);
-  margin: 0 auto;
-  padding: 3rem 2.5rem 2.5rem;
+  margin: 2rem auto;
+  padding: 3rem 3rem 2.75rem;
   background: var(--color-sm-paper);
+  border-radius: 14px;
+  box-shadow:
+    0 1px 2px rgb(20 25 22 / 0.04),
+    0 10px 30px rgb(20 25 22 / 0.06);
 }
 
 @media (max-width: 40rem) {
   .sm-sheet {
-    padding: 2rem 1.25rem 2rem;
+    margin: 1rem auto;
+    padding: 2rem 1.35rem 2rem;
+    border-radius: 12px;
   }
   .sm-masthead-inner {
     padding: 0.7rem 1.25rem;
@@ -240,34 +305,42 @@ body {
 
 /* ---------------------------------------------------------------- type --- */
 
-/* Green, 700, sentence case - the site's h1 exactly. */
+/* The website sets every heading in solid green. Copied straight across it is
+   the single most dating thing on the page - a green h1 over grey body copy is
+   a 2012 WordPress theme - so the refresh moves the heading to ink and hands
+   the green to the rule underneath it and to the accents. The brand signal
+   survives; the heading stops shouting. */
 .sm-h1 {
-  font-size: clamp(2rem, 1.4rem + 2.4vw, 2.8rem);
-  font-weight: 700;
-  line-height: 1.1;
-  letter-spacing: -0.015em;
-  color: var(--color-sm-green);
+  font-family: var(--font-display);
+  font-size: clamp(2.1rem, 1.4rem + 2.6vw, 3rem);
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.028em;
+  color: var(--color-sm-ink);
 }
 
 /* The short rule the website sets between a heading and its paragraph. It is
-   the one piece of decoration on the page, so it is the only one. */
+   the one piece of decoration on the page, so it is the only one - and now
+   that the heading is ink, it is also where the green lives. */
 .sm-rule {
-  width: 3rem;
+  width: 2.5rem;
   height: 3px;
-  margin: 1.1rem 0 1.25rem;
-  background: var(--color-sm-green-mid);
+  margin: 1.15rem 0 1.2rem;
+  background: var(--color-sm-green);
   border: 0;
+  border-radius: 2px;
 }
 
 .sm-lead {
   font-size: 1.0625rem;
-  line-height: 1.55;
+  line-height: 1.6;
   color: var(--color-sm-slate);
 }
 
 /* Eyebrows, tags, meta - anything small enough that tracking it open is what
    makes it read as a label rather than as shrunken prose. */
 .sm-label {
+  font-family: var(--font-display);
   font-size: 0.6875rem;
   font-weight: 700;
   letter-spacing: var(--tracking-label);
@@ -275,12 +348,12 @@ body {
   color: var(--color-sm-slate);
 }
 
-/* Wide enough that the rule closing the last row and the rule opening the
-   footer read as two edges rather than as one doubled line. */
+/* No rule of its own. Both pages that use it put it under a hairline-ruled
+   list, so the list's own closing rule was already the divider and the
+   footer's added a second one - with an empty band between them that read as
+   a blank row in the list. Space alone separates it now. */
 .sm-foot {
-  margin-top: 3.5rem;
-  padding-top: 1.25rem;
-  border-top: 1px solid var(--color-sm-line);
+  margin-top: 1.75rem;
   font-size: 0.8125rem;
   line-height: 1.6;
   color: var(--color-sm-slate);
@@ -295,15 +368,16 @@ body {
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  padding: 0.85rem 1.6rem;
+  padding: 0.8rem 1.6rem;
   border: 0;
   border-radius: 50px;
   background: var(--color-sm-green);
   color: var(--color-sm-paper);
   font: inherit;
+  font-family: var(--font-display);
   font-size: 0.9375rem;
   font-weight: 700;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.015em;
   text-decoration: none;
   cursor: pointer;
   transition:
@@ -313,7 +387,7 @@ body {
 
 .sm-btn:hover:not(:disabled) {
   background: var(--color-sm-green-dark);
-  box-shadow: 0 6px 18px rgb(19 114 60 / 0.25);
+  box-shadow: 0 4px 14px rgb(19 114 60 / 0.22);
 }
 
 .sm-btn:disabled {

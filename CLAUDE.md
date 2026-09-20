@@ -79,6 +79,16 @@ Done:
   website's green pill.
 - The reel is deliberately untouched and stays on Lato. See *Branding* below.
 
+A facelift pass followed on the same day, because copying seattlemakers.org
+faithfully also copied what is dated about it.
+
+Done:
+- Figtree joins Roboto as the display face, headings move from green to ink,
+  `--color-sm-mist` lightens, the sheets gain a radius and a soft shadow, and
+  the label-availability tags become tinted chips.
+- Printed labels are unchanged - still Roboto, insets identical to three
+  decimals after the pass.
+
 Next:
 - Those 8 slideshow type errors.
 - Photos for **leatherworking** and **a/v studio** - the only two studios still
@@ -116,11 +126,32 @@ deck. Three units is invisible on its own and obvious in a tab next to the real
 one. `--color-sm-ink` moved `#111111` -> `#1A1A1A` at the same time, which also
 shifts the reel's stage black by a hair; that is intended, there is one black.
 
-**Roboto is the site's face because it is seattlemakers.org's face** - every
-heading, paragraph and nav item there is Roboto. One variable woff2 covers
-100-900, so the four weights the UI uses cost a single 37K download, less than
-the three static Lato files it replaced. Self-hosted, matching how Lato was
-handled: the screen by the door should render the same with no network.
+The **refresh** then moved two of these off the site's own values on purpose:
+`--color-sm-mist` `#E5E5E5` -> `#F2F4F2` and `--color-sm-line` -> `#E4E7E4`.
+The site's grey is heavy and flat, and it was the single biggest thing making
+these pages feel drab - a lighter, faintly green-cast ground reads as air
+rather than as a background. `--color-sm-slate` warmed `#606164` -> `#5C6360`
+to match. The greens are untouched; those are the brand.
+
+**Roboto is the site's body face because it is seattlemakers.org's face** -
+every heading, paragraph and nav item there is Roboto. One variable woff2
+covers 100-900, so the weights the UI uses cost a single 37K download, less
+than the three static Lato files it replaced. Self-hosted, matching how Lato
+was handled: the screen by the door should render the same with no network.
+
+**Figtree carries the headings, and it was picked by looking rather than by
+argument.** The same line was set in Figtree, Archivo and Roboto directly under
+the lockup and screenshotted: the wordmark's "makers" is a heavy geometric with
+big round bowls and a straight-legged `k`, which Figtree echoes, Archivo
+squares off, and Roboto flattens into something anonymous. It is also the
+honest midpoint of this repo's own history - geometric-humanist like the Lato
+that was sampled off the wordmark, modern and neutral like the Roboto that
+replaced it - and at 20K variable it is smaller than either.
+
+The split is display/text, not decorative: `--font-display` takes h1s, tool
+names, event times and titles, nav, buttons and the tracked micro-labels;
+`--font-sans` keeps the prose, so the website's own voice still reads in body
+copy. Do not reach for Figtree for paragraphs.
 
 **The reel stays on Lato, and names it explicitly.** Its 25 slides were laid
 out and verified against Lato's metrics on a fixed 1920x1080 stage, where a
@@ -129,11 +160,14 @@ wider face does not reflow so much as overrun. `slideshow.astro` sets
 Roboto. The tool pages have no such geometry and a much better reason to match
 the website.
 
-**A consequence worth knowing: printed labels are now set in Roboto.** The
-label sheet inherits `--font-sans` like everything else. The auto-fit adapts on
-its own - the print-to-PDF check still lands all eight labels inside their
-die-cut rectangles - but the stock in the drawer printed before this change is
-in Lato and will not match a fresh sheet.
+**Printed labels are set in Roboto and stayed there through the refresh.** The
+label sheet inherits `--font-sans`, and the refresh deliberately did not point
+it at the display face: a label is the tool's *output*, not its UI, the type
+metrics behind `TITLE_MIN` / `FILL_MAX` and the whole auto-fit were tuned
+against them, and churning the face a second time would strand a second batch
+of drawer stock. The print-to-PDF check after the refresh returned insets
+identical to three decimals, which is the proof it did not move. Stock printed
+before the Lato -> Roboto change still will not match a fresh sheet.
 
 **Fraunces was deleted, and the old comment about it was wrong.** global.css
 described it as "display face for print only", but nothing on the printed sheet
@@ -176,6 +210,39 @@ disconnected ticks with gaps between rows. The pseudo-element spans `top: 0` to
 `bottom: -1px`, taking it down through the row's own hairline into the next
 one, so the day reads as one continuous line. The rail offset and the grid's
 first column are the same `--rail` custom property, so they cannot drift.
+
+**Green headings were the most dating thing on the page.** The website sets
+every h1 and h2 in solid `#13723C` over grey body copy, which is a 2012
+WordPress theme however good the green is. The refresh moves headings to ink
+and hands the green to the rule under them, to the kind labels, to the nav
+underline and to the buttons. The brand signal survives and the page stops
+shouting. `--tracking-label` came in from `0.14em` to `0.1em` for the same
+reason - the live site's value reads as strained at 11px, and wide tracking
+dates a design faster than almost anything else.
+
+**The masthead's width is a constant, not `--sm-shell-w`.** It followed each
+page's content width at first, and since `/` is 52rem, `/today` 72rem and
+`/labels` 84rem, the lockup slid left and right as you moved between them -
+the opposite of what a masthead is for. The bar is pinned at 84rem; only the
+sheet under it varies.
+
+**`.sm-foot` has no rule of its own.** Both pages that use it put it under a
+hairline-ruled list, so the list's closing rule was already the divider and the
+footer's added a second one. Widening the gap between them made it worse, not
+better: an empty band between two full-width hairlines reads as a blank row in
+the list. Space alone separates it now.
+
+**The availability chip is the exception, and that is the point.** Every row
+has a kind, so chipping all of them would be a wall of chips carrying no
+information. Whether you can still get in is true of some rows only, so it gets
+the tinted pill and is findable at a glance from a few metres - which is the
+distance this board is actually read from.
+
+**The refresh lightens `--color-sm-mist`, which the reel also uses.**
+`EventSlide` paints with `bg-sm-mist`, so its plates lifted `#E5E5E5` ->
+`#F2F4F2` along with everything else. That is consistent rather than
+accidental - it is one token - but it is a change to a page that is otherwise
+deliberately frozen, and it is the only one.
 
 ### The rest
 
