@@ -1,21 +1,28 @@
 ---
 /**
- * The site footer, on every tool page.
+ * The site footer, and now the only shared chrome on the page.
  *
- * It exists to say who made this, and it carries the only link out to
- * seattlemakers.org now that the masthead is identity and nothing else. A link
- * inside a sentence that explains it beats a bare address floating in a bar.
+ * There was a masthead above every page carrying the lockup and the product
+ * name. It is gone: on a site with two tools it was a bar of identity with
+ * nothing to do, and the crumb on each tool page already handles getting back
+ * to the index.
  *
- * Hidden in print along with the masthead: /labels puts a full-bleed sheet on
- * the page and anything else on it is ink in the wrong place.
+ * So the lockup moved down here and finishes the sentence - "built with love
+ * by the community at" *[Seattle Makers]* - which is a better reason for a
+ * logo to be on a page than "this is a website". It is desaturated and dropped
+ * to 42% so it settles into the ground rather than sitting on top of it, and
+ * comes back to full colour on hover, since it is a link.
+ *
+ * The artwork is the kit's "No outline" variant, and that matters here: every
+ * other lockup carries a black keyline around the letters, which under
+ * `grayscale()` becomes a dark outline around a grey fill and reads as muddy
+ * rather than quiet. Flat colour greys down cleanly.
  */
 ---
 
 <footer class="sm-footer no-print">
-  <p>
-    Built with <span class="sm-heart">❤️</span> by the <a
-      href="https://seattlemakers.org"
-      rel="noopener">Seattle Makers Community</a
-    >
-  </p>
+  <p>Built with <span class="sm-heart">❤️</span> by the community at</p>
+  <a class="sm-footer-logo" href="https://seattlemakers.org" rel="noopener">
+    <img src="/brand/wordmark-plain.png" alt="Seattle Makers" />
+  </a>
 </footer>

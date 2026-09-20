@@ -114,10 +114,6 @@
      design faster than almost anything else. */
   --tracking-label: 0.1em;
 
-  /* The masthead's height, as a number anything positioning itself under a
-     sticky bar can read. /labels' sidebar is sticky too, and at its old
-     top: 2rem it slid underneath the bar the moment the bar became sticky. */
-  --sm-bar-h: 3rem;
 }
 
 /* Tailwind's display utilities outrank the UA rule for [hidden], so a flex
@@ -128,9 +124,13 @@
 
 html {
   font-family: var(--font-sans);
-  /* Black, so the full-bleed reel never flashes white behind itself. The tool
-     pages paint their own ground over it. */
-  background: var(--color-sm-ink);
+  /* Mist, matching the ground the plates sit on. This was the brand ink, so
+     that the full-bleed reel never flashed white behind itself - but html is
+     what paints the canvas, including the area you rubber-band into when you
+     overscroll, so every tool page showed a black band above and below itself
+     the moment you scrolled past either end. The reel sets ink on html from
+     its own stylesheet now; it is the one page that wants it. */
+  background: var(--color-sm-mist);
   color: var(--color-sm-ink);
   -webkit-text-size-adjust: 100%;
 }
@@ -138,6 +138,14 @@ html {
 body {
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
+  /* Contains the first child's top margin. html is painted with the brand ink
+     so the full-bleed reel never flashes white, and with the masthead gone the
+     plate's own 2.25rem top margin collapsed straight out of the body box -
+     which dropped the body, and its mist, 36px down the page and left a black
+     band across the top. The masthead used to prevent this by being a
+     non-margin first child, so removing it exposed a latent bug rather than
+     causing a new one. */
+  display: flow-root;
 }
 
 /* One focus ring for the whole site. Green-mid rather than green so it stays
@@ -161,129 +169,21 @@ body {
 
 /* ================================================================= shell ===
 
-   The chrome every tool page shares. Defined here rather than in a component's
-   scoped <style> because /today builds rows in the browser: Astro's scoping
-   attribute is stamped on at build, so an element created by script never
-   matches a scoped rule. Same trap as the injected QR on /labels. */
+   There is no masthead any more. Every page used to open on a bar carrying the
+   lockup and "Digital Toolbox"; on a site with two tools that was a strip of
+   identity with no job, and the crumb on each tool page already gets you back
+   to the index. The lockup moved to the footer, where it finishes a sentence.
 
-/* White, green-ruled, sticky. The dark slab was the one element the refresh never
-   touched - still seattlemakers.org's WordPress header sitting on pages that
-   had been lightened around it - and no amount of tuning its height or its
-   green rule was going to fix that, because the problem was the material. It
-   is now the same material as the sheets below it.
+   What is left of the shell is the plate, the crumb row and the footer. */
 
-   Sticky is worth having here and was not before: a dark full-bleed bar
-   following you down the page is oppressive, a white one with a hairline
-   simply stays available. It matters most on /labels, whose sidebar is longer
-   than the viewport. */
-.sm-masthead {
-  position: sticky;
-  top: 0;
-  z-index: 20;
-  background: var(--color-sm-paper);
-  /* Green, not a neutral hairline. A white bar with a grey rule, a logo, a
-     vertical pipe and a grey product name is the Google product-header
-     pattern almost exactly; the brand's own colour along the bottom edge is
-     the cheapest way to stop looking like someone else's chrome. */
-  border-bottom: 2px solid var(--color-sm-green);
-}
-
-.sm-masthead-inner {
-  display: flex;
-  align-items: center;
-  /* Centred, like the plate below it and the footer below that. Left-aligned
-     with a wide empty right-hand side is the shape of an app's chrome bar;
-     everything else on these pages is a centred column, and the masthead was
-     the only thing not playing along. */
-  justify-content: center;
-  gap: 1.5rem;
-  /* Deliberately NOT --sm-shell-w. The bar was following each page's content
-     width, so the lockup slid left and right as you moved between /, /today
-     and /labels - three different widths - which is the opposite of what a
-     masthead is for. One constant, and only the sheet under it varies. */
-  max-width: 84rem;
-  margin: 0 auto;
-  /* Roomier than the 1.5rem it had, so the band reads as a full-width band
-     with its own gutter rather than as a column that failed to line up with
-     the sheet. It cannot line up: the sheet is 52rem on /, 72rem on /today and
-     84rem on /labels, and matching it per page is what used to make the
-     lockup slide about between pages. A header wider than its content is
-     ordinary; a header *almost* aligned with it looks like a mistake. */
-  padding: 0.75rem 2rem;
-}
-
-/* The lockup must never give up width to the nav. As a plain flex item it
-   did: at 375px the nav filled the bar and the anchor was shrunk to 0, which
-   showed as a masthead with no logo in it at all. */
-.sm-masthead-inner > a:first-child {
-  flex: 0 0 auto;
-}
-
-/* On white the lockup wears its own colours - no inverting, which is what the
-   dark bar needed. */
-.sm-brand {
-  display: flex;
-  align-items: center;
-  gap: 0.8rem;
-  text-decoration: none;
-  min-width: 0;
-}
-
-/* The one-line lockup, followed by a divider so "Digital Toolbox" reads as the
-   product name rather than as part of the logo.
-
-   1.4rem looks too tall written down and is not: the artwork is one line of
-   type at 7.9:1, so its cap height is a small fraction of the box, and at
-   1.1rem it read as smaller than the 0.95rem text beside it. */
-.sm-lockup {
-  display: block;
-  width: auto;
-  height: 1.4rem;
-}
-
-.sm-brand-name {
-  font-family: var(--font-display);
-  font-size: 0.95rem;
-  font-weight: 700;
-  letter-spacing: -0.012em;
-  white-space: nowrap;
-  color: var(--color-sm-ink);
-}
-
-
-/* Must sit AFTER .sm-brand-name, not before it. The product label carries both
-   classes, they have the same specificity, and source order decides - with
-   this block first, .sm-brand-name's 700 ink won and "Digital Toolbox"
-   rendered as bold and dark as the org name it is supposed to sit under.
-
-   The vertical rule that used to separate the two is gone. A logo, a pipe and
-   a grey product name is how every Google tool labels itself, and the label
-   now speaks this site's own dialect instead: the same tracked uppercase green
-   as ALL TOOLS, OPEN STUDIO and the kind labels on the board. */
-.sm-brand-product {
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: var(--tracking-label);
-  text-transform: uppercase;
-  color: var(--color-sm-green);
-}
-
-.sm-brand:hover .sm-brand-product {
-  color: var(--color-sm-green-dark);
-}
-
-/* Back to the index, on each tool page. This is what replaced the tool list in
-   the masthead: one link, on the page it belongs to, pointing at the page that
-   actually enumerates the tools.
-
-   It sits on the ground above the plate rather than inside the green panel,
-   because the panel holds the title and the subtitle and nothing else - and a
-   third line in there was most of what made it feel oversized. */
+/* Back to the index, on each tool page. This is what replaced the tool list
+   when the masthead was still a nav bar, and it is now the only navigation on
+   the site: one link, on the page it belongs to, pointing at the page that
+   enumerates the tools. */
 .sm-back {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  margin-bottom: 0.7rem;
   font-family: var(--font-display);
   font-size: 0.7rem;
   font-weight: 600;
@@ -309,12 +209,12 @@ body {
   justify-content: space-between;
   gap: 0.35rem 1.5rem;
   max-width: var(--sm-shell-w, 64rem);
-  margin: 2rem auto 0.75rem;
+  margin: 2.25rem auto 0.75rem;
   padding: 0 0.25rem;
 }
 
-/* The crumb already provides the gap under the masthead, so the plate must not
-   add its own on top of it. */
+/* The crumb already provides the gap at the top of the page, so the plate must
+   not add its own on top of it. */
 .sm-crumb-row + .sm-sheet {
   margin-top: 0;
 }
@@ -368,21 +268,8 @@ body {
     padding: var(--pad-y) var(--pad-x) 2rem;
     border-radius: 12px;
   }
-  .sm-masthead-inner {
-    padding: 0.7rem 1.1rem;
-  }
-  /* The one-line lockup is ~177px at its desktop height, and with the divider
-     and "Digital Toolbox" beside it the brand ran 295px into 285px of bar at
-     320px wide - no document overflow, because the flex row just clipped, so
-     this only shows up if you measure the pieces rather than the page. */
-  .sm-lockup {
-    height: 1.2rem;
-  }
-  .sm-brand {
-    gap: 0.45rem;
-  }
-  .sm-brand-product {
-    padding-left: 0.5rem;
+  .sm-footer-logo img {
+    height: 2.2rem;
   }
 }
 
@@ -437,11 +324,12 @@ body {
 /* --------------------------------------------------------------- footer --- */
 
 /* Centred on the ground rather than inside the plate, so it reads as the end
-   of the site rather than as the last row of whatever page you are on. */
+   of the site rather than as the last row of whatever page you are on. It is
+   the only shared chrome left, so it carries the lockup as well as the line. */
 .sm-footer {
   max-width: var(--sm-shell-w, 64rem);
   margin: 0 auto;
-  padding: 0.5rem 2rem 3rem;
+  padding: 1.5rem 2rem 3.5rem;
   text-align: center;
   font-family: var(--font-display);
   font-size: 0.8125rem;
@@ -449,18 +337,32 @@ body {
   color: var(--color-sm-slate);
 }
 
-.sm-footer a {
-  color: var(--color-sm-green);
-  text-decoration: none;
-  border-bottom: 1px solid transparent;
-  transition:
-    color 140ms ease,
-    border-color 140ms ease;
+/* Desaturated and dropped into the ground rather than sitting on it - at full
+   strength the green pulled more attention down here than the tools above it.
+   Full colour on hover, because it is a link. */
+.sm-footer-logo {
+  display: inline-block;
+  margin-top: 0.85rem;
+  line-height: 0;
 }
 
-.sm-footer a:hover {
-  color: var(--color-sm-green-dark);
-  border-bottom-color: currentColor;
+.sm-footer-logo img {
+  display: block;
+  width: auto;
+  /* Stacked, so it needs roughly twice the height the one-line lockup did to
+     read at the same size. */
+  height: 2.6rem;
+  filter: grayscale(1);
+  opacity: 0.42;
+  transition:
+    filter 180ms ease,
+    opacity 180ms ease;
+}
+
+.sm-footer-logo:hover img,
+.sm-footer-logo:focus-visible img {
+  filter: none;
+  opacity: 1;
 }
 
 /* Emoji sit high against Latin type and render a size up on most platforms. */
@@ -539,7 +441,6 @@ body {
    positioned from the page corner, and a masthead above it would push the
    first row of labels off its die-cut. */
 @media print {
-  .sm-masthead,
   .sm-footer {
     display: none !important;
   }

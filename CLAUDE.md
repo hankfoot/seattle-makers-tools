@@ -181,239 +181,53 @@ sidebar h1, both screen chrome. A serif was also the single loudest thing
 saying "different organisation", since seattlemakers.org has no serif anywhere.
 Removing both uses took 33K of font with it.
 
-**The masthead is white, and it took three passes to get there.** It started
-as a faithful copy of seattlemakers.org's header - a near-black full-bleed slab
-with the lockup knocked out white via `filter: invert(1)` on
-`wordmark-black.png`, which is pure black on transparent so the invert gave
-exactly the right white. That was correct next to the first rebrand and wrong
-the moment the pages under it were lightened: it was the one element the
-refresh never touched, so it sat on top of the new design still wearing the old
-one. No amount of tuning its height or its green rule fixed it, because the
-problem was the material, not the proportions.
+**There is no masthead.** It went through four shapes - a near-black copy of
+seattlemakers.org's header, then white and sticky, then an identity strip with
+the tool list moved onto the page, then the one-line lockup with the product
+name beside it - and the last of those made the answer obvious: a bar whose
+only job is to say what site you are on, on a site with two tools, where the
+crumb already gets you back to the index. The lockup moved to the footer.
 
-Going white fixed the material and left two things behind: the full lockup,
-stacked over two lines and big enough to be the loudest thing in the bar, and a
-list of every tool across the top - a lot of chrome for a site with two of
-them.
+Deleted with it: `SiteHeader.astro`, every `.sm-masthead` / `.sm-brand` /
+`.sm-lockup` rule, and `--sm-bar-h`, which existed so `/labels`' sticky sidebar
+could clear a sticky bar. That sidebar is back to a plain `top: 2rem` - left as
+`calc(var(--sm-bar-h) + 1.25rem)` against a variable that no longer exists, it
+resolved to an invalid value and sticky silently fell back to static.
 
-**So the bar is an identity strip, not a navigation bar.** The monogram and
-the name of the thing, and nothing else. Navigation went back to the page: the
-index *is* the list of tools, and each tool page carries a single `.sm-back` to
-it. Chrome that duplicates the page's own content earns nothing, and `Base`'s
-`current` prop went with the nav it fed.
+**`html` is painted mist, and the reel overrides it from its own stylesheet.**
+It used to be the brand ink globally, so the full-bleed reel never flashed
+white behind itself - but `html` is what paints the *canvas*, which includes
+the area you rubber-band into when you overscroll. Every tool page therefore
+showed a black band above and below itself the moment you scrolled past either
+end. `slideshow.astro` sets `html { background: var(--color-sm-ink) }` in its
+own `is:global` block now; it is the one page that wants it. Checked by
+rendering a page into a viewport far taller than its content and sampling the
+corners: `(242,244,242)` all round. `labels.astro`'s print block still forces
+`html` white, so the new mist cannot tint a sheet - the printed margins sample
+pure white.
 
-The link out to seattlemakers.org left the bar too, for the footer - "Built
-with ❤️ by the Seattle Makers Community", where the link sits inside a sentence
-that gives it a reason to be there rather than being a bare address floating in
-a bar. `.sm-nav-out` and `--color-sm-sage` went with it; sage existed only to
-colour nav links on the dark bar, which has been gone for two passes.
+**`body` is `display: flow-root`, and removing the masthead is what exposed
+why.** `html` is painted with the brand ink so the full-bleed reel never
+flashes white. With the bar gone the plate became the first child, and its
+2.25rem top margin collapsed straight out of the body box - dropping the body,
+and its mist, 36px down the page and leaving a black band across the top. The
+masthead had been preventing that by being a non-margin first child, so this
+was a latent bug the removal revealed rather than one it caused.
 
-**The footer is hidden in print alongside the masthead.** `/labels` puts a
-full-bleed sheet on the page and anything else on it is ink in the wrong place
-- checked by printing with the footer in place and confirming zero ink outside
-the die-cut cells, not by assuming the rule fired.
+**The footer is the only shared chrome, and the lockup finishes its
+sentence.** "Built with ❤️ by the community at" *[Seattle Makers]* - which is a
+better reason for a logo to be on a page than "this is a website". It is
+`grayscale(1)` at 42% so it settles into the ground instead of sitting on it;
+at full strength the green pulled more attention to the bottom of the page than
+the tools above it. Full colour on hover and focus, because it is a link, and
+it carries the only outbound link to seattlemakers.org.
 
-**The masthead logo is the one-line lockup, and the brand kit's naming is a
-trap.** `Logo - versions/Logo - clear/` holds the set; the one-line variants
-are called "Skinny" (3545x451, 7.86:1) and the stacked ones "Official"
-(3.23:1). **"dark" in these filenames means *for dark backgrounds*, not dark
-ink**: `Logo final_Skinny dark.png` sets SEATTLE in pure white and is invisible
-on this white bar, `Logo final_Skinny.png` sets it in pure black. The two are
-indistinguishable in a file listing and the white one looks like a blank canvas
-in a previewer, so this was settled by decoding both and counting pixel
-colours - white came back `(255,255,255)`, black `(0,0,0)`, and the green in
-both is `#0F723B`, near enough to the site's `#13723C`.
-
-`public/brand/wordmark-inline.png` is `Logo final_Skinny.png` scaled to 600px
-wide (19K), which covers the ~177px it renders at better than 3x. The canvas
-needed no trimming: measured padding is 0.4% on the sides.
-
-`.sm-lockup` is `1.4rem` tall, which looks too big written down and is not -
-the artwork is one line of type at 7.9:1, so its cap height is a small fraction
-of the box, and at 1.1rem it read as smaller than the 0.95rem text beside it.
-Below 40rem it drops to 1.2rem: at the desktop height the brand ran 295px into
-285px of bar at 320px wide, and because a flex row simply clips, nothing
-overflowed the document and it was invisible unless you measured the pieces.
-
-**The bar was starting to look like a Google product header, and three things
-fixed it.** A white bar with a neutral hairline, a logo, a vertical pipe and a
-grey product name beside it is that pattern almost exactly. So: the bottom rule
-is 2px of brand green rather than a grey hairline; the pipe is gone; and
-"Digital Toolbox" is set in the same tracked uppercase green as ALL TOOLS,
-OPEN STUDIO and the kind labels on the board, so the bar speaks this site's own
-dialect instead of borrowing someone else's. The whole group is centred too -
-the plate and the footer are centred columns, and a left-aligned brand with a
-wide empty right-hand side was the only thing on the page shaped like app
-chrome.
-
-**The lockup and its label are optically centred, and it was measured rather
-than nudged.** The artwork carries 2.8% transparent padding top and bottom, so
-the obvious worry is that centring the boxes leaves the words sitting low
-against the logo's ink. Measured, the ink centre and the label's text centre
-are 0.35px apart - so a hand-tuned `translateY` was added, found to be moving
-it *away* from centre, and removed.
-
-**`.sm-brand-product` must come after `.sm-brand-name` in the file.** The
-product label carries both classes, they have equal specificity, and source
-order decides - with the product rules first, `.sm-brand-name`'s 700 ink won
-and "Digital Toolbox" rendered as bold and dark as the lockup it is meant to
-sit under.
-
-**The favicon is the kit's own `Logo final_Flavicon.png`** - the outlined green
-m - at 96px, replacing a hand-drawn green square with an M and an orange dot
-that never came from the brand at all. `apple-touch-icon.png` is the same mark
-at 180px **flattened onto white**, because iOS ignores alpha and paints
-transparency black. Both source variants are transparent, so the touch icon
-could not just be a copy.
-
-**Superseded assets were deleted with the swap**: `mark.png` (the monogram
-cropped out of the stacked lockup) and `wordmark-header.png` (a 512px copy of
-it for the white bar) were both stopgaps for not having the one-line artwork,
-along with the `existsSync` branch in `SiteHeader` that chose between them.
-`wordmark-black.png` is still unreferenced but kept - it is a brand asset
-rather than something this repo generated.
-
-**How the monogram was made, for the record** - it is gone now, replaced by
-the real one-line lockup, but the technique is worth keeping. The "m" of
-"makers" was cropped out of `wordmark.png` rather than redrawn, and found by
-profiling the artwork rather than by eye: the two lines of the lockup
-overlap vertically, so there is no clean horizontal split, but within the `m`'s
-own column band (x 35-514) the rows fall into exactly two runs - y 22-271 is
-the "SE" above it and y 292-612 is the glyph, whose dominant colour comes back
-`#10733C`, the wordmark green. Cropping that is the real letterform, outline
-and all. Using the full lockup here would also have set the words "Seattle
-Makers" twice, once as artwork and again as the title beside it.
-
-`wordmark-header.png` - a 512px copy of `wordmark.png`, made because the
-original is 2048px and 261K to render about 110px wide - was what the white bar
-used before the monogram replaced it.
-
-**The bar is sticky, which it could not have been before.** A dark full-bleed
-slab following you down the page is oppressive; a white one with a hairline
-just stays available. It earns its keep on `/labels`, whose sidebar is longer
-than most viewports.
-
-**`--sm-bar-h` tracks the bar's height and has to be updated with it.** It has
-been 3.2rem, 2.85rem and now 3rem as the logo changed shape. It only feeds a
-clearance gap, so being a couple of pixels out breaks nothing visibly - which
-is exactly why it drifts. The bar measures 48px; check it when the bar changes.
-
-**`--sm-bar-h` exists because two things stick.** `/labels`' sidebar is
-`position: sticky` too, and at its old `top: 2rem` it slid straight under the
-masthead as soon as the masthead started sticking. It now offsets by
-`calc(var(--sm-bar-h) + 1.25rem)`. Note the sidebar only sticks at all when it
-is shorter than the viewport - it is ~1066px tall, so on a 800px-high window it
-scrolls away like anything else, which is how `top`-only sticky behaves and is
-not new.
-
-**The masthead cannot line up with the sheet, so it deliberately does not
-try.** The sheet is 52rem on `/`, 72rem on `/today` and 84rem on `/labels`;
-matching it per page is what used to make the lockup slide about between pages,
-and a header wider than its content is ordinary. What is *not* ordinary is a
-header almost aligned with it - at 1.5rem of padding the lockup sat 24px from
-the window edge while the card was inset 64px, which reads as a mistake rather
-than as a full-width band. 2rem, and the band reads as a band.
-
-**The masthead must be `display: none` in print, and its anchor must be
-`flex: 0 0 auto`.** The first because `/labels` positions its sheet in absolute
-inches from the physical page corner and anything above it pushes the first row
-off its die-cut. The second because as a plain flex item the lockup gives up
-width to the nav: at 375px the nav filled the bar and the anchor was shrunk to
-zero, which showed as a masthead with no logo in it at all.
-
-**Two rules that set `display` on the same element need the same specificity.**
-`.sm-nav a.sm-nav-out` sets `display: inline-flex`; the media query that hides
-the external link below 48rem was written as a bare `.sm-nav-out`, which loses,
-so the link stayed on at 375px - and it was the thing crushing the wordmark.
-`!important` would have fixed the display and taken the hover colour down with
-it. Matching the selector is the fix.
-
-**`today.astro`'s styles are `is:global` and its class names are plain.** The
-board renders at build time and `today.ts` replaces those rows in the browser;
-Astro stamps its scoping attribute at build, so a scoped rule would style the
-server-rendered floor and nothing that replaces it. Same trap as the injected
-QR on `/labels`. The two renders must emit identical markup or the board
-visibly restyles itself the moment the first fetch lands - which is why the row
-classes are defined once as names rather than as utility strings copied into
-two files.
-
-**The time rail is a `::before` on the row, not a `border-left` on the
-content.** A border only covers the text box, so the line came out as
-disconnected ticks with gaps between rows. The pseudo-element spans `top: 0` to
-`bottom: -1px`, taking it down through the row's own hairline into the next
-one, so the day reads as one continuous line. The rail offset and the grid's
-first column are the same `--rail` custom property, so they cannot drift.
-
-**The green panel holds a title and a subtitle. Nothing else goes in it.**
-That is a size rule, not a taste one: every extra line is a full-width band of
-brand green, so a back link, a stats strip and a freshness stamp turned a
-two-line header into a slab. They live around it instead - the crumb row above
-the plate, the stats on the white below - and the panel came down from about
-200px to 146px on `/today`. If something new needs to go near the title, put it
-on the crumb row or under the panel, not in it.
-
-**Every page opens on a green panel, and that is where the brand colour
-finally does some work.** Before it the pages were ink and hairlines with green
-rationed out in 11px doses, which is a strange way to treat the most
-distinctive thing Seattle Makers owns. The panel bleeds to the edges of the
-plate it sits in by cancelling its parent's padding with a negative margin,
-rather than the plate being restructured around it - so `/labels`' sidebar uses
-the same component at its own much smaller padding. Both read `--pad-x` /
-`--pad-y` off the plate, so the bleed cannot be out by the difference between
-them. Verified by measuring: the hero's left, right and top edges sit within
-0.5px of the plate's on both layouts.
-
-`.lb-head.sm-hero` zeroes its bottom margin, because `.lb-editor` is a flex
-column with a 1rem gap of its own and the two stacked into a hole under the
-panel.
-
-**`--color-sm-on-green` is `#dcebe1`, and it was computed rather than picked.**
-Supporting text on `#13723C` needs 4.5:1; sage `#84BF80` is the obvious
-choice from the palette and comes out at 2.78:1. `#dcebe1` is 4.86:1. White is
-6.00:1 and carries the headings.
-
-**There is no watermark in the hero, and there were two attempts at one.** A
-blown-up monogram bled off the corner, at 7% white and again at 4.5%: at both
-it read as a smudge rather than as texture, because a big soft shape in the
-corner of a flat panel looks like a rendering artifact rather than a decision.
-The panel carries itself on colour, white Figtree and a rule.
-
-**The crumb row is a flex row, and `/today` hangs its freshness stamp off the
-other end.** The stamp came up out of a footer - on a board by the door, how
-current the thing is belongs near the top, and this page goes to some lengths
-never to overstate it - but it is not title or subtitle, so it sits above the
-plate rather than inside the green. `/today` has no footer left at all.
-
-**Neither list has a top rule any more.** The hero's edge is already the
-boundary, and a hairline sitting 2.25rem below it had nothing above it to
-divide - it read as an orphan.
-
-**The index is a door, not a dashboard.** It carried counts, per-tool metadata
-and the calendar-refresh command, and none of it helped anyone choose between
-two tools - all of it lives where it actually applies: the counts on the board
-itself, the sheet sizes in the label tool's own controls, `npm run events` in
-the README. What is left is each tool's name and what it is for. It no longer
-imports `events.json` or the reel either, which it was pulling in at build time
-purely to compute numbers nobody read.
-
-That cleanup killed `.sm-foot`, `.sm-stats`, `.sm-stat`, `.sm-label` and
-`.sm-rule` outright, and they were deleted rather than left in global.css. A
-shared stylesheet is exactly where dead selectors rot quietly.
-
-**Green headings were the most dating thing on the page.** The website sets
-every h1 and h2 in solid `#13723C` over grey body copy, which is a 2012
-WordPress theme however good the green is. The refresh moves headings to ink
-and hands the green to the rule under them, to the kind labels, to the nav
-underline and to the buttons. The brand signal survives and the page stops
-shouting. `--tracking-label` came in from `0.14em` to `0.1em` for the same
-reason - the live site's value reads as strained at 11px, and wide tracking
-dates a design faster than almost anything else.
-
-**The masthead's width is a constant, not `--sm-shell-w`.** It followed each
-page's content width at first, and since `/` is 52rem, `/today` 72rem and
-`/labels` 84rem, the lockup slid left and right as you moved between them -
-the opposite of what a masthead is for. The bar is pinned at 84rem; only the
-sheet under it varies.
+**The artwork there is the kit's "No outline" variant, and that is not
+cosmetic.** Every other lockup carries a black keyline around the letters,
+which under `grayscale()` becomes a dark outline around a grey fill and reads
+as muddy rather than quiet. Flat colour greys down cleanly. It is the stacked
+shape (3.23:1), so `.sm-footer-logo img` is 2.6rem tall - roughly twice what
+the one-line lockup needed to read at the same size.
 
 **On mobile the sheet needs an explicit side margin, not `auto`.** Below the
 breakpoint it is wider than its own `max-width`, so `margin: 1rem auto`

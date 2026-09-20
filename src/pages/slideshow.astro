@@ -93,6 +93,14 @@ const slides = buildReel();
 </Base>
 
 <style is:global>
+  /* The canvas, including what you overscroll into, so the full-bleed reel
+     never flashes the tool pages' mist behind itself. This lives here rather
+     than in global.css because it is true of this page alone - there, it was
+     painting a black band onto every other page's overscroll. */
+  html {
+    background: var(--color-sm-ink);
+  }
+
   /* The reel stays on Lato while the tool pages moved to Roboto to match
      seattlemakers.org. Its 25 slides were laid out and verified against Lato's
      metrics at a fixed 1920x1080 stage, where a wider or narrower face does

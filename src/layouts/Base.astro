@@ -1,6 +1,5 @@
 ---
 import '../styles/global.css';
-import SiteHeader from '../components/SiteHeader.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 
 interface Props {
@@ -8,7 +7,7 @@ interface Props {
   description?: string;
   /** Chrome-free full-bleed page (the reel). */
   bare?: boolean;
-  /** Render the shared masthead. Off for the reel, which is full-bleed. */
+  /** Render the shared footer. Off for the reel, which is full-bleed. */
   chrome?: boolean;
   /**
    * Width of the masthead bar's contents and of any .sm-sheet below it, set
@@ -67,7 +66,6 @@ const body = bare
     }
   </head>
   <body class={body} style={`--sm-shell-w: ${shellWidth}`}>
-    {chrome && <SiteHeader />}
     <slot />
     {chrome && <SiteFooter />}
   </body>

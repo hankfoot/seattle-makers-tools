@@ -382,8 +382,11 @@ const stocks = STOCKS.map((s) => ({
     }
     .lb-col {
       position: sticky;
-      /* Clears the sticky masthead rather than disappearing behind it. */
-      top: calc(var(--sm-bar-h) + 1.25rem);
+      /* Plain again: there is no sticky masthead to clear any more, and
+         --sm-bar-h went with it. Left as a calc() referencing a variable that
+         no longer exists, this resolved to an invalid value and sticky
+         silently fell back to static. */
+      top: 2rem;
       flex: 0 0 22rem;
       width: 22rem;
       display: flex;
