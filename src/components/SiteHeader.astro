@@ -4,9 +4,11 @@ import { existsSync } from 'node:fs';
 /**
  * The masthead, on every tool page.
  *
- * An identity strip, not a navigation bar: the logo, the name of the thing,
- * and the one link that leaves. Navigation lives on the page - the index *is*
- * the list of tools, and each tool page carries a single `.sm-back` to it.
+ * An identity strip, not a navigation bar: the logo and the name of the thing,
+ * and nothing else. Navigation lives on the page - the index *is* the list of
+ * tools, and each tool page carries a single `.sm-back` to it. The link out to
+ * seattlemakers.org moved to the footer, where it sits inside a sentence that
+ * gives it a reason to be there.
  *
  * **The logo has two forms, and which one renders depends on a file.** The
  * one-line "SEATTLE makers" lockup is the right thing in a 48px bar, but the
@@ -51,10 +53,6 @@ const INLINE = ['/brand/wordmark-inline.svg', '/brand/wordmark-inline.png'].find
           </>
         )
       }
-    </a>
-    <a class="sm-nav-out" href="https://seattlemakers.org" rel="noopener">
-      seattlemakers.org
-      <span aria-hidden="true">↗</span>
     </a>
   </div>
 </header>

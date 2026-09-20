@@ -82,7 +82,6 @@
   --color-sm-green: #13723c;
   --color-sm-green-dark: #0e4d29;
   --color-sm-green-mid: #43aa6d;
-  --color-sm-sage: #84bf80;
   --color-sm-ink: #1a1a1a;
   --color-sm-slate: #5c6360;
   --color-sm-line: #e4e7e4;
@@ -276,31 +275,6 @@ body {
   color: var(--color-sm-green);
 }
 
-/* The one link that leaves the site. It is the whole right-hand side now that
-   the tools are no longer listed up here. */
-.sm-nav-out {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 0.3rem;
-  flex: 0 0 auto;
-  font-family: var(--font-display);
-  font-size: 0.75rem;
-  font-weight: 500;
-  letter-spacing: var(--tracking-label);
-  text-transform: uppercase;
-  text-decoration: none;
-  color: var(--color-sm-slate);
-  transition: color 140ms ease;
-}
-
-.sm-nav-out:hover {
-  color: var(--color-sm-green);
-}
-
-.sm-nav-out span {
-  font-size: 0.7em;
-}
-
 /* Back to the index, on each tool page. This is what replaced the tool list in
    the masthead: one link, on the page it belongs to, pointing at the page that
    actually enumerates the tools.
@@ -400,11 +374,6 @@ body {
   .sm-masthead-inner {
     padding: 0.7rem 1.1rem;
   }
-  /* The address is the first thing to go when the bar gets tight; the brand
-     and the title are what the bar is for. */
-  .sm-nav-out {
-    display: none;
-  }
 }
 
 /* ----------------------------------------------------------------- hero ---
@@ -452,6 +421,47 @@ body {
     margin-bottom: 1.6rem;
     padding: 1.5rem var(--pad-x) 1.4rem;
     border-radius: 12px 12px 0 0;
+  }
+}
+
+/* --------------------------------------------------------------- footer --- */
+
+/* Centred on the ground rather than inside the plate, so it reads as the end
+   of the site rather than as the last row of whatever page you are on. */
+.sm-footer {
+  max-width: var(--sm-shell-w, 64rem);
+  margin: 0 auto;
+  padding: 0.5rem 2rem 3rem;
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--color-sm-slate);
+}
+
+.sm-footer a {
+  color: var(--color-sm-green);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition:
+    color 140ms ease,
+    border-color 140ms ease;
+}
+
+.sm-footer a:hover {
+  color: var(--color-sm-green-dark);
+  border-bottom-color: currentColor;
+}
+
+/* Emoji sit high against Latin type and render a size up on most platforms. */
+.sm-heart {
+  font-size: 0.9em;
+  vertical-align: -0.02em;
+}
+
+@media (max-width: 40rem) {
+  .sm-footer {
+    padding: 0.25rem 1.25rem 2.25rem;
   }
 }
 
@@ -519,7 +529,8 @@ body {
    positioned from the page corner, and a masthead above it would push the
    first row of labels off its die-cut. */
 @media print {
-  .sm-masthead {
+  .sm-masthead,
+  .sm-footer {
     display: none !important;
   }
 }

@@ -196,11 +196,22 @@ stacked over two lines and big enough to be the loudest thing in the bar, and a
 list of every tool across the top - a lot of chrome for a site with two of
 them.
 
-**So the bar is an identity strip, not a navigation bar.** The monogram, the
-name of the thing, and the one link that leaves. Navigation went back to the
-page: the index *is* the list of tools, and each tool page carries a single
-`.sm-back` to it. Chrome that duplicates the page's own content earns nothing,
-and `Base`'s `current` prop went with the nav it fed.
+**So the bar is an identity strip, not a navigation bar.** The monogram and
+the name of the thing, and nothing else. Navigation went back to the page: the
+index *is* the list of tools, and each tool page carries a single `.sm-back` to
+it. Chrome that duplicates the page's own content earns nothing, and `Base`'s
+`current` prop went with the nav it fed.
+
+The link out to seattlemakers.org left the bar too, for the footer - "Built
+with ❤️ by the Seattle Makers Community", where the link sits inside a sentence
+that gives it a reason to be there rather than being a bare address floating in
+a bar. `.sm-nav-out` and `--color-sm-sage` went with it; sage existed only to
+colour nav links on the dark bar, which has been gone for two passes.
+
+**The footer is hidden in print alongside the masthead.** `/labels` puts a
+full-bleed sheet on the page and anything else on it is ink in the wrong place
+- checked by printing with the footer in place and confirming zero ink outside
+the die-cut cells, not by assuming the rule fired.
 
 **The logo has two forms and a file decides which renders.** Dropping the
 one-line "SEATTLE makers" lockup into `public/brand/wordmark-inline.svg` or
