@@ -480,16 +480,6 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
     opacity: 0.55;
   }
 
-  /* Tinted toward the brand, a step short of lit - and only once the class is
-     close enough to say so. A `next` row six hours out is the next one and
-     nothing more; it waits in the condensed tier with a plain white plate. */
-  .t-row[data-status='next'].is-up {
-    background: var(--color-sm-wash);
-    box-shadow:
-      0 1px 2px rgb(20 25 22 / 0.05),
-      0 2px 10px rgb(19 114 60 / 0.09);
-  }
-
   /* Framed, not filled.
 
      This was a solid green plate with white type on it, and a whole field of
@@ -568,7 +558,18 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
     align-items: baseline;
     column-gap: 0.7cqmin;
     padding: var(--pad) 1.2cqmin;
-    background: var(--color-sm-mist);
+    /* Wash, not mist, and this is where the board's colour lives now.
+
+       The plate behind the words is white on every row; the *time* is what
+       changes. A class that has not happened yet has a light green block, it
+       keeps that block when it expands into the elevated tier, the block goes
+       solid green when the class is actually running, and the whole row greys
+       out when it is over. One column, read top to bottom, is the day.
+
+       Putting the tint on the plate instead was tried and is worse: a wash
+       panel behind a title and a summary is a lot of green for "starts in 20
+       minutes", and it left two different grounds for the same words. */
+    background: var(--color-sm-wash);
     font-family: var(--font-display);
     color: var(--color-sm-ink);
     white-space: nowrap;
@@ -599,23 +600,15 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
     color: var(--color-sm-slate);
   }
 
-  /* The hairline token, not mist. A faded plate is about #F8F9F8 over the
-     board's mist, and a mist block on it comes out within a couple of units of
-     the plate itself - which on the 10:30pm board, where every row is past,
-     made every time look like it had fallen off its plate onto the ground.
-     Checked at that hour rather than at one with a live row in it. */
+  /* The hairline token, not the wash the upcoming rows carry. The row is
+     already greyscaled, so a washed block would come out a pale neutral within
+     a couple of units of its own plate - which on the 10:30pm board, where
+     every row is past, made every time look like it had fallen off its plate
+     onto the ground. Checked at that hour rather than at one with a live row
+     in it. */
   .t-row[data-status='past'] .t-time {
     background: var(--color-sm-line);
     color: var(--color-sm-slate);
-  }
-
-  .t-row[data-status='next'].is-up .t-time {
-    background: rgb(19 114 60 / 0.1);
-    color: var(--color-sm-green-dark);
-  }
-  .t-row[data-status='next'].is-up .t-mer {
-    color: var(--color-sm-green-dark);
-    opacity: 0.75;
   }
 
   /* On a feature row the block is the height of a plate, and an hour set at
@@ -642,9 +635,10 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
     font-size: 1.7cqmin;
   }
 
-  /* The same green as the frame, so the block reads as part of it rather than
-     as a second decision. It was green-dark against a green plate, where it
-     needed to be a step darker to show at all; against white it does not. */
+  /* Activated. The same green as the frame, so the block reads as part of it
+     rather than as a second decision - and it is the one step in the column
+     that is a fill rather than a tint, which is what makes "running" read
+     differently from "about to run" at five metres. */
   .t-row[data-status='live'] .t-time {
     background: var(--color-sm-green);
     color: var(--color-sm-paper);
@@ -837,11 +831,6 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
   .t-flag.is-off {
     color: var(--color-sm-alert);
     background: #fbeaea;
-  }
-
-  /* The mist chip has nothing to sit on once the plate is wash itself. */
-  .t-row[data-status='next'].is-up .t-flag.is-mute {
-    background: var(--color-sm-paper);
   }
 
   /* ------------------------------------------------- where the day stands ---
@@ -1040,12 +1029,6 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
        drawing the eye to the rows that have no photograph. Green on this board
        means "on now". */
     background: var(--color-sm-mist);
-  }
-
-  /* On the wash plate the panel needs to stop being the same colour as the
-     ground it sits on. */
-  .t-row[data-status='next'].is-up .t-thumb.is-icon {
-    background: var(--color-sm-paper);
   }
 
   /* ======================================================== dense mode ===

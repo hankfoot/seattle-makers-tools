@@ -551,8 +551,7 @@ elements; how much of the board each gets is decided by two things.
 
 - **full** - the class that is running. Big picture, the summary, the countdown
   sized to be read at the same distance as the title, and a green frame.
-- **elevated** - a class inside its half hour. The same shape on a wash plate,
-  a step smaller.
+- **elevated** - a class inside its half hour. The same shape, a step smaller.
 - **condensed** - everything else, and the *base* case in the stylesheet
   because most of a day is one or the other. A title with a subtitle under it:
   the name of the thing, then the line that qualifies it. Finished rows are
@@ -671,22 +670,36 @@ A rail filled to a *percentage* was tried on paper before either and rejected:
 the live row already carries a progress bar, and two readings of the same number
 on one row is one too many.
 
-**Material is status, and it is the whole of the redesign.** The board is mist
-and every event is a plate standing off it. The plate says where the event
-stands before a word of it is read:
+**The board is mist and every event is a plate standing off it.** What
+separates one event from the next is the *ground showing through between two
+plates* - there are no hairlines on this board at all. A rule drawn across a
+row is a table; a gap between two plates is a board, and that one change is
+most of what stopped it looking like a printout.
 
-| status | plate |
-| --- | --- |
-| past | white, faded to 0.5, no shadow |
-| later | white, standing off the ground |
-| next | wash, tinted toward the brand green |
-| live | white, framed in brand green, with a solid green time block |
+**The colour lives in the time column, and nowhere else.** The plate behind the
+words is white on every row; the block on its left is what says where the
+event stands, so one column read top to bottom is the day:
 
-Four materials down one column read as a stack filling up, which is what a day
-is. And what separates one event from the next is now the *ground showing
-through between two plates* - there are no hairlines on this board at all. A
-rule drawn across a row is a table; a gap between two plates is a board. That
-one change is most of what stopped it looking like a printout.
+| state | time block | the row |
+| --- | --- | --- |
+| upcoming | wash - light green | condensed |
+| starting soon | wash - the same light green | expands |
+| on now | **solid green**, white type | stays expanded, gains a green frame |
+| over | hairline grey | condensed again, whole row greyscaled |
+| cancelled | alert red, struck through | whatever tier it was in |
+
+The middle two steps sharing a colour is the point: expanding *is* the change
+when a class comes up, and going solid is the change when it starts. Two
+different signals for two different events, rather than one gradient nobody can
+read the middle of.
+
+**Tinting the plate instead was tried first.** `next` had a wash plate, which
+put a green panel behind a title, a summary and a photograph to say "starts in
+20 minutes" - a lot of green for a small claim, and it left the same words
+sitting on two different grounds depending on the hour. It also meant chips and
+icon tiles needed white backgrounds on that one row to stay visible, which is
+the same "second palette for one row" problem the solid green live plate had.
+All of those overrides are gone.
 
 **`live` was a solid green plate first, and a whole field of brand green was
 too much of it.** The running class shouted over the rest of the board rather
