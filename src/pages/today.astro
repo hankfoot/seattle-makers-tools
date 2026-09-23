@@ -382,7 +382,14 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
 
   .t-row {
     /* One number each, so a block and the column it sits in cannot drift. */
-    --rail: 16cqmin;
+    /* 17.5, not the 16 it was. The block has to hold the widest time the
+       calendar can produce at the feature size - "11:30" and "12:00" are five
+       glyphs where "2:15" is four - on one line, with its meridiem beside it.
+       At 16cqmin that came to about 158px of ink in 147px of room, and the
+       block is `overflow: hidden`, so it would have clipped rather than
+       wrapped. The 16px it takes off the body is cheaper than a truncated
+       time on the one column the whole board is read down. */
+    --rail: 17.5cqmin;
     --shot: 11cqmin;
     /* The picture's own inset - one number for every tier, unlike `--pad`,
        which is what it used to borrow. Tying it to the tier made the running
@@ -549,12 +556,17 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
      with the tier; the block does not. */
   .t-time {
     align-self: stretch;
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
+    /* A grid, not a wrapping flex row, and the difference is the whole point:
+       the hour and its meridiem share a row *by construction*, and only the
+       badge can start a new one. Wrapped flex put "PM" under "11:30" whenever
+       the pair got close to the block's width, so the time read as two lines
+       on exactly the plates where it is biggest. */
+    display: grid;
+    grid-template-columns: auto auto;
     justify-content: center;
     align-content: center;
-    gap: 0 0.7cqmin;
+    align-items: baseline;
+    column-gap: 0.7cqmin;
     padding: var(--pad) 1.2cqmin;
     background: var(--color-sm-mist);
     font-family: var(--font-display);
@@ -607,16 +619,23 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
   }
 
   /* On a feature row the block is the height of a plate, and an hour set at
-     the queue's size floats in the middle of it like a caption. Stacked and
-     much bigger, it fills what it is standing in - and the time is worth that
-     much room on the two rows somebody is actually about to act on. */
-  .t-row.is-up .t-time {
-    flex-direction: column;
-    gap: 0.2cqmin;
-  }
+     the queue's size floats in the middle of it like a caption. Much bigger,
+     it fills what it is standing in - and the time is worth that room on the
+     rows somebody is about to act on.
 
+     4.1, not the 4.4 it was while the meridiem sat underneath: on one line the
+     pair has to fit the block's 16cqmin less its padding, and 4.4 came to
+     15.9 of the 13.6 available. Measured, not guessed - see the note in
+     CLAUDE.md. */
+  /* 3.9, and the number is measured rather than chosen. The block's inner
+     width is 13.6cqmin; the widest time the calendar can make is a two-digit
+     hour - "10:00", "11:30", "12:00", all exactly the same width because the
+     face is tabular - and at 4cqmin that pair came to 157.5px of ink in 163.1
+     of room. Five pixels is not a margin on a thing that clips silently, so
+     this backs off to about nine. The units are all cqmin, so the ratio holds
+     at every board size. */
   .t-row.is-up .t-h {
-    font-size: 4.4cqmin;
+    font-size: 3.9cqmin;
   }
 
   .t-row.is-up .t-mer {
@@ -852,10 +871,18 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
     text-align: center;
   }
 
-  /* It hangs off the time block, under the meridiem on a feature plate. The
-     block is a plate tall and held one short line; this is the most relevant
-     thing that could fill it, and moving it out of the tag row is what stopped
-     that row wrapping on the real calendar's longer studio names. */
+  /* It hangs off the time block, under the time. The block is a plate tall and
+     held one short line; this is the most relevant thing that could fill it,
+     and moving it out of the tag row is what stopped that row wrapping on the
+     real calendar's longer studio names.
+
+     Spanning both columns is what keeps it on its own row - it is the one item
+     in this block that is allowed to break the line. */
+  .t-badge {
+    grid-column: 1 / -1;
+    justify-self: center;
+  }
+
   .t-row.is-up .t-badge {
     margin-top: 1.2cqmin;
   }
@@ -1071,16 +1098,6 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
 
   .t-list.is-dense .t-row.is-up :is(.t-studio, .t-kind, .t-flag) {
     font-size: 1.3cqmin;
-  }
-
-  /* Back to one line, and the badge beside the time rather than under it.
-     `flex-wrap: wrap` is the safety net: a block this narrow cannot always
-     hold "11:30 PM" and "ON NOW" side by side, and a wrapped badge costs one
-     short line where an overflowing one costs the plate. */
-  .t-list.is-dense .t-row.is-up .t-time {
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: 0.4cqmin 0.7cqmin;
   }
 
   .t-list.is-dense .t-row.is-up .t-h {
@@ -1368,16 +1385,22 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
     .t-time {
       grid-column: 1 / -1;
       grid-row: 1;
-      flex-direction: row;
-      justify-content: flex-start;
+      /* A header bar, so everything in it sits on one line - the badge
+         included, which is the one place on the board it is not on a row of
+         its own. Implicit columns rather than the wide layout's two, and the
+         badge has to give up its span to join them. */
+      grid-auto-flow: column;
+      grid-template-columns: none;
+      justify-content: start;
+      align-items: baseline;
       padding: 1cqmin 2.4cqmin;
     }
-    .t-row.is-up .t-time {
-      flex-direction: row;
-      /* The gap comes back with the direction. Stacked, the feature block sets
-         `gap: 0.2cqmin` for the line under the hour; left in place on a row it
-         is the space *between* them, and "2:15PM" runs together. */
-      gap: 0 0.7cqmin;
+    .t-badge {
+      grid-column: auto;
+      margin-left: 0.6cqmin;
+    }
+    .t-row.is-up .t-badge {
+      margin-top: 0;
     }
     .t-body {
       grid-column: 1;

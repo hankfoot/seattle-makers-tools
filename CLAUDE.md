@@ -748,9 +748,32 @@ whether a class at 2:15 is in the morning, and setting both halves the same size
 spends the column's whole presence on the half that is never read.
 
 One block width for every tier, so the column is a column; the hour size steps
-with the tier. On a feature row the hour and meridiem **stack** - a block that
-is a plate tall with a queue-sized hour in the middle of it reads as a caption
+with the tier. The hour is much bigger on a feature row - a block that is a
+plate tall with a queue-sized hour in the middle of it reads as a caption
 floating in a void.
+
+**The block is a grid, and that is what keeps the time on one line.** It was a
+wrapping flex row, and on the feature tier the meridiem dropped under the hour
+whenever the pair came close to the block's width - so the time read as two
+lines on exactly the plates where it is biggest. As a grid with two `auto`
+columns the hour and its meridiem share a row *by construction*; the badge
+spans `1 / -1`, so it is the one item allowed to start a new one. The narrow
+layout, where the block is a header bar across the top of the plate, switches
+to `grid-auto-flow: column` and the badge gives up its span to sit inline.
+
+**The feature hour is 3.9cqmin, and the number is measured.** The block's inner
+width is 13.6cqmin. The widest time the calendar can produce is a two-digit
+hour - "10:00", "11:30" and "12:00" are all exactly the same width, because the
+face is tabular - and at 4cqmin that pair came to 157.5px of ink in 163.1px of
+room. Five pixels is not a margin on a thing that clips silently, so it backs
+off to about nine. Everything here is in cqmin, so that ratio holds at every
+board size.
+
+`--rail` went 16 -> 17.5cqmin for the same reason: at 16 the worst-case time
+needed about 158px of a 147px block. Measuring the *grid columns* is
+misleading, incidentally - the spanning badge stretches them, so "STARTING
+SOON" makes them look full when the time has room. Measure the text with a
+Range.
 
 **The footer strip is ink, and that is what closes the composition.** Green band
 at the top, light body, dark strip at the foot. It was mist, which on a mist
