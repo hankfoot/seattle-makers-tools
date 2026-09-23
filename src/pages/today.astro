@@ -254,12 +254,16 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
     flex: 0 0 auto;
     display: flex;
     flex-direction: column;
-    gap: 1.4cqmin;
+    /* Tight. The band was 225px on a 1080 board - 39 of padding, 82 of title,
+       15 of gap, 51 of facts, 39 of padding - and the two paddings alone were
+       a third of it. Every pixel here comes off the list below, which is the
+       part of the board somebody is actually reading. */
+    gap: 0.7cqmin;
     /* Full-bleed green, but its text lands on the same left edge as the rows
        below: past a point the content stops widening and centres instead, so a
        very wide screen does not run titles into lines nobody reads from across
        a room. One expression, no breakpoint, and the band stays edge to edge. */
-    padding: 3.6cqmin max(3.4cqmin, calc((100% - 168cqmin) / 2));
+    padding: 2.3cqmin max(3.4cqmin, calc((100% - 168cqmin) / 2));
     background: var(--color-sm-green);
   }
 

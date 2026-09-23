@@ -1054,6 +1054,14 @@ and the clock came down from 5.4 to 4.4cqmin - on a line of reference under a
 7cqmin title it was the loudest thing in the band, which is the wrong way round
 for a clock.
 
+**The band is then tightened, because every pixel here comes off the list.**
+Restacked it measured 225px on a 1080 board: 39 of padding, 82 of title, 15 of
+gap, 51 of facts, 39 of padding - the two paddings alone were a third of the
+band, and none of it was doing any work. At 2.3cqmin of padding and 0.7 of gap
+it is **190px**, and the 35px went to the part of the board somebody is
+actually reading. Worth knowing when editing this: the title is bigger than it
+has ever been *and* the band is shorter than it was before the greeting grew.
+
 **The date moved up beside the clock.** It used to sit under the greeting as
 "What's on today · Tuesday, September 22", which left the left side carrying a
 greeting, an instruction *and* a fact while the clock stood alone on the right.
