@@ -572,17 +572,36 @@ change. As it is, a class that goes live at 2:15 simply grows where it stands.
 **The list is a flex column and rows take up the day's slack.** A board holds
 four events on a Tuesday and nine on a Saturday; with the queue rows collapsed,
 a quiet day ended in a third of a screen of white paper under the last row.
-Rows are `flex: 1 0 auto` with a per-tier `max-height`.
+Queue rows are `flex: 1 0 auto` with a `max-height`.
 
 Both halves of that are load-bearing. The **`0`** is: a row allowed to shrink
 would silently squash its own content instead of overflowing the list, and
 fit() detects "too many rows" by asking whether the list overflows - shrinkable
 rows would let it crush eight events into the space for six and report that
 everything fits. The **cap** is the other end: two events on a quiet Tuesday
-would otherwise each take half the screen. Caps are set well clear of the
-tallest thing a row of that tier can hold, so they only ever bite into empty
-space. A very quiet day still ends in some white, which is honest - that is all
-there is today.
+would otherwise each take half the screen. It is set well clear of the tallest
+thing a queue row can hold, because the row is `overflow: hidden` and a cap
+that bites into content clips it rather than compressing it.
+
+**The feature tier does not grow at all, and letting it was a mistake worth
+recording.** "The stage takes whatever the queue does not need" sounds right
+and looks broken: on 2026-09-27 three classes run at once, and the three plates
+came out 508-559px tall holding 410px of content - about 150px of dead white
+each, with the green time block stretching through all of it. A grown plate
+does not read as generous, it reads as empty. The queue absorbs the slack
+instead, and what is left over sits at the bottom of the board as ground, which
+reads as "that is all that is on" - which is true.
+
+Not growing also retires a clipping hazard, since a row that cannot grow has no
+use for a cap. **But the base rule's cap still applies unless it is explicitly
+lifted**, and that is the trap: removing the feature tier's own `max-height`
+left the queue's 20cqmin in force over it and cut three live plates off
+mid-sentence. `max-height: none` on the tier is what makes it safe. Measured
+after: 417/409, 366/358 and 373/365 - plate against content, the 8px being the
+border.
+
+A very quiet day still ends in some white, which is honest - that is all there
+is today.
 
 Verified under pressure at 900x1000: three earlier and two later dropped, "+ 3
 EARLIER · 2 LATER NOT SHOWN" printed, and the live and next rows owning the
@@ -701,15 +720,15 @@ the words and the picture placed underneath it. It also has to go back to
 `gap: 0.2cqmin` is the space between two lines there and the space between two
 words here, so without it the plate reads "2:15PM".
 
-**Finished rows drop the picture, and what the dimming does to one is why.** A
-row at 42% is legible as text and *broken* as a photograph - a pale rectangle
-with a ghost in it reads as an image that failed to load, which on a screen left
-up for days is the one thing a picture here must never look like. Found on the
-10:30pm board, where every row is past: eight faded tiles read as eight faults.
-Nothing is lost that the row does not still say - the title answers "did I miss
-it", and the picture was only ever there to help somebody choose. The track
-stays reserved, so the left edge does not shift when a row crosses over at the
-end of its session.
+**Finished rows kept their picture again on 2026-09-22, and the note that said
+otherwise was about a different board.** They dropped it when a past row was
+flat white at 42% opacity, where a pale rectangle with a ghost in it read as an
+image that had failed to load - checked on the 10:30pm board, where every row is
+past and eight faded tiles read as eight faults. With plates, a faded picture
+sits on a faded plate with a radius and an inset, and reads as muted rather than
+broken; checked at the same hour. Keeping it also means "shows a picture" and
+"has a picture" are the same question, which is what lets `.t-row.is-bare` be
+decided once at render rather than changing when a row crosses over.
 
 **The picture is wrapped now, and the wrapper is not decoration.** An `<img>`
 cannot clip its own transform, so the live row's pan would bleed the photograph
@@ -1111,11 +1130,29 @@ arrived at by looking rather than by argument:
   picture is smaller than it would be on the right - that is the trade, and it
   is the reason for the size.
 
-The sizes are now per tier - 8.5cqmin on a queue row, 20 on the next class, 27
+The sizes are now per tier - 11cqmin on a queue row, 22 on the next class, 25
 on the running one - which steps that left edge exactly twice down the board.
 That is a different thing from the ragged version above: every queue row starts
 on one vertical and the two feature rows on another, so it reads as two blocks
 rather than as noise.
+
+**And a row with genuinely nothing to show gives the width back.** Reserving
+the track is right for a row whose picture has not loaded yet, or which is
+showing a studio icon. It is wrong for a row that will never have one: about a
+third of the calendar is whole-building events - tours, orientations, meetups -
+which reach neither tier of the fallback, and on a plate their reserved slot is
+130px of blank paper between the time and the title. That reads as a picture
+that failed, not as alignment. `row()` marks those `is-bare` and the CSS zeroes
+`--shot` and `--shot-gap`.
+
+Two left edges is what it costs, and the plates are what make it affordable:
+every row is its own object with its own time block, so the shared edge that
+matters is the one down the right of that block and it does not move. This was
+a much worse trade when the rows were hairlines on one continuous field.
+
+`.t-row.is-bare` has to sit **after** the tier rules in the stylesheet. It and
+`.t-row:is([data-status='live'], …)` have identical specificity, so source
+order is the only thing deciding which wins.
 
 **The narrow layout keeps the picture on the right, and that is not an
 inconsistency.** Below the board's 480px container query there is no time rail

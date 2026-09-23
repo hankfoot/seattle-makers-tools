@@ -315,6 +315,11 @@ function row(e: SmEvent, st: Status, now: string): HTMLLIElement {
    */
   const photo = thumbOf(e);
   const icon = studios[0]?.icon ?? null;
+  // Whole-building events - tours, orientations, meetups, about a third of the
+  // calendar - reach neither tier of the fallback and show nothing at all. The
+  // class is what lets the plate give that width back instead of holding an
+  // empty slot open; see the note on `.t-row.is-bare`.
+  if (!photo && !icon) li.classList.add('is-bare');
   if (photo || icon) {
     // The picture is wrapped, and the wrapper is not decoration: the live row
     // pans its photograph, and an <img> cannot clip its own transform - scaled

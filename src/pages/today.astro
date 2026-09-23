@@ -429,15 +429,58 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
 
        The cap stops the other end - two events on a quiet Tuesday would
        otherwise each take half the screen. Set well clear of the tallest thing
-       a row of that tier can hold, so it only ever bites into empty space. */
+       a row of that tier can hold, because the row is `overflow: hidden` and a
+       cap that bites into content clips it rather than compressing it. */
     flex: 1 0 auto;
-    max-height: 18cqmin;
+    max-height: 20cqmin;
   }
 
+  /* The feature tier does not grow, and the queue absorbs the slack instead.
+
+     Letting it grow was the obvious reading of "the stage takes whatever the
+     queue does not need", and on a board that is mostly feature rows it looks
+     broken: three classes running at once on 2026-09-27 gave three plates of
+     508-559px holding 410px of content, so each carried about 150px of dead
+     white with the green time block stretching through all of it. A grown
+     plate does not read as generous, it reads as empty.
+
+     Nothing grows means nothing needs a cap here either, which also retires a
+     clipping hazard: these rows hold a three-line title, a two-line summary, a
+     countdown and a progress bar, and any cap low enough to stop the dead
+     space would have been low enough to cut one of them off. */
   .t-row:is([data-status='live'], [data-status='next']) {
     --shot: 22cqmin;
     --pad: 2.8cqmin;
-    max-height: 42cqmin;
+    flex-grow: 0;
+    /* Explicitly, and it is not tidiness: the base rule's cap is meant for a
+       one-line queue row, and left in force here it cut three live plates off
+       mid-sentence the moment their own caps were removed. A cap on a row that
+       cannot grow has nothing to do except clip. */
+    max-height: none;
+  }
+
+  /* Nothing to show, so the words start after the time block.
+
+     The picture's track is reserved rather than `auto` so that titles line up
+     down the board - that is still right for a row whose picture simply has
+     not loaded, or which is showing a studio icon. It is not right for a row
+     that will never have one: about a third of the calendar is whole-building
+     events that reach neither tier of the fallback, and on a plate their
+     reserved slot is 130px of blank paper between the time and the title,
+     which reads as a picture that failed rather than as alignment.
+
+     Two left edges is what this costs, and the plates are what make it
+     affordable: every row is its own object with its own time block, so the
+     shared edge that matters is the one down the right of that block, and it
+     does not move. This was a much worse trade when the rows were hairlines on
+     one continuous field.
+
+     Placed after the tier rules deliberately - `.t-row.is-bare` and
+     `.t-row:is([data-status='live'], …)` have identical specificity, so source
+     order is the only thing that decides it. */
+  .t-row.is-bare {
+    --shot: 0cqmin;
+    --shot-gap: 0cqmin;
   }
 
   /* Faded, not sunk. The first version dropped the plate entirely so a
@@ -478,7 +521,6 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
   .t-row[data-status='live'] {
     --shot: 25cqmin;
     --pad: 3.2cqmin;
-    max-height: 52cqmin;
     border-color: var(--color-sm-green);
     box-shadow:
       0 2px 4px rgb(14 77 41 / 0.1),
@@ -923,21 +965,6 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
     object-fit: cover;
   }
 
-  /* Finished rows drop the picture, and what the dimming does to one is the
-     reason. A row at low opacity is legible as text and *broken* as a
-     photograph - a pale rectangle with a ghost in it reads as an image that
-     failed to load, which on a screen left up for days is the one thing a
-     picture here must never look like. Found on the 10:30pm board, where every
-     row is past: eight faded tiles read as eight faults.
-
-     Nothing is lost that the row does not still say. A finished class is an
-     archive line - the title answers "did I miss it", and the picture was only
-     ever there to help somebody choose. The track stays reserved, so the left
-     edge does not shift when a row crosses over at the end of its session. */
-  .t-row[data-status='past'] .t-shot {
-    display: none;
-  }
-
   /* The only ambient motion on the board, and it is on the one picture worth
      looking at: a slow pan across the running class's own photograph.
 
@@ -1009,7 +1036,9 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
   .t-list.is-dense .t-row:is([data-status='live'], [data-status='next']) {
     --shot: 11cqmin;
     --pad: 1.5cqmin;
-    max-height: 18cqmin;
+    /* Queue-shaped here, so it takes the queue's share of the slack too. */
+    flex-grow: 1;
+    max-height: 20cqmin;
   }
 
   .t-list.is-dense .t-row:is([data-status='live'], [data-status='next']) .t-body {
