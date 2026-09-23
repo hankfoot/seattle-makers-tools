@@ -178,7 +178,7 @@ export function clock(iso: string): string {
 /**
  * The line under a row's description: what is happening, and how long it has.
  *
- * It carries the state in words now - "On now", "Starting soon" - where the
+ * It carries the state in words now - "On now", "Starting in" - where the
  * board used to put a pill in the time block beside the clock. That was the
  * same fact in two places, and the time block is for the time.
  *
@@ -203,7 +203,7 @@ export function statusNote(status: Status, start: string, end: string, now: stri
   }
   if (status === 'next' && startingSoon(start, now)) {
     const until = gap(now, start);
-    return until ? `Starting soon · in ${until}` : 'Starting now';
+    return until ? `Starting in ${until}` : 'Starting now';
   }
   return '';
 }

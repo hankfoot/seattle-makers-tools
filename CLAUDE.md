@@ -541,7 +541,8 @@ moves were improvements and the deletion supersedes them:
   make 2026-10-07 fit without dense mode.
 - Deleting it fixed what neither move did: the pill said "On now" and the line
   under the description said "50m left", which is the same fact twice. It reads
-  **"On now · 50m left"** now, and the time block is for the time.
+  **"On now · 50m left"** and **"Starting in 20m"** now, and the time block is
+  for the time.
 
 Two things fell out of it. The lamp moved to `.t-note::before`, where it sits
 in front of the words that replaced the pill. And the time block's grid
@@ -710,6 +711,20 @@ sitting on two different grounds depending on the hour. It also meant chips and
 icon tiles needed white backgrounds on that one row to stay visible, which is
 the same "second palette for one row" problem the solid green live plate had.
 All of those overrides are gone.
+
+**The live frame is an overlay, not a border, and the difference showed on
+every plate that is not framed.** A border has to be reserved on all of them or
+the framed plate comes out narrower inside than its neighbours - so every row
+carried `border: 0.4cqmin solid transparent`. `background-clip` is `border-box`,
+so that band showed the plate's own white: a 4px ring around every time block
+and every picture on the board, an outline round the two things that are meant
+to run to the plate's edge.
+
+An inset `box-shadow` is the usual answer and cannot be used here - the row is
+`overflow: hidden` with children that paint their own backgrounds, so the time
+block would cover the frame down the left-hand edge. A positioned `::after` is
+painted above every child, costs no layout, and needs nothing reserved
+anywhere. `.t-row` keeps `position: relative` for it.
 
 **`live` was a solid green plate first, and a whole field of brand green was
 too much of it.** The running class shouted over the rest of the board rather

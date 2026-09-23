@@ -412,14 +412,9 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
        different thing: two blocks, not noise. */
     grid-template-columns: var(--rail) calc(var(--shot) + var(--shot-gap)) 1fr;
     align-items: center;
-    /* Transparent on every tier but `live`, which is what stops the framed
-       plate being narrower inside than the ones around it. `background-clip`
-       is `border-box` by default, so the plate's own colour fills the band and
-       nothing shows until a border-color is set. An inset box-shadow would
-       have done this without reserving space, and cannot be used: the row is
-       `overflow: hidden` with children that paint their own backgrounds, and
-       the time block would cover the frame down the left-hand edge. */
-    border: 0.4cqmin solid transparent;
+    /* Needed by the live row's frame, which is drawn as an overlay rather than
+       as a border - see `.t-row[data-status='live']::after`. */
+    position: relative;
     border-radius: 1.8cqmin;
     background: var(--color-sm-paper);
     /* The time block runs to the plate's edge, so the plate has to clip it
@@ -499,10 +494,33 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
   .t-row[data-status='live'] {
     --shot: 25cqmin;
     --pad: 3.2cqmin;
-    border-color: var(--color-sm-green);
     box-shadow:
       0 2px 4px rgb(14 77 41 / 0.1),
       0 10px 28px rgb(14 77 41 / 0.16);
+  }
+
+  /* An overlay, not a border, and the difference was visible on every plate
+     that is *not* framed.
+
+     A border has to be reserved on all of them or the framed plate is narrower
+     inside than its neighbours - so every row carried
+     `border: 0.4cqmin solid transparent`. `background-clip` is `border-box`,
+     so that band showed the plate's own white, which put a 4px ring around
+     every time block and picture on the board: an outline round the one thing
+     that was meant to run to the plate's edge.
+
+     An inset `box-shadow` was the other candidate and cannot be used here: the
+     row is `overflow: hidden` with children that paint their own backgrounds,
+     so the time block would cover the frame down the left-hand edge. A
+     positioned `::after` is painted above every child, costs no layout, and
+     needs nothing reserved anywhere. */
+  .t-row[data-status='live']::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border: 0.4cqmin solid var(--color-sm-green);
+    border-radius: inherit;
+    pointer-events: none;
   }
 
   /* Nothing to show, so the words start after the time block.
