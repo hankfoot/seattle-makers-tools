@@ -79,6 +79,10 @@ Done:
   `/events.json` is gone - see *There is no fallback calendar* below.
 - The slideshow is parked: its entry on the index is commented out, the page
   and `scripts/slideshow.ts` are untouched, and `/slideshow` still serves.
+- **Deployed, and deploying again is a merge.** Cloudflare's git integration
+  was reconnected to `seattlemakers/sm-digital-toolbox` on 2026-09-23 and a
+  push to `main` built and shipped. Nobody needs `wrangler` or a Cloudflare
+  login - see HANDOVER.md.
 
 Studio calendar (`/calendar`) is built and verified against a print-to-PDF,
 added 2026-09-20.
@@ -174,7 +178,12 @@ time. Three ways out, roughly in order of how much they cost:
   upcoming class, only certifications. Revisit when the calendar fills out.
 - Drop the `50-deck-*.jpg` photos once every studio has enough current ones;
   they are of the old Wallingford space and only exist as a backstop.
-- Deploy. Output is static; nothing needs a server.
+- An icon for **leatherworking**. The brand's Illustrator master has no
+  leatherworking mark, so it borrows sewing's - which means a class tagged only
+  `leatherworking` shows a spool of thread. One such event is on the calendar.
+- A calendar tag for **lapidary**, which is a real studio with a real icon and
+  nothing on the schedule mapped to it. Belongs in WISHLIST as a question for
+  the event coordinator rather than as code.
 - Possibly a scheduled events refresh (daily GitHub Action) once the scraper has
   proven stable across a site change or two.
 

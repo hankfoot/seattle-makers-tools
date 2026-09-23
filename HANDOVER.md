@@ -58,11 +58,17 @@ before that; both old URLs redirect. What the move took, and what it left:
    do, and it is the one part of this that a push cannot finish.* Two separate
    things, both in the Cloudflare dashboard:
 
-   - **The authorisation.** The GitHub app authorisation does not follow a repo
-     across owners, so the Worker can no longer see its source and has stopped
-     auto-deploying. Re-authorise the Cloudflare GitHub app against the
-     `seattlemakers` org and point the Worker at `sm-digital-toolbox`.
-     **Until this is done, pushes to `main` do not deploy.**
+   - ~~**The authorisation.**~~ Done, 2026-09-23. The GitHub app authorisation
+     does not follow a repo across owners, so the Worker could not see its
+     source and had stopped auto-deploying; it was re-authorised against the
+     `seattlemakers` org. A push to `main` built and shipped, so **pushes
+     deploy again** and the contributor story below holds.
+
+     One oddity to know about rather than fix: the Worker's Git setting still
+     *displays* the pre-rename repo name, `seattlemakers/seattle-makers-tools`.
+     GitHub redirects old repo URLs indefinitely and the integration tracks the
+     repo rather than the string, which is why it works - but the label is
+     stale, and anyone comparing it against `wrangler.toml` will wonder.
 
    - **The orphan.** `wrangler.toml`'s `name` is the Worker's name, and it now
      reads `sm-digital-toolbox`. A deploy does not rename a Worker - it creates
