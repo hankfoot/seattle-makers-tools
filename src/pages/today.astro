@@ -384,6 +384,11 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
     /* One number each, so a block and the column it sits in cannot drift. */
     --rail: 16cqmin;
     --shot: 11cqmin;
+    /* The picture's own inset - one number for every tier, unlike `--pad`,
+       which is what it used to borrow. Tying it to the tier made the running
+       class's picture sit in a 35px margin and a queue row's in 16px, so the
+       inset read as a different decision on every row. */
+    --shot-gap: 1.2cqmin;
     --gutter: 2.4cqmin;
     --pad: 1.5cqmin;
     display: grid;
@@ -398,7 +403,7 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
        from across a room, where a straight left edge is most of what makes a
        list scannable. The tiers step that edge exactly twice, which is a
        different thing: two blocks, not noise. */
-    grid-template-columns: var(--rail) var(--shot) 1fr;
+    grid-template-columns: var(--rail) calc(var(--shot) + var(--shot-gap)) 1fr;
     align-items: center;
     /* Transparent on every tier but `live`, which is what stops the framed
        plate being narrower inside than the ones around it. `background-clip`
@@ -877,23 +882,20 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
      cannot clip its own transform, so a scaled `<img>` would simply bleed over
      the words beside it. `.t-shot` owns the geometry and the clipping;
      `.t-thumb` fills it and is the only thing that moves. */
-  /* A panel of the card, not a sticker on it.
+  /* Square, and inset by one small margin on every tier.
 
-     It was an inset square with a radius of its own, floating in the middle of
-     a plate whose time block ran edge to edge beside it - so the one element
-     with a margin round it read as something dropped on top of the card rather
-     than part of it, and on a queue row it was a 92px thumbnail adrift in a
-     100px-tall plate.
+     Two things were wrong before and they needed opposite fixes. It was a
+     *floating* square - the only element on the plate with a wide margin round
+     it, next to a time block running edge to edge - which read as a sticker on
+     the card rather than part of it. Stretching it to the plate's full height
+     fixed that and broke something else: a square is what a square crop wants
+     to be, and a picture whose height came from the row was a different shape
+     on every row, portrait beside a three-line title and letterbox beside one
+     line.
 
-     Flush now: no margin, no radius of its own, the plate's `overflow: hidden`
-     clipping its outer corners, and stretched to the plate's full height so it
-     sits directly against the time block. The card reads as three panels -
-     when, what it looks like, what it is - which is also the order somebody
-     scanning from the left actually wants them in.
-
-     The gutter that used to be its left margin is gone from this track
-     entirely; the only gap left is the body's own left padding, between the
-     picture and the words. */
+     So: square again, and the inset cut to about half what it was and made one
+     number rather than the tier's `--pad`. Enough to keep the picture off the
+     time block and off the plate's edges, not enough to leave it adrift. */
   .t-shot {
     /* Row as well as column. An item that names only a column is auto-placed
        into the next row whose column 2 is free, which - with the body already
@@ -901,14 +903,14 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
        row doubles in height. */
     grid-column: 2;
     grid-row: 1;
-    align-self: stretch;
+    align-self: center;
     width: var(--shot);
-    /* At least square. Stretching alone would let a one-line queue row squash
-       the picture into a letterbox strip, because the row's height would then
-       come from the text and nothing else - the picture used to set that floor
-       by being a fixed square, and this is what keeps it doing so. */
-    min-height: var(--shot);
+    aspect-ratio: 1;
+    /* No right margin: the body's own left padding is the gap to the words,
+       and it wants to be wider than the gap to the time block. */
+    margin: var(--shot-gap) 0 var(--shot-gap) var(--shot-gap);
     overflow: hidden;
+    border-radius: 1.2cqmin;
     /* Something to look at for the moment between layout and decode, rather
        than a hole in the plate. */
     background: var(--color-sm-mist);
@@ -1369,12 +1371,12 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
          something dropped on the card rather than part of it. The time block
          is already a bar across the top here, so the picture closes the
          opposite corner. */
-      align-self: stretch;
+      align-self: start;
       /* Off the tier, like everywhere else. A flat 22cqmin here gave a
          one-line queue row a picture twice the height of its own text. */
       width: var(--shot);
-      min-height: var(--shot);
-      margin: 0;
+      aspect-ratio: 1;
+      margin: var(--shot-gap);
     }
     /* Little room for two tiers at this width - the whole board is about as
        wide as a feature row's picture on the wall. The type steps once and the

@@ -1066,26 +1066,33 @@ two studios takes the first; the pair it happens to is leatherworking + sewing,
 and one icon beside both names is not a claim about which room it is in, where
 two tiles would be.
 
-**The picture is a panel of the card, not a sticker on it.** It was an inset
-square with a radius of its own, floating in a plate whose time block ran edge
-to edge beside it - so the one element with a margin round it read as something
-dropped on top of the card, and on a queue row it was a 92px thumbnail adrift
-in a 100px-tall plate.
+**The picture is square, and inset by one small margin on every tier.** Two
+things were wrong with it and they needed opposite fixes, which is worth
+recording because the middle step looked like the answer.
 
-It is flush now: no margin, no radius of its own, the plate's `overflow:
-hidden` clipping its outer corners, and `align-self: stretch` taking it to the
-plate's full height so it sits directly against the time block. The card reads
-as three panels - **when**, **what it looks like**, **what it is** - which is
-also the order somebody scanning from the left wants them in. The gutter that
-used to be its left margin is gone from the track entirely; the only gap left
-is the body's own left padding.
+It was *floating*: the only element on the plate with a wide margin round it,
+next to a time block running edge to edge, so it read as a sticker on the card
+rather than part of it - and on a queue row it was a 92px thumbnail adrift in a
+100px-tall plate. Stretching it to the plate's full height fixed exactly that.
+The card became three flush panels - when, what it looks like, what it is - and
+it was a real improvement on what came before.
 
-**`min-height: var(--shot)` is what stops it becoming a letterbox.** The
-picture used to set the row's height floor by being a fixed square. Stretched,
-its height comes from the row instead - so a one-line queue row would have
-squashed it to about 119x69. The min-height puts the floor back: at least
-square, and taller when the words need the room. Measured after: a queue row is
-119x120 and the running class's panel is 270x359.
+It also broke the square. A picture whose height comes from the row is a
+different shape on every row: portrait beside a three-line title, letterbox
+beside one line. `min-height: var(--shot)` held the floor at square but not the
+ceiling, so the running class's panel came out 270x359. A square crop is what
+these want to be, and it is what makes a column of them scan as one thing.
+
+So: square again, with the inset cut to about half what it was - **and made one
+number, `--shot-gap`, rather than the tier's `--pad`**. That was the other
+half of "floating": tied to the tier, the inset was 35px on the running class
+and 16px on a queue row, so it read as a different decision on every plate.
+Enough margin now to keep the picture off the time block and the plate's edges,
+not enough to leave it adrift.
+
+The cost is vertical: a square picture takes more room on a short row than a
+stretched one, and the 2026-10-07 board went back to "+ 1 later not shown". The
+fit pass reports it, which is the deal.
 
 **The picture leads the row, and its column is reserved.** Both of those were
 arrived at by looking rather than by argument:
