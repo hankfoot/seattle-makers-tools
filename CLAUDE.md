@@ -1397,6 +1397,61 @@ it is a real page's og:image and every `content-length` was measured against
 the live site, so the file doubles as the record of what those measurements
 were. No network: `fetch` is stubbed.
 
+### The studio icons
+
+**They are vectors now, extracted from the brand's own Illustrator master.**
+All twelve live at `public/brand/icons/<slug>.svg` and total 123KB; they
+replaced eight PNGs at 130-230KB *each* plus three crude SVGs drawn here to
+fill gaps. They also stop being resolution-bound, which matters on a board
+whose picture column is 270px on a 1080p screen and twice that on a 4K panel.
+
+**A modern `.ai` file is a PDF**, as long as "Create PDF Compatible File" was
+ticked on save - which is the default. `pdfinfo` says so immediately, and
+`pdftocairo -svg` then gets at the artwork as paths rather than pixels. The
+master has four pages: **page 1 is the colour set** (plus a palette bar), page
+2 the mono set.
+
+**`pdftocairo` ignores `-x/-y/-W/-H` for SVG output**, so the page cannot be
+cropped on the way out - it emits all 792x612pt every time. The split was done
+afterwards, on geometry:
+
+1. `pdftoppm -gray -r 72` gives a PGM, which is a header and raw bytes - no
+   image library needed, and none is installed. At 72dpi one pixel is one PDF
+   point, so everything measured there maps straight onto the SVG.
+2. Flood-fill the dark pixels into connected components. The twelve icon rings
+   come out as the only components that are 77x77 and near-square.
+3. Split the page SVG by path bounding box. Poppler emits only `M/L/C/Z`, so
+   "every number is alternately x then y" is a safe way to get a bbox, and no
+   path outside `<defs>` carries a `clip-path`, so they can be regrouped freely.
+
+**The filter has to be the distance to the ring, not the bounding box.** A
+square around each circle also catches bits of the curved labels that sit just
+outside it - "Electronics" contributed a stray crescent 42.3pt from a centre
+with a 38.5pt radius, and it rendered as a blot on the plate. Keeping only
+paths whose nearest bbox point is inside the disc removes it and costs nothing
+else.
+
+**The assignments were checked by colour, not by reading the layout.** Each
+icon has a distinct hue on the colour page - red laser, purple sewing, teal
+screen printing, blue a/v, lime arts, pink ceramics, green electronics, orange
+3d, gold cnc, crimson lapidary, yellow woodshop, and metalworking the one with
+no saturated pixels at all. Averaging the saturated pixels in each ring
+confirms which is which without trusting a squint at a thumbnail.
+
+**Two studios came off the sheet that were not in `studios.ts`: arts & crafts
+and lapidary.** `crafts` is a real calendar tag with 11 events, and
+`/events/types/crafts/` comes back titled "Crafts Archives - Seattle Makers" -
+against the bare "Seattle Makers" that a soft-404 gives, which is the tell
+documented under *The poster*. So arts & crafts resolves and prints. Lapidary
+has no tag at all and behaves like metalworking and a/v studio: the select
+labels it "not tagged on the calendar yet", the sheet says so, and the QR falls
+back to the whole calendar rather than a dead archive.
+
+**The sheet has no leatherworking, so it borrows sewing's icon.** A placeholder
+and marked as one in `studios.ts`: the two already share a calendar tag
+(`leatherworking-sewing`), which makes it the least wrong thing to point at,
+but a row tagged only `leatherworking` currently shows a spool of thread.
+
 ### The poster
 
 **The sheet is a flex column inside a margin, not absolute positioning from the

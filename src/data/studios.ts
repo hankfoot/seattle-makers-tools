@@ -3,7 +3,7 @@
  *
  * ADDING A STUDIO
  *   1. drop photos in  public/studios/<slug>/*.jpg   (1920px+ wide, landscape)
- *   2. drop an icon at public/brand/icons/<slug>.(png|svg)
+ *   2. drop an icon at public/brand/icons/<slug>.svg
  *   3. add an entry below
  * Nothing else needs to change.
  *
@@ -12,9 +12,19 @@
  * emits both `cnc` and `cnc-routing` for one studio, and tags some leatherwork
  * classes `leatherworking-sewing`, which is not a studio of its own.
  *
- * The slugs `cosplay`, `design` and `crafts` appear on events but are topical
- * tags rather than studios, so they are absent here on purpose - an event
- * carrying only those resolves to no studio and produces no card.
+ * The slugs `cosplay` and `design` appear on events but are topical tags rather
+ * than studios, so they are absent here on purpose - an event carrying only
+ * those resolves to no studio, and on /today falls through to the generic
+ * calendar icon.
+ *
+ * `crafts` used to be in that list and is not any more: the brand's own studio
+ * icon sheet has an Arts & Crafts mark, so it is a room rather than a topic.
+ * Checked before adding it - `/events/types/crafts/` comes back titled "Crafts
+ * Archives - Seattle Makers" against the bare "Seattle Makers" a soft-404
+ * gives, so the taxonomy is real. 11 events carry it.
+ *
+ * Icons are all SVG as of 2026-09-22, extracted from the Illustrator master
+ * rather than re-cut from a raster - see *The studio icons* in CLAUDE.md.
  */
 export type Studio = {
   slug: string;
@@ -34,17 +44,23 @@ export type Studio = {
 };
 
 export const STUDIOS: Studio[] = [
-  { slug: 'laser-cutting',   name: 'laser cutting',   icon: '/brand/icons/laser-cutting.png',   eventCategories: ['laser-cutting'] },
-  { slug: '3d-printing',     name: '3d printing',     icon: '/brand/icons/3d-printing.png',     eventCategories: ['3d-printing'] },
-  { slug: 'woodshop',        name: 'woodshop',        icon: '/brand/icons/woodshop.png',        eventCategories: ['woodworking'] },
-  { slug: 'sewing',          name: 'sewing',          icon: '/brand/icons/sewing.png',          eventCategories: ['sewing'] },
-  { slug: 'electronics',     name: 'electronics',     icon: '/brand/icons/electronics.png',     eventCategories: ['electronics'], preferEvent: 'Programmable LEDs' },
-  { slug: 'cnc',             name: 'cnc',             icon: '/brand/icons/cnc.png',             eventCategories: ['cnc', 'cnc-routing'] },
+  { slug: 'laser-cutting',   name: 'laser cutting',   icon: '/brand/icons/laser-cutting.svg',   eventCategories: ['laser-cutting'] },
+  { slug: '3d-printing',     name: '3d printing',     icon: '/brand/icons/3d-printing.svg',     eventCategories: ['3d-printing'] },
+  { slug: 'woodshop',        name: 'woodshop',        icon: '/brand/icons/woodshop.svg',        eventCategories: ['woodworking'] },
+  { slug: 'sewing',          name: 'sewing',          icon: '/brand/icons/sewing.svg',          eventCategories: ['sewing'] },
+  { slug: 'electronics',     name: 'electronics',     icon: '/brand/icons/electronics.svg',     eventCategories: ['electronics'], preferEvent: 'Programmable LEDs' },
+  { slug: 'cnc',             name: 'cnc',             icon: '/brand/icons/cnc.svg',             eventCategories: ['cnc', 'cnc-routing'] },
   { slug: 'ceramics',        name: 'ceramics',        icon: '/brand/icons/ceramics.svg',        eventCategories: ['ceramics'] },
   { slug: 'screen-printing', name: 'screen printing', icon: '/brand/icons/screen-printing.svg', eventCategories: ['print-making'] },
-  { slug: 'leatherworking',  name: 'leatherworking',  icon: '/brand/icons/leatherworking.svg',  eventCategories: ['leatherworking', 'leatherworking-sewing'] },
-  { slug: 'metalworking',    name: 'metalworking',    icon: '/brand/icons/metalworking.png',    eventCategories: [] },
-  { slug: 'av-studio',       name: 'a/v studio',      icon: '/brand/icons/av-studio.png',       eventCategories: [] },
+  { slug: 'arts-crafts',     name: 'arts & crafts',   icon: '/brand/icons/arts-crafts.svg',     eventCategories: ['crafts'] },
+  // The icon sheet has no leatherworking mark, so it borrows sewing's for now.
+  // The two share a calendar tag already (`leatherworking-sewing`), which makes
+  // it the least wrong thing to point at - but it is a placeholder, and a row
+  // tagged only `leatherworking` currently shows a spool of thread.
+  { slug: 'leatherworking',  name: 'leatherworking',  icon: '/brand/icons/sewing.svg',          eventCategories: ['leatherworking', 'leatherworking-sewing'] },
+  { slug: 'metalworking',    name: 'metalworking',    icon: '/brand/icons/metalworking.svg',    eventCategories: [] },
+  { slug: 'av-studio',       name: 'a/v studio',      icon: '/brand/icons/av-studio.svg',       eventCategories: [] },
+  { slug: 'lapidary',        name: 'lapidary',        icon: '/brand/icons/lapidary.svg',        eventCategories: [] },
 ];
 
 export const STUDIO_BY_SLUG = new Map(STUDIOS.map((s) => [s.slug, s]));
