@@ -1049,22 +1049,27 @@ and a negation would paint the hero ink for the first frame of every load.
 5.1cqmin, because its column was whatever the clock's tabular numerals left
 over. Measured: 1007px of band, less a 43px gap, less the 276px the date was
 taking, leaves 688, and "Welcome to Seattle Makers!" needs 809px at 6cqmin.
-Given the full width it is **7cqmin**. The facts moved to a row of their own,
+Given the full width it is **7.2cqmin**, which is the ceiling and not a
+preference: measured at four sizes, the greeting's ink is 944px at 7cqmin, 971
+at 7.2, 998 at 7.4 and 1025 at 7.6 in a 1007px band. Everything is in cqmin, so
+the margin is a ratio that holds at every board size - 7.2 leaves 3.6%, 7.3
+leaves 2.2%, which is six pixels on the narrow board. The facts moved to a row of their own,
 and the clock came down from 5.4 to 4.4cqmin - on a line of reference under a
 7cqmin title it was the loudest thing in the band, which is the wrong way round
 for a clock.
 
-**The gap under the greeting was the clock's fault, not the gap property's.**
+**The gap under the greeting is the clock's doing, not the gap property's.**
 The facts row is baseline-aligned so the small date sits on the clock's line
 rather than floating in the middle of it - and the clock is 47.5px, so the
-shared baseline sits about 36px below the top of that row. The 26px hours line
-was being dragged down with it, opening 17px of nothing under the title that no
-amount of `gap` could close.
+shared baseline sits about 36px below the top of that row, carrying the 26px
+hours line down with it. No amount of `gap` closes that.
 
-`align-self: start` takes the hours off that baseline. The date still pairs
-with the clock, because they sit next to each other and read as one fact; the
-hours is at the far end of the band and pairs with the greeting above it
-instead. The rest was half-leading: the greeting's `line-height` was 1.08 over
+Lifting the hours out of the row with `align-self: start` closes it and was
+tried; it was reverted, because the three facts reading as one line across the
+band is worth more than the space it saves. **The greeting is sized to fill the
+gap instead** - see the note on `.t-welcome`.
+
+What did come out was half-leading: the greeting's `line-height` was 1.08 over
 a line with no descenders, which hangs empty space under it. At 1 the box hugs
 the glyphs, and the descenders on "We open at 2pm today" still clear the line
 below - checked, because that is the one greeting that has any.

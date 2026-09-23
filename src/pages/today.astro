@@ -247,7 +247,7 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
      1007px of band, less a 43px gap, less the 276px the date was taking,
      leaves 688 - and "Welcome to Seattle Makers!" needs 809px at 6cqmin.
 
-     Given the whole width it can be 7, which is a bump somebody notices from
+     Given the whole width it can be 7.2, which is a bump somebody notices from
      the door. The facts drop to a line of their own, where they read as a row
      of reference rather than as a column competing with the greeting. */
   .t-hero {
@@ -288,16 +288,14 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
      relationship the date has to the clock on the other side of the band: the
      greeting is the voice and this is the fact under it. */
   .t-hours {
-    /* Top of the row, not on the clock's baseline.
+    /* On the row's shared baseline with the date and the clock, so the three
+       facts read as one line of reference across the band.
 
-       This is where the gap under the greeting was actually coming from. The
-       row is baseline-aligned so the small date sits on the clock's line - and
-       the clock is 47.5px, so a shared baseline sits about 36px below the top
-       of the row, which pushed this 26px line down with it and opened 17px of
-       nothing under the title. The date still pairs with the clock, because
-       they are next to each other and read as one fact; this is at the far end
-       of the band and pairs with the greeting above it instead. */
-    align-self: start;
+       That baseline sits about 36px below the top of the row, because the
+       clock is 47.5px and sets it - so this 26px line rides down with it and
+       leaves space under the greeting. The greeting is sized to fill that
+       rather than the line being lifted out of the row to avoid it; see the
+       note on `.t-welcome`. */
     line-height: 1.2;
     font-family: var(--font-display);
     font-size: 2.4cqmin;
@@ -352,9 +350,23 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
      longest thing it ever says, and a greeting that breaks itself is smaller
      at five metres than one that does not - so this is measured rather than
      chosen, and the measurement is in the note in CLAUDE.md. */
+  /* 7.2cqmin, which is a ceiling rather than a preference.
+
+     The greeting has the band's full width - 1007px on a 1080 board - and
+     "Welcome to Seattle Makers!" is the longest thing it ever says. Measured
+     at four sizes: 944px of ink at 7cqmin, 971 at 7.2, 998 at 7.4 and 1025 at
+     7.6. So 7.4 clears by nine pixels and 7.6 wraps outright.
+
+     The margin is what picks between them, and it has to be read as a ratio
+     rather than in pixels: everything here is in cqmin, so the band is always
+     93.2cqmin wide and the greeting always the same fraction of it. 7.2 leaves
+     3.6% at every board size; 7.3 leaves 2.2%, which is 6px on the narrow
+     board. A greeting that breaks itself is smaller at five metres, not
+     bigger, so the last 0.1 is not worth the exposure - the difference is
+     about one pixel of type. */
   .t-welcome {
     font-family: var(--font-display);
-    font-size: 7cqmin;
+    font-size: 7.2cqmin;
     font-weight: 800;
     letter-spacing: -0.022em;
     /* 1.0, so the box hugs the glyphs. Any more is half-leading hanging under
