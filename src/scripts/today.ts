@@ -207,8 +207,14 @@ function row(e: SmEvent, st: Status, now: string): HTMLLIElement {
   const studios = studiosForCategories(e.categories);
 
   const tags = el('p', 't-tags');
+  // The badge lives in the time block, not here. "On now" is a statement about
+  // time and belongs beside the time; putting it in the tag row cost that row
+  // about 150px, which on a feature plate is the difference between
+  // "CERTIFICATION · CNC + WOODSHOP  4 LEFT" sitting on one line and wrapping
+  // with the separator orphaned at the head of line two. It also fills a block
+  // that is a plate tall and had one short line in the middle of it.
   const badge = BADGE[st];
-  if (badge) tags.append(el('span', 't-badge', badge));
+  if (badge) t.append(el('span', 't-badge', badge));
   tags.append(el('span', 't-kind', kindOf(e)));
   const studio = studioLabel(studios);
   if (studio) tags.append(el('span', 't-studio', studio));
@@ -376,12 +382,13 @@ function tick(): void {
 
     if (li.dataset.status !== st) {
       li.dataset.status = st;
-      // The badge is the only element whose existence depends on status.
-      const tags = li.querySelector('.t-tags');
-      const existing = tags?.querySelector('.t-badge');
+      // The badge is the only element whose existence depends on status, and
+      // it hangs off the time block - see the note in row().
+      const slot = li.querySelector('.t-time');
+      const existing = slot?.querySelector('.t-badge');
       const wanted = BADGE[st];
       if (existing && !wanted) existing.remove();
-      else if (!existing && wanted) tags?.prepend(el('span', 't-badge', wanted));
+      else if (!existing && wanted) slot?.append(el('span', 't-badge', wanted));
       else if (existing && wanted) existing.textContent = wanted;
     }
 
@@ -624,45 +631,93 @@ function applyMode(): void {
  */
 function fit(): void {
   const rows = [...list!.children] as HTMLLIElement[];
-  for (const r of rows) r.hidden = false;
-  more!.hidden = true;
-
   const overflows = () => list!.scrollHeight > list!.clientHeight + 1;
+
+  const showAll = () => {
+    for (const r of rows) r.hidden = false;
+    more!.hidden = true;
+  };
+
+  /**
+   * Hide what is expendable, in order, and report what went.
+   *
+   * Finished events first, oldest first - they are the least useful thing on a
+   * board about what is happening. Then the far end of the day, latest first.
+   * Never a live row or the next one.
+   */
+  const drop = (): { past: number; later: number } => {
+    let past = 0;
+    let later = 0;
+    for (const r of rows.filter((r) => r.dataset.status === 'past')) {
+      if (!overflows()) break;
+      r.hidden = true;
+      past++;
+    }
+    for (const r of rows.filter((r) => r.dataset.status === 'later').reverse()) {
+      if (!overflows()) break;
+      r.hidden = true;
+      later++;
+    }
+    return { past, later };
+  };
+
+  list!.classList.remove('is-dense');
+  showAll();
   if (!overflows()) return;
 
-  const sacrificial = (r: HTMLLIElement) =>
-    r.dataset.status !== 'live' && r.dataset.status !== 'next';
+  let gone = drop();
 
-  // Finished events first, oldest first - they are the least useful thing on
-  // a board about what is happening.
-  const past = rows.filter((r) => r.dataset.status === 'past');
-  // Then the far end of the day, latest first.
-  const tail = rows.filter((r) => r.dataset.status === 'later').reverse();
-
-  let droppedPast = 0;
-  let droppedLater = 0;
-  for (const r of past) {
-    if (!overflows()) break;
-    r.hidden = true;
-    droppedPast++;
-  }
-  for (const r of tail) {
-    if (!overflows()) break;
-    if (!sacrificial(r)) continue;
-    r.hidden = true;
-    droppedLater++;
+  /**
+   * Still over, with nothing expendable left - so what will not fit is the
+   * feature tier itself, and a live row can never be hidden.
+   *
+   * **Found with real data, and it was silent.** Three classes start at 6pm on
+   * 2026-10-07; three green plates and an "up next" came to 1637px in a
+   * 1543px list, so the next class was clipped by `overflow: hidden` with
+   * nothing on the board admitting it. A board that looks like the day ends
+   * early is the exact failure this whole pass exists to prevent, and the
+   * old code walked into it whenever the tier alone overflowed - the fixture
+   * never had more than one live row, so it never came up.
+   *
+   * The answer is to stop showing the tier rather than to clip it. Dense mode
+   * drops every row to the queue shape - one line each, plates and badges
+   * intact, so what is running is still obvious - and the drop pass runs
+   * again over the smaller rows.
+   */
+  if (overflows()) {
+    list!.classList.add('is-dense');
+    showAll();
+    gone = overflows() ? drop() : { past: 0, later: 0 };
   }
 
   const parts: string[] = [];
-  if (droppedPast) parts.push(`${droppedPast} earlier`);
-  if (droppedLater) parts.push(`${droppedLater} later`);
-  if (parts.length) {
-    more!.textContent = `+ ${parts.join(' · ')} not shown`;
-    more!.hidden = false;
-    // The line itself takes room; if that tips it over, give back one row.
-    if (overflows()) {
-      const lastHidden = [...rows].reverse().find((r) => r.hidden);
-      if (lastHidden && !overflows()) lastHidden.hidden = false;
+  if (gone.past) parts.push(`${gone.past} earlier`);
+  if (gone.later) parts.push(`${gone.later} later`);
+  if (!parts.length) return;
+
+  more!.textContent = `+ ${parts.join(' · ')} not shown`;
+  more!.hidden = false;
+
+  // The line itself takes room, so revealing it can be what tips the list
+  // over. Hide one more and say so.
+  //
+  // This used to read `if (overflows()) { ...; if (!overflows()) reveal }` -
+  // a condition that cannot be true inside its own negation, so the branch
+  // was dead and the line could overflow the board unchecked.
+  if (overflows()) {
+    // Same order drop() uses, so the one that goes is the one that was next
+    // in line: the latest remaining "later", else the oldest remaining "past".
+    const next =
+      [...rows].reverse().find((r) => !r.hidden && r.dataset.status === 'later') ??
+      rows.find((r) => !r.hidden && r.dataset.status === 'past');
+    if (next) {
+      next.hidden = true;
+      if (next.dataset.status === 'past') gone.past++;
+      else gone.later++;
+      const redo: string[] = [];
+      if (gone.past) redo.push(`${gone.past} earlier`);
+      if (gone.later) redo.push(`${gone.later} later`);
+      more!.textContent = `+ ${redo.join(' · ')} not shown`;
     }
   }
 }

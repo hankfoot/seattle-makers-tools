@@ -407,6 +407,56 @@ is exactly the kind of divergence a fixture exists to prevent.
 **Exactly one row is ever `next`.** "Up next" has to mean one thing on a board,
 or it is a synonym for "not yet" repeated down the page.
 
+**The fit pass has an escape hatch now, and real data is what found the hole.**
+
+fit() may never hide a live row or the next one - those are the two facts the
+board exists to show. So when *those alone* overflow, there was nothing left to
+drop and the pass simply gave up, leaving `overflow: hidden` to cut the last
+plate in half with nothing on the board admitting to it. A board that looks
+like the day ends early is the exact failure this whole pass exists to prevent.
+
+It was invisible against the fixture, which has one live row. Three classes
+start at 6pm on **2026-10-07** - Industrial Sewing, Big CNC and the CNC series -
+and three lit plates plus an "up next" came to 1637px in a 1543px list, with the
+next class clipped and the board saying only "+ 1 later not shown".
+
+**Dense mode** is the answer: rather than clip the tier, stop showing it. Every
+row drops to the queue shape - one line each, but the plates keep their colour
+and the badges keep their text, so what is running is still the one green block
+on the board. It is the tier that goes, not the information. The drop pass then
+runs again over the smaller rows. Verified at 1000x1050, where all five of that
+day's events fit with nothing hidden and nothing clipped.
+
+Its CSS is the queue geometry restated under `.t-list.is-dense`, which outranks
+the `.t-row:is(...)` tier rules on specificity alone - no `!important`
+anywhere.
+
+**A dead branch in the same function, found while rewriting it.** The "if the
++N line itself tips the list over, give a row back" step read
+`if (overflows()) { const r = …; if (!overflows()) r.hidden = false }` - an
+inner condition that cannot be true inside its own negation. It never ran, so
+the line could push the last row off the board unchecked. It hides one *more*
+row now, in the same order drop() uses, and updates the count to match.
+
+**The badge moved into the time block, and it fixed two things at once.** "On
+now" is a statement about time and belongs beside the time. In the tag row it
+cost about 150px, which on the real calendar was the difference between
+`CERTIFICATION · CNC + WOODSHOP  4 LEFT` sitting on one line and wrapping - with
+the `·` separator, which lives in `.t-studio::before`, orphaned at the head of
+line two. It also fills a block that is a plate tall and had one short line in
+the middle of it. Moving it was enough on its own to make 2026-10-07 fit without
+dense mode at all.
+
+tick() had to follow: the badge is the one element whose existence depends on
+status, and it is appended to `.t-time` rather than prepended to `.t-tags`.
+
+**The board is verified against the live calendar now, not only the fixture.**
+`?now=HH:MM&on=YYYY-MM-DD` drives both the clock and the fetched day, so any
+real date is a link. Worth using a genuinely busy one: the fixture is eight
+tidy rows chosen by us, and what breaks a layout like this is a 54-character
+title, a two-studio row, three simultaneous starts, and a day where three
+events in five carry no picture at all. Every one of those is on 2026-10-07.
+
 **Two tiers, and the tier is the whole design.** Every row carries the same
 elements; `data-status` decides how much of the board each gets.
 

@@ -653,7 +653,7 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
      its own, which is the one label there somebody acts on. A long studio pair
      ("leatherworking + sewing") will still wrap, and that is fine - what was
      wrong was the common case wrapping. */
-  .t-row:is([data-status='live'], [data-status='next']) :is(.t-studio, .t-kind, .t-flag, .t-badge) {
+  .t-row:is([data-status='live'], [data-status='next']) :is(.t-studio, .t-kind, .t-flag) {
     font-size: 1.7cqmin;
   }
 
@@ -745,8 +745,17 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
     align-items: center;
     padding: 0.5cqmin 1.3cqmin;
     border-radius: 999px;
+    font-size: 1.5cqmin;
     color: #fff;
     background: var(--color-sm-green);
+  }
+
+  /* It hangs off the time block, under the meridiem on a feature plate. The
+     block is a plate tall and held one short line; this is the most relevant
+     thing that could fill it, and moving it out of the tag row is what stopped
+     that row wrapping on the real calendar's longer studio names. */
+  .t-row:is([data-status='live'], [data-status='next']) .t-badge {
+    margin-top: 1.2cqmin;
   }
 
   /* Knocked out on the lit plate: a green pill on a green ground is a hole. */
@@ -912,6 +921,90 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
 
   .t-row[data-status='next'] .t-thumb.is-icon {
     background: var(--color-sm-paper);
+  }
+
+  /* ======================================================== dense mode ===
+
+     The escape hatch, set by fit() when even the feature tier will not fit.
+
+     A wall screen cannot be scrolled, so a plate past the bottom edge is
+     invisible with no way to reveal it - and fit() may never hide a live row
+     or the next one, which are the two facts the board exists to show. When
+     those alone overflow there is nothing left to drop, and the old code
+     simply let `overflow: hidden` cut the last plate in half with nothing on
+     the board admitting to it.
+
+     Real data found it: three classes start at 6pm on 2026-10-07, and three
+     lit plates plus an "up next" came to 1637px in a 1543px list. The
+     fixture had one live row, so it never came up.
+
+     So the board stops showing the tier rather than clipping it. Every row
+     drops to the queue shape - but the plates keep their colour and the badges
+     keep their text, so what is running is still the one green block on the
+     board. It is the tier that goes, not the information.
+
+     Everything here is the queue geometry restated at a higher specificity.
+     The tier rules are written against `.t-row:is(...)`, so `.t-list.is-dense`
+     in front of the same selector wins without an `!important` anywhere. */
+
+  .t-list.is-dense .t-row:is([data-status='live'], [data-status='next']) {
+    --shot: 8.5cqmin;
+    --pad: 1.5cqmin;
+    max-height: 18cqmin;
+  }
+
+  .t-list.is-dense .t-row:is([data-status='live'], [data-status='next']) .t-body {
+    display: flex;
+  }
+
+  .t-list.is-dense .t-row:is([data-status='live'], [data-status='next']) .t-title {
+    margin-right: auto;
+    font-size: 2.6cqmin;
+  }
+
+  .t-list.is-dense .t-row:is([data-status='live'], [data-status='next']) .t-sum {
+    display: none;
+  }
+
+  .t-list.is-dense .t-row:is([data-status='live'], [data-status='next']) .t-note {
+    display: inline;
+    margin-top: 0;
+    font-size: 1.4cqmin;
+  }
+
+  .t-list.is-dense .t-row:is([data-status='live'], [data-status='next']) :is(.t-studio, .t-kind, .t-flag) {
+    font-size: 1.3cqmin;
+  }
+
+  /* Back to one line, and the badge beside the time rather than under it.
+     `flex-wrap: wrap` is the safety net: a block this narrow cannot always
+     hold "11:30 PM" and "ON NOW" side by side, and a wrapped badge costs one
+     short line where an overflowing one costs the plate. */
+  .t-list.is-dense .t-row:is([data-status='live'], [data-status='next']) .t-time {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0.4cqmin 0.7cqmin;
+  }
+
+  .t-list.is-dense .t-row:is([data-status='live'], [data-status='next']) .t-h {
+    font-size: 2.7cqmin;
+  }
+
+  .t-list.is-dense .t-row:is([data-status='live'], [data-status='next']) .t-mer {
+    font-size: 1.3cqmin;
+  }
+
+  .t-list.is-dense .t-row:is([data-status='live'], [data-status='next']) .t-badge {
+    margin-top: 0;
+    padding: 0.28cqmin 0.9cqmin;
+    font-size: 1.15cqmin;
+  }
+
+  /* The progress bar is the one thing that genuinely has nowhere to go on a
+     single line. Its number survives as words in .t-note, which is what a
+     screen reader was getting from it anyway. */
+  .t-list.is-dense .t-progress {
+    display: none;
   }
 
   /* A board on a wall is the one screen nobody chose to look at, so the
