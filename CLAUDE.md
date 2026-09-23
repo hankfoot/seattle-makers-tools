@@ -721,11 +721,20 @@ than as a row that never had one.
 
 **The queue's right-hand cluster is right-justified on every line, not just the
 first.** With a long title the meta wraps, and left to itself that second line
-packs to the left - which strands "finished" on the right of line one above a
+packs to the left - which strands a note on the right of line one above a
 left-aligned row of labels, reading as two different rows. `justify-content:
 flex-end` on the row body fixes it; the `margin-right: auto` on the title still
 wins on line one, because auto margins take the free space before
 justify-content sees it.
+
+**Only the two rows somebody can act on get a note at all.** A finished class
+said "finished" until 2026-09-22, which was a fourth way of saying the same
+thing - the plate has already faded, the time on it has already gone by, and it
+is sitting above the row that is running. It was also the note that kept
+triggering the wrap above, so on any past row with a long title the word ended
+up stranded on a line of its own: the most conspicuous thing about the event
+nobody needs to look at. `statusNote()` returns `''` for `past` now, the same
+as it always has for `later`, and `npm test` pins both.
 
 **The clock earns its place rather than decorating.** Every time note on this
 board is relative - "starts in 45m", "1h 15m left" - and a relative time with

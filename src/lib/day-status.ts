@@ -175,7 +175,19 @@ export function clock(iso: string): string {
   return `${hour} ${meridiem}`;
 }
 
-/** The line under a row: what the status actually means in time terms. */
+/**
+ * The line under a row: what the status actually means in time terms.
+ *
+ * Only the two rows somebody can still act on get one. A finished class used to
+ * say "finished", which was a fourth way of saying the same thing - the plate
+ * has already faded, the time on it has already gone by, and it is sitting
+ * above the row that is running. It also had to be placed: on a queue row the
+ * note joins the meta cluster at the right-hand edge, so on any row with a long
+ * title it wrapped, and the word stranded on a line of its own was the most
+ * conspicuous thing about an event nobody needs to look at.
+ *
+ * "Later" has never had one. `.t-time` already says when.
+ */
 export function statusNote(status: Status, start: string, end: string, now: string): string {
   if (status === 'live') {
     const left = gap(now, end);
@@ -185,6 +197,5 @@ export function statusNote(status: Status, start: string, end: string, now: stri
     const until = gap(now, start);
     return until ? `starts in ${until}` : 'starting now';
   }
-  if (status === 'past') return 'finished';
   return '';
 }

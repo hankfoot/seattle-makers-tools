@@ -100,6 +100,11 @@ eq(startingSoon('2026-09-19T14:00', '2026-09-19T14:00'), true, 'starting now is 
 
 eq(statusNote('live','2026-09-19T13:00','2026-09-19T15:00','2026-09-19T14:00'), '1h left', 'live note');
 eq(statusNote('next','2026-09-19T13:00','2026-09-19T15:00','2026-09-19T12:30'), 'starts in 30m', 'next note');
+// Only the two rows somebody can still act on get a note. "finished" was a
+// fourth way of saying what the faded plate, the passed time and the position
+// above the running row already say.
+eq(statusNote('past','2026-09-19T13:00','2026-09-19T15:00','2026-09-19T16:00'), '', 'finished says nothing');
+eq(statusNote('later','2026-09-19T18:00','2026-09-19T19:00','2026-09-19T12:00'), '', 'later says nothing');
 
 // --- the shapes the real calendar actually contains ---
 // This used to sweep src/data/events.json. That file is gone, and a test that
