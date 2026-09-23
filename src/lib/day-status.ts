@@ -169,6 +169,21 @@ export function clockParts(iso: string): { hour: string; meridiem: string } {
   return { hour: `${h12}:${iso.slice(14, 16)}`, meridiem: h < 12 ? 'am' : 'pm' };
 }
 
+/**
+ * The end of a session as it reads under its own start: "– 4:15", or
+ * "– 1:00pm" when the meridiem has turned over between the two.
+ *
+ * Dropping the repeated meridiem is the whole point. A block showing
+ * "2:15 PM" over "– 4:15 PM" says pm twice in two lines of a column that is
+ * read hundreds of times a day; the only time it carries information is when
+ * the session crosses noon or midnight, and then it appears.
+ */
+export function endLabel(start: string, end: string): string {
+  const a = clockParts(start);
+  const b = clockParts(end);
+  return b.meridiem === a.meridiem ? `– ${b.hour}` : `– ${b.hour}${b.meridiem}`;
+}
+
 /** "2:00 pm" from a floating local string. Still what the hero clock wants. */
 export function clock(iso: string): string {
   const { hour, meridiem } = clockParts(iso);

@@ -5,7 +5,7 @@
  * Run with `npm test`. Node strips the types; there is no test framework and
  * no build step, which is the whole reason this is a plain .mjs.
  */
-import { sessionEnd, statuses, progress, gap, clock, clockParts, startingSoon, SOON_MINUTES, statusNote }
+import { sessionEnd, statuses, progress, gap, clock, clockParts, endLabel, startingSoon, SOON_MINUTES, statusNote }
   from '../src/lib/day-status.ts';
 
 let pass = 0, fail = 0;
@@ -61,6 +61,13 @@ eq(clockParts('2026-09-19T11:59').meridiem, 'am', 'parts: minute before noon is 
 eq(clockParts('2026-09-19T14:30').hour, '2:30', 'parts: afternoon hour drops the leading zero');
 // The two must never disagree - clock() is the hero's and is built from these.
 eq(clock('2026-09-19T09:05'), `${clockParts('2026-09-19T09:05').hour} ${clockParts('2026-09-19T09:05').meridiem}`, 'parts and clock agree');
+// --- the end time, under the start ---
+// The meridiem is dropped when it repeats, and kept when it turns over.
+eq(endLabel('2026-09-19T14:15', '2026-09-19T16:15'), '– 4:15',    'same half of the day drops pm');
+eq(endLabel('2026-09-19T11:30', '2026-09-19T13:00'), '– 1:00pm',  'crossing noon keeps it');
+eq(endLabel('2026-09-19T23:00', '2026-09-20T00:30'), '– 12:30am', 'crossing midnight keeps it');
+eq(endLabel('2026-09-19T09:00', '2026-09-19T11:30'), '– 11:30',   'morning to morning drops am');
+
 // --- a cancelled class is never running and is never what is next ---
 // Both of these were true of the live calendar before `off` existed: the
 // cancelled ceramics class came out `next` at 17:10 and `live` at 18:00.

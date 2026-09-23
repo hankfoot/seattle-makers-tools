@@ -33,6 +33,7 @@ import {
   sessionEnd,
   clock,
   clockParts,
+  endLabel,
   progress,
   statusNote,
   nowLocal,
@@ -253,6 +254,10 @@ function row(e: SmEvent, st: Status, now: string): HTMLLIElement {
   const t = el('span', 't-time');
   const parts = clockParts(e.start);
   t.append(el('span', 't-h', parts.hour), el('span', 't-mer', parts.meridiem));
+  // The end under the start, in the same block. The block is a plate tall and
+  // was holding one line; a session's end is the other half of the fact the
+  // column exists to carry, and it costs no height at all.
+  t.append(el('span', 't-end', endLabel(e.start, sessionEnd(e.start, e.end))));
   li.append(t);
 
   const body = el('div', 't-body');
