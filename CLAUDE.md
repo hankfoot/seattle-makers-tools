@@ -610,39 +610,49 @@ what keeps the progress bar's transition alive and what the whole file is built
 around. Markup that differed by tier would force a re-render on every status
 change. As it is, a class that goes live at 2:15 simply grows where it stands.
 
-**The list is a flex column and rows take up the day's slack.** A board holds
-four events on a Tuesday and nine on a Saturday; with the queue rows collapsed,
-a quiet day ended in a third of a screen of white paper under the last row.
-Queue rows are `flex: 1 0 auto` with a `max-height`.
+**Nothing on this board grows into the day's slack, and getting there took two
+goes at the same wrong idea.**
 
-Both halves of that are load-bearing. The **`0`** is: a row allowed to shrink
-would silently squash its own content instead of overflowing the list, and
-fit() detects "too many rows" by asking whether the list overflows - shrinkable
-rows would let it crush eight events into the space for six and report that
-everything fits. The **cap** is the other end: two events on a quiet Tuesday
-would otherwise each take half the screen. It is set well clear of the tallest
-thing a queue row can hold, because the row is `overflow: hidden` and a cap
-that bites into content clips it rather than compressing it.
+The list is a flex column, and rows were `flex: 1 0 auto` with a per-tier
+`max-height` so that a quiet day did not end in a screen of empty ground. That
+was written when the board was white with hairline rows, where trailing space
+read as an unfinished page.
 
-**The feature tier does not grow at all, and letting it was a mistake worth
-recording.** "The stage takes whatever the queue does not need" sounds right
-and looks broken: on 2026-09-27 three classes run at once, and the three plates
-came out 508-559px tall holding 410px of content - about 150px of dead white
-each, with the green time block stretching through all of it. A grown plate
-does not read as generous, it reads as empty. The queue absorbs the slack
-instead, and what is left over sits at the bottom of the board as ground, which
-reads as "that is all that is on" - which is true.
+It is wrong, and for one reason that applies to both tiers: **the things inside
+a row are fixed sizes, so a taller row is not a bigger row - it is the same row
+with more space around it.**
 
-Not growing also retires a clipping hazard, since a row that cannot grow has no
-use for a cap. **But the base rule's cap still applies unless it is explicitly
-lifted**, and that is the trap: removing the feature tier's own `max-height`
-left the queue's 20cqmin in force over it and cut three live plates off
-mid-sentence. `max-height: none` on the tier is what makes it safe. Measured
-after: 417/409, 366/358 and 373/365 - plate against content, the 8px being the
-border.
+- On the **feature** tier it showed as dead white. 2026-09-27 has three classes
+  running at once, and the three plates came out 508-559px tall holding 410px
+  of content: about 150px of nothing each, with the green time block stretching
+  through all of it.
+- Moving the growth to the **condensed** tier just moved the symptom. A queue
+  row grew to 216px around a picture that stays 119px square, so the inset
+  became a band of padding above and below it.
 
-A very quiet day still ends in some white, which is honest - that is all there
-is today.
+So nothing grows now. Leftover space sits at the foot of the list, where mist
+ground under a stack of plates reads as "that is all that is on" - which is
+true, and is what a stack of cards does anyway. Measured after: feature rows
+417/409, 366/358, 373/365 plate against content (the 8px is the border), and a
+condensed row 153px holding a 119px picture - 17px around it, which is the
+13px inset plus the border.
+
+**`flex-shrink: 0` stays, and separately.** A row allowed to shrink would
+silently squash its own content instead of overflowing the list, and fit()
+detects "too many rows" by asking whether the list overflows - shrinkable rows
+would let it crush eight events into the space for six and report that
+everything fits.
+
+**No growth also means no `max-height` anywhere**, which retires a real hazard:
+these rows are `overflow: hidden`, so a cap that bites into content cuts it off
+rather than compressing it. That happened once - removing the feature tier's
+own cap left the base rule's in force over it and sliced three live plates off
+mid-sentence.
+
+**The condensed tier keeps one `min-height`**, equal to the picture plus twice
+its inset, so a row with no picture is not visibly shorter than the ones around
+it (145px against 153px). It cannot be written as that `calc()`, because
+`.is-bare` zeroes both inputs and the floor would go with them.
 
 Verified under pressure at 900x1000: three earlier and two later dropped, "+ 3
 EARLIER · 2 LATER NOT SHOWN" printed, and the live and next rows owning the

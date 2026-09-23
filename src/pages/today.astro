@@ -421,42 +421,38 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
     box-shadow:
       0 1px 2px rgb(20 25 22 / 0.05),
       0 2px 10px rgb(20 25 22 / 0.05);
-    /* Grow into the day's slack, and never shrink. The `0` is the load-bearing
-       half: a row allowed to shrink would silently squash its own content
-       instead of overflowing the list, and fit() detects "too many rows" by
-       asking whether the list overflows. Shrinkable rows would let it crush
-       eight events into the space for six and report that everything fits.
+    /* Nothing on this board grows into the day's slack, and nothing shrinks.
 
-       The cap stops the other end - two events on a quiet Tuesday would
-       otherwise each take half the screen. Set well clear of the tallest thing
-       a row of that tier can hold, because the row is `overflow: hidden` and a
-       cap that bites into content clips it rather than compressing it. */
-    flex: 1 0 auto;
-    max-height: 20cqmin;
+       Growing was tried on both tiers and is wrong on both, for one reason:
+       the things inside a row are fixed sizes, so a taller row is not a bigger
+       row - it is the same row with more space around it. On the feature tier
+       that showed as 150px of dead white beside a stretched green block; on
+       the condensed tier it showed as a square picture floating in a band of
+       its own padding. Leftover space belongs at the foot of the list, where
+       the mist ground reads as "that is all that is on" - which is true, and
+       is what a stack of cards does anyway.
+
+       `flex-shrink: 0` is separately load-bearing: a row allowed to shrink
+       would silently squash its own content instead of overflowing the list,
+       and fit() detects "too many rows" by asking whether the list overflows.
+       Shrinkable rows would let it crush eight events into the space for six
+       and report that everything fits.
+
+       No growth also means no `max-height` anywhere, which retires the
+       clipping hazard that came with it - a cap on an `overflow: hidden` row
+       cuts content off rather than compressing it, and it did exactly that
+       once. */
+    flex: 0 0 auto;
+    /* One floor for the whole condensed tier, so a row with no picture is not
+       visibly shorter than the ones around it. Equals `--shot` plus twice
+       `--shot-gap`; it cannot be written as that calc, because `.is-bare`
+       zeroes both and the floor would go with them. */
+    min-height: 13.4cqmin;
   }
 
-  /* The feature tier does not grow, and the queue absorbs the slack instead.
-
-     Letting it grow was the obvious reading of "the stage takes whatever the
-     queue does not need", and on a board that is mostly feature rows it looks
-     broken: three classes running at once on 2026-09-27 gave three plates of
-     508-559px holding 410px of content, so each carried about 150px of dead
-     white with the green time block stretching through all of it. A grown
-     plate does not read as generous, it reads as empty.
-
-     Nothing grows means nothing needs a cap here either, which also retires a
-     clipping hazard: these rows hold a three-line title, a two-line summary, a
-     countdown and a progress bar, and any cap low enough to stop the dead
-     space would have been low enough to cut one of them off. */
   .t-row.is-up {
     --shot: 22cqmin;
     --pad: 2.8cqmin;
-    flex-grow: 0;
-    /* Explicitly, and it is not tidiness: the base rule's cap is meant for a
-       one-line queue row, and left in force here it cut three live plates off
-       mid-sentence the moment their own caps were removed. A cap on a row that
-       cannot grow has nothing to do except clip. */
-    max-height: none;
   }
 
   /* Faded, not sunk. The first version dropped the plate entirely so a
@@ -1052,9 +1048,6 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
   .t-list.is-dense .t-row.is-up {
     --shot: 11cqmin;
     --pad: 1.5cqmin;
-    /* Queue-shaped here, so it takes the queue's share of the slack too. */
-    flex-grow: 1;
-    max-height: 20cqmin;
   }
 
   .t-list.is-dense .t-row.is-up .t-body {
@@ -1345,24 +1338,13 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
          miniature stops being a miniature. */
       gap: 0.6cqmin 0;
       --shot: 13cqmin;
-      /* Stacked rows share out the day's slack like the wide ones, but they
-         need `align-content` to do it. The grid is two rows deep here - time
-         above the words - and auto rows stretch by default, so a grown row
-         opened a band of white between a time and its own title. Centring the
-         whole grid instead puts the slack outside the pair, where it reads as
-         the row's own padding.
-
-         The caps are looser than the wide layout's for the obvious reason:
-         every row is taller stacked. */
-      align-content: center;
-      max-height: 24cqmin;
+      /* The wide layout's floor is a picture-plus-inset it does not have here:
+         the picture sits under the time bar rather than beside it, so a row is
+         as tall as its two stacked halves and nothing else. */
+      min-height: 0;
     }
     .t-row.is-up {
       --shot: 22cqmin;
-      max-height: 64cqmin;
-    }
-    .t-row[data-status='live'] {
-      max-height: 72cqmin;
     }
     /* Smaller in proportion down here, not bigger. It used to sit in the hero
        as the only thing saying where you were, and wanted every pixel; in the
