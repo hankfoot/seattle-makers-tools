@@ -33,7 +33,6 @@ import {
   clock,
   clockParts,
   progress,
-  startingSoon,
   statusNote,
   nowLocal,
   type Status,
@@ -179,48 +178,6 @@ function thumbOf(e: SmEvent): string | null {
   return THUMB_HOST.test(u) ? u : null;
 }
 
-/**
- * The badge on the time block, or nothing.
- *
- * "Starting soon", not "Up next". Both name the same single row - see the note
- * on `statuses()` - but one describes a position in a list and the other
- * describes the thing somebody in the doorway actually wants to know. A board
- * is not a queue you are waiting in.
- *
- * And because it says *soon*, it has to mean it: the row that is next at nine
- * in the morning can be six hours away, and a badge reading "starting soon"
- * over it is simply false. Inside 30 minutes it is an instruction - start
- * walking to the room - and outside it the row keeps its prominence and its
- * "starts in 4h", which is the honest version of the same thing.
- */
-function badgeFor(st: Status, start: string, now: string): string | null {
-  if (st === 'live') return 'On now';
-  if (st === 'next' && startingSoon(start, now)) return 'Starting soon';
-  return null;
-}
-
-/**
- * Put the badge in the time block, take it out, or change its text - and raise
- * or drop the row's tier with it.
- *
- * Those are the same question. A row is elevated exactly when it has something
- * to announce: it is running, or it is about to start. A class six hours out is
- * the *next* one, but nothing about it is worth half the board yet, so it sits
- * in the condensed tier with everything else until its half-hour comes round.
- *
- * Shared by the first render and every tick because the two now disagree about
- * when it should run - see the note in tick().
- */
-function syncBadge(row: Element, wanted: string | null): void {
-  row.classList.toggle('is-up', wanted !== null);
-  const slot = row.querySelector('.t-time');
-  if (!slot) return;
-  const existing = slot.querySelector('.t-badge');
-  if (!wanted) existing?.remove();
-  else if (!existing) slot.append(el('span', 't-badge', wanted));
-  else existing.textContent = wanted;
-}
-
 function el(tag: string, cls: string, text?: string): HTMLElement {
   const n = document.createElement(tag);
   if (cls) n.className = cls;
@@ -228,6 +185,33 @@ function el(tag: string, cls: string, text?: string): HTMLElement {
   // page, so they are untrusted text and must never be parsed as markup.
   if (text !== undefined) n.textContent = text;
   return n;
+}
+
+/**
+ * Put the countdown under the description, take it out, or change its words -
+ * and raise or drop the row's tier with it.
+ *
+ * Those are one question, which is why they are one function. A row is
+ * elevated exactly when `statusNote()` gives it something to say: it is
+ * running, or it is starting inside the half hour. A class six hours out is
+ * the *next* one, but nothing about it is worth half the board yet, so it
+ * stays condensed and says nothing until its half-hour comes round.
+ *
+ * The state used to be a pill in the time block - "On now", "Starting soon" -
+ * with the countdown repeating it underneath. That was the same fact in two
+ * places, and the time block is for the time.
+ *
+ * Shared by the first render and every tick, because the two disagree about
+ * when it should run - see the note in tick().
+ */
+function syncNote(row: Element, wanted: string): void {
+  row.classList.toggle('is-up', wanted !== '');
+  const body = row.querySelector('.t-body');
+  if (!body) return;
+  const existing = body.querySelector('.t-note');
+  if (!wanted) existing?.remove();
+  else if (!existing) body.append(el('p', 't-note', wanted));
+  else existing.textContent = wanted;
 }
 
 /**
@@ -256,17 +240,6 @@ function row(e: SmEvent, st: Status, now: string): HTMLLIElement {
   const studios = studiosForCategories(e.categories);
 
   const tags = el('p', 't-tags');
-  // The badge lives in the time block, not here. "On now" is a statement about
-  // time and belongs beside the time; putting it in the tag row cost that row
-  // about 150px, which on a feature plate is the difference between
-  // "CERTIFICATION · CNC + WOODSHOP  4 LEFT" sitting on one line and wrapping
-  // with the separator orphaned at the head of line two. It also fills a block
-  // that is a plate tall and had one short line in the middle of it.
-  const badge = badgeFor(st, e.start, now);
-  if (badge) {
-    li.classList.add('is-up');
-    t.append(el('span', 't-badge', badge));
-  }
   tags.append(el('span', 't-kind', kindOf(e)));
   const studio = studioLabel(studios);
   if (studio) tags.append(el('span', 't-studio', studio));
@@ -286,8 +259,13 @@ function row(e: SmEvent, st: Status, now: string): HTMLLIElement {
   if (e.summary) body.append(el('p', 't-sum', e.summary));
 
   const end = sessionEnd(e.start, e.end);
+  // The countdown, and the tier with it - a row is elevated exactly when it
+  // has something to say. See syncNote().
   const note = statusNote(st, e.start, end, now);
-  if (note) body.append(el('p', 't-note', note));
+  if (note) {
+    li.classList.add('is-up');
+    body.append(el('p', 't-note', note));
+  }
 
   if (st === 'live') {
     const bar = el('div', 't-progress');
@@ -442,24 +420,13 @@ function tick(): void {
 
     if (li.dataset.status !== st) li.dataset.status = st;
 
-    // Outside that check, deliberately. The badge used to depend on status
-    // alone, so reconciling it only on a transition was enough. It does not
-    // any more: a "next" row 35 minutes out carries no badge and the same row
-    // five minutes later carries one, with nothing about its status having
-    // changed. Left inside, "Starting soon" would appear only when some
-    // *other* event happened to change state.
-    syncBadge(li, badgeFor(st, e.start, stamp));
-
-    const note = statusNote(st, e.start, end, stamp);
-    let noteEl = li.querySelector('.t-note');
-    if (note && !noteEl) {
-      noteEl = el('p', 't-note', note);
-      li.querySelector('.t-body')?.append(noteEl);
-    } else if (note && noteEl) {
-      noteEl.textContent = note;
-    } else if (!note && noteEl) {
-      noteEl.remove();
-    }
+    // Outside that check, deliberately. The note - and the tier that follows
+    // it - used to depend on status alone, so reconciling only on a transition
+    // was enough. It does not any more: a "next" row 35 minutes out says
+    // nothing and the same row five minutes later says "Starting soon", with
+    // nothing about its status having changed. Left inside, the row would grow
+    // only when some *other* event happened to change state.
+    syncNote(li, statusNote(st, e.start, end, stamp));
 
     const bar = li.querySelector('.t-progress');
     if (st === 'live') {

@@ -98,11 +98,13 @@ eq(startingSoon('2026-09-19T18:00', '2026-09-19T09:00'), false, 'nine hours out 
 // ever is.
 eq(startingSoon('2026-09-19T14:00', '2026-09-19T14:00'), true, 'starting now is soon');
 
-eq(statusNote('live','2026-09-19T13:00','2026-09-19T15:00','2026-09-19T14:00'), '1h left', 'live note');
-eq(statusNote('next','2026-09-19T13:00','2026-09-19T15:00','2026-09-19T12:30'), 'starts in 30m', 'next note');
-// Only the two rows somebody can still act on get a note. "finished" was a
-// fourth way of saying what the faded plate, the passed time and the position
-// above the running row already say.
+eq(statusNote('live','2026-09-19T13:00','2026-09-19T15:00','2026-09-19T14:00'), 'On now · 1h left', 'live note carries the state');
+eq(statusNote('next','2026-09-19T13:00','2026-09-19T15:00','2026-09-19T12:30'), 'Starting soon · in 30m', 'next note at the boundary');
+// The note is also what raises a row's tier in today.ts, so an empty one means
+// a condensed row. A class six hours out has nothing on it to act on, and a
+// finished one says nothing that the greyed plate and the passed time do not.
+eq(statusNote('next','2026-09-19T18:00','2026-09-19T19:00','2026-09-19T12:00'), '', 'next but not soon says nothing');
+eq(statusNote('next','2026-09-19T13:00','2026-09-19T15:00','2026-09-19T12:29'), '', '31m out says nothing');
 eq(statusNote('past','2026-09-19T13:00','2026-09-19T15:00','2026-09-19T16:00'), '', 'finished says nothing');
 eq(statusNote('later','2026-09-19T18:00','2026-09-19T19:00','2026-09-19T12:00'), '', 'later says nothing');
 

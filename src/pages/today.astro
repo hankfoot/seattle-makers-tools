@@ -746,9 +746,11 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
     color: var(--color-sm-slate);
   }
 
-  /* How long is left, or how long until - the one number on a feature row
-     that changes while you are standing there, so it is sized to be read at
-     the same distance as the title. */
+  /* What is happening and how long it has - "On now · 50m left", "Starting
+     soon · in 20m". It only ever appears on an elevated row, because the note
+     is what elevates it: see statusNote(). Sized to be read at the same
+     distance as the title, since it is the one line here that changes while
+     somebody is standing in front of it. */
   .t-row.is-up .t-note {
     display: block;
     margin-top: 1.2cqmin;
@@ -758,10 +760,38 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
     color: var(--color-sm-green-dark);
   }
 
+  /* A status light, in the vernacular of every machine in the building: the
+     thing that is running has a lamp on it. It used to sit on the "On now"
+     pill in the time block; with the pill gone it moves to the words that
+     replaced it, which is the same place on the plate for the same reason.
+     It is the board's only repeating motion, and it sits on the one row that
+     is genuinely happening right now - ambient movement anywhere else would
+     be decoration. */
+  .t-row[data-status='live'] .t-note::before {
+    content: '';
+    display: inline-block;
+    width: 1.3cqmin;
+    height: 1.3cqmin;
+    margin-right: 0.9cqmin;
+    vertical-align: 0.06em;
+    border-radius: 50%;
+    background: var(--color-sm-green);
+    animation: t-pulse 2.4s ease-in-out infinite;
+  }
+
+  @keyframes t-pulse {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.2;
+    }
+  }
+
   .t-studio,
   .t-kind,
-  .t-flag,
-  .t-badge {
+  .t-flag {
     font-family: var(--font-display);
     font-size: 1.3cqmin;
     font-weight: 700;
@@ -840,80 +870,6 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
      two carrying what someone walking in actually wants - what is running, and
      what is next - get a badge, and the tier and the plate gave them the room
      and the colour. */
-
-  .t-badge {
-    display: inline-flex;
-    align-items: center;
-    padding: 0.5cqmin 1.3cqmin;
-    border-radius: 999px;
-    font-size: 1.5cqmin;
-    line-height: 1.25;
-    color: #fff;
-    background: var(--color-sm-green);
-    /* "Starting soon" is 13 characters against "On now"'s 6, and the block it
-       sits in is one width for every tier - so at 1.5cqmin the pill came out
-       wider than the block and burst through both of its edges, shoving the
-       time off the left. Capped and allowed to break, it sets as two centred
-       lines in a block that is a plate tall and has the room. */
-    max-width: 100%;
-    white-space: normal;
-    text-align: center;
-  }
-
-  /* It hangs off the time block, under the time. The block is a plate tall and
-     held one short line; this is the most relevant thing that could fill it,
-     and moving it out of the tag row is what stopped that row wrapping on the
-     real calendar's longer studio names.
-
-     Spanning both columns is what keeps it on its own row - it is the one item
-     in this block that is allowed to break the line. */
-  .t-badge {
-    grid-column: 1 / -1;
-    justify-self: center;
-  }
-
-  .t-row.is-up .t-badge {
-    margin-top: 1.2cqmin;
-  }
-
-  /* Knocked out on the lit plate: a green pill on a green ground is a hole. */
-  .t-row[data-status='live'] .t-badge {
-    color: var(--color-sm-green-dark);
-    background: var(--color-sm-paper);
-  }
-
-  /* A status light, in the vernacular of every machine in the building: the
-     thing that is running has a lamp on it. It is the board's only repeating
-     motion, and it sits on the one row that is genuinely happening right now -
-     ambient movement anywhere else would be decoration. */
-  .t-row[data-status='live'] .t-badge::before {
-    content: '';
-    width: 1.2cqmin;
-    height: 1.2cqmin;
-    margin-right: 0.9cqmin;
-    border-radius: 50%;
-    background: currentColor;
-    animation: t-pulse 2.4s ease-in-out infinite;
-  }
-
-  @keyframes t-pulse {
-    0%,
-    100% {
-      opacity: 1;
-    }
-    50% {
-      opacity: 0.2;
-    }
-  }
-
-  /* Outlined, not filled: "up next" is a smaller claim than "on now", and the
-     plate underneath is already saying most of it. */
-  .t-row[data-status='next'].is-up .t-badge {
-    padding: 0.36cqmin 1.16cqmin;
-    color: var(--color-sm-green-dark);
-    background: transparent;
-    border: 1px solid var(--color-sm-green-mid);
-  }
 
   /* How far through the running session we are. Presentational only - the same
      fact is in .t-note as words, which is what a screen reader gets. */
@@ -1091,12 +1047,6 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
     font-size: 1.3cqmin;
   }
 
-  .t-list.is-dense .t-row.is-up .t-badge {
-    margin-top: 0;
-    padding: 0.28cqmin 0.9cqmin;
-    font-size: 1.15cqmin;
-  }
-
   /* The progress bar is the one thing that genuinely has nowhere to go on a
      single line. Its number survives as words in .t-note, which is what a
      screen reader was getting from it anyway. */
@@ -1116,7 +1066,7 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
      What is left is a board that still says what is running: the lamp holds at
      full, the photograph holds still, and the lit plate was never moving. */
   @media (prefers-reduced-motion: reduce) {
-    .t-row[data-status='live'] .t-badge::before,
+    .t-row[data-status='live'] .t-note::before,
     .t-row[data-status='live'] .t-thumb:not(.is-icon) {
       animation: none;
     }
@@ -1377,13 +1327,6 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
       justify-content: start;
       align-items: baseline;
       padding: 1cqmin 2.4cqmin;
-    }
-    .t-badge {
-      grid-column: auto;
-      margin-left: 0.6cqmin;
-    }
-    .t-row.is-up .t-badge {
-      margin-top: 0;
     }
     .t-body {
       grid-column: 1;

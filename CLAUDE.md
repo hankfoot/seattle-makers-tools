@@ -70,8 +70,8 @@ Done:
   the left of every plate, hour big and tabular over a small tracked meridiem.
 - An ink strip at the foot, which is what makes the board one composed object
   rather than a panel that runs out of content.
-- Three moving things, and no more: a status lamp on the ON NOW badge, a 26s
-  pan across the running class's own photograph, and the clock. See *What
+- Three moving things, and no more: a status lamp on the "On now" countdown, a
+  26s pan across the running class's own photograph, and the clock. See *What
   moves* below.
 - `/events-dummy.json` is a prerendered endpoint, not a file in public/. Its
   times are generated at build time relative to the build's clock, so it is
@@ -357,7 +357,7 @@ belongs to reads as the more important of the two.
 What is left is one red field and one red label on a grey row, which is the
 whole point of the treatment. Checked by sampling every computed colour in the
 row rather than by looking: no green remains, and the chip is the only red
-text. The green "On now" badge cannot turn up here either, now that
+text. A green "On now" countdown cannot turn up here either, now that
 `statuses()` will not call a cancelled class live.
 
 **The strikethrough was `1px` and that was the same mistake as the old time
@@ -412,20 +412,21 @@ the runtime re-render share one implementation instead of keeping two copies of
 the same rules in step by hand. `npm test` covers it: 26 assertions, no
 framework, Node strips the types.
 
-**The badge is no longer a function of status alone, and tick() had to change
-to suit.** It used to be reconciled only inside `if (li.dataset.status !== st)`,
-which was right while "next" and "On now" were the whole rule. With the
-30-minute gate a `next` row 35 minutes out carries no badge and the same row
-five minutes later carries one, *with nothing about its status having changed* -
-so left inside that branch, "Starting soon" would have appeared only when some
-other event happened to change state. `syncBadge()` runs on every tick now.
+**The countdown is no longer a function of status alone, and tick() had to
+change to suit.** It used to be reconciled only inside
+`if (li.dataset.status !== st)`, which was right while "next" and "live" were
+the whole rule. With the 30-minute gate a `next` row 35 minutes out says
+nothing and the same row five minutes later says "Starting soon", *with nothing
+about its status having changed* - so left inside that branch it would have
+appeared only when some other event happened to change state. `syncNote()` runs
+on every tick now.
 
 Verified rather than reasoned about, using the clock-stub technique below:
 `Date` replaced with a shifted subclass at 15:10, one real tick observed
-(`past` -> `next`, "starts in 35m", no badge), the shift moved to 15:20, and one
-more tick observed - badge "Starting soon", note "starts in 25m", **status still
+(`past` -> `next`, condensed, no countdown), the shift moved to 15:20, and one
+more tick observed - "Starting soon · in 25m", the row expanded, **status still
 `next`**. That last line is the whole test; with the old code it would have read
-`next` and no badge forever.
+`next` and stayed condensed forever.
 
 **`refresh()` and `tick()` are separate on purpose.** Refresh (5 min, network)
 changes *what* is on. Tick (30s, no network) changes *where the day stands* -
@@ -458,8 +459,8 @@ tagged `woodworking` on the real feed and studios.ts maps it back;
 dummy board would have been missing a label the production board shows, which
 is exactly the kind of divergence a fixture exists to prevent.
 
-**Exactly one row is ever `next`.** The badge has to mean one thing on a board,
-or it is a synonym for "not yet" repeated down the page. A cancelled class
+**Exactly one row is ever `next`.** "Starting soon" has to mean one thing on a
+board, or it is a synonym for "not yet" repeated down the page. A cancelled class
 cannot be the one - see below.
 
 **A cancelled class is never running and is never what is next, and until
@@ -482,15 +483,15 @@ It reads **"Starting soon"**; it read "Up next" until 2026-09-22. Both name the
 same single row, but one describes a position in a list and the other describes
 the thing somebody in the doorway wants to know - and a board is not a queue you
 are waiting in. The rename is not free: 13 characters against "On now"'s 6, in a
-time block whose width is one number for every tier. See the badge note below.
+time block whose width is one number for every tier.
 
 **And because it says *soon*, it has to mean it.** The row that is next at nine
-in the morning can be six hours away, and a badge reading "starting soon" over
+in the morning can be six hours away, and a line reading "starting soon" over
 it is simply false. `startingSoon()` gates it at **30 minutes** - about the
 point where the label stops being a fact and becomes an instruction, which is
 to start walking to the room. Outside the window the row keeps its feature
 plate and its picture and its "starts in 4h", which is the honest version of
-the same information; it just loses the pill.
+the same information; it just says nothing at all.
 
 The rule is in lib/day-status.ts with the rest of the time logic rather than in
 the renderer, and `npm test` pins the boundary: 31 minutes out is not soon, 30
@@ -511,7 +512,7 @@ next class clipped and the board saying only "+ 1 later not shown".
 
 **Dense mode** is the answer: rather than clip the tier, stop showing it. Every
 row drops to the queue shape - one line each, but the plates keep their colour
-and the badges keep their text, so what is running is still the one green block
+and the countdowns keep their text, so what is running is still the one green block
 on the board. It is the tier that goes, not the information. The drop pass then
 runs again over the smaller rows. Verified at 1000x1050, where all five of that
 day's events fit with nothing hidden and nothing clipped.
@@ -527,17 +528,25 @@ inner condition that cannot be true inside its own negation. It never ran, so
 the line could push the last row off the board unchecked. It hides one *more*
 row now, in the same order drop() uses, and updates the count to match.
 
-**The badge moved into the time block, and it fixed two things at once.** "On
-now" is a statement about time and belongs beside the time. In the tag row it
-cost about 150px, which on the real calendar was the difference between
-`CERTIFICATION · CNC + WOODSHOP  4 LEFT` sitting on one line and wrapping - with
-the `·` separator, which lives in `.t-studio::before`, orphaned at the head of
-line two. It also fills a block that is a plate tall and had one short line in
-the middle of it. Moving it was enough on its own to make 2026-10-07 fit without
-dense mode at all.
+**The pill is gone, and its words went into the countdown.** It lived in the
+tag row first, then in the time block, and was deleted on 2026-09-22. Both
+moves were improvements and the deletion supersedes them:
 
-tick() had to follow: the badge is the one element whose existence depends on
-status, and it is appended to `.t-time` rather than prepended to `.t-tags`.
+- In the **tag row** it cost about 150px, which on the real calendar was the
+  difference between `CERTIFICATION · CNC + WOODSHOP  4 LEFT` sitting on one
+  line and wrapping - with the `·` separator, which lives in
+  `.t-studio::before`, orphaned at the head of line two.
+- In the **time block** it filled a block that is a plate tall and had one
+  short line in the middle of it, and moving it there was enough on its own to
+  make 2026-10-07 fit without dense mode.
+- Deleting it fixed what neither move did: the pill said "On now" and the line
+  under the description said "50m left", which is the same fact twice. It reads
+  **"On now · 50m left"** now, and the time block is for the time.
+
+Two things fell out of it. The lamp moved to `.t-note::before`, where it sits
+in front of the words that replaced the pill. And the time block's grid
+stopped being stretched by a spanning item, so measuring its columns finally
+means what it looks like it means.
 
 **The board is verified against the live calendar now, not only the fixture.**
 `?now=HH:MM&on=YYYY-MM-DD` drives both the clock and the fetched day, so any
@@ -566,11 +575,12 @@ on half the board.** Every `next` row was elevated, whether it started in 20
 minutes or at nine tonight - so the second-biggest thing on a Tuesday morning
 was a class nobody could act on for most of the day.
 
-The flag is `is-up`, and it is toggled in `syncBadge()` because **the badge and
-the tier are the same question**: a row is elevated exactly when it has
-something to announce - it is running, or it is about to start. One source of
-truth, set on first render and reconciled on every tick, so the row grows at
-the same moment its pill appears. Verified with the clock stub: at 15:05 the
+The flag is `is-up`, and it is toggled in `syncNote()` because **the countdown
+and the tier are the same question**: a row is elevated exactly when
+`statusNote()` gives it something to say - it is running, or it is about to
+start. One source of truth, set on first render and reconciled on every tick,
+so the row grows at the same moment its line appears. Verified with the clock
+stub: at 15:05 the
 row is `next`, 179px, summary hidden; the shift moves to 15:20 and one tick
 later it is `next` still, 272px, summary shown.
 
@@ -724,16 +734,6 @@ frame down the left-hand edge.
 The drop shadow stays green-cast, which is most of why a white plate still reads
 as lifted rather than as another queue row.
 
-**The badge wraps, and the time block clips.** "Starting soon" at 1.5cqmin came
-out wider than the 16cqmin block it sits in and burst through both of its edges,
-shoving the time off the left. It is capped at `max-width: 100%` with
-`white-space: normal` and centred, so it sets as two lines in a block that is a
-plate tall and has the room; `.t-time` takes `min-width: 0; overflow: hidden` so
-that anything else too wide for it gives way inside rather than spilling onto
-the plate. The cost is real and is reported honestly: on the 2026-10-07 board
-the taller badge takes one row back off the bottom, and the fit pass says
-"+ 1 later not shown".
-
 **"Sunk" was the first version of `past` and it was wrong.** Finished rows had
 no plate at all - transparent, so a finished class became the ground. It reads
 well written down and badly on screen: with nothing under them the time block
@@ -862,9 +862,11 @@ the same node 86,400 times a day on a screen nobody ever reloads.
 **What moves, and what deliberately does not.** Three things, and the restraint
 is the point - ambient motion spread across a board reads as a screensaver.
 
-1. A **status lamp** on the ON NOW badge, 2.4s. It is the vernacular of every
-   machine in the building: the thing that is running has a light on it. It
-   sits on the one row that is genuinely happening.
+1. A **status lamp** on the "On now" countdown, 2.4s. It is the vernacular of
+   every machine in the building: the thing that is running has a light on it.
+   It sits on the one row that is genuinely happening. It was on the pill in
+   the time block until that went; it moved to the words that replaced it,
+   which is the same place on the plate for the same reason.
 2. A **26-second pan** across the running class's own photograph. Slow enough
    that somebody standing at the board does not see it move and somebody
    walking past sees that this is not a poster. 2D transform only - the reel

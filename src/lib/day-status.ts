@@ -176,26 +176,34 @@ export function clock(iso: string): string {
 }
 
 /**
- * The line under a row: what the status actually means in time terms.
+ * The line under a row's description: what is happening, and how long it has.
  *
- * Only the two rows somebody can still act on get one. A finished class used to
- * say "finished", which was a fourth way of saying the same thing - the plate
- * has already faded, the time on it has already gone by, and it is sitting
- * above the row that is running. It also had to be placed: on a queue row the
- * note joins the meta cluster at the right-hand edge, so on any row with a long
- * title it wrapped, and the word stranded on a line of its own was the most
- * conspicuous thing about an event nobody needs to look at.
+ * It carries the state in words now - "On now", "Starting soon" - where the
+ * board used to put a pill in the time block beside the clock. That was the
+ * same fact in two places, and the time block is for the time.
  *
- * "Later" has never had one. `.t-time` already says when.
+ * **A row gets one only when there is something to act on**, which is exactly
+ * the two states the board elevates: running, or starting inside the half
+ * hour. Everything else returns empty and stays condensed.
+ *
+ * That correspondence is deliberate and load-bearing - `scripts/today.ts`
+ * raises a row's tier on `note !== ''` rather than keeping a second rule in
+ * step with this one. A class six hours out therefore shows no countdown at
+ * all: "starts in 6h" is a fact about the schedule, not a thing to do, and
+ * `.t-time` already says when it is.
+ *
+ * A finished class says nothing either. It used to say "finished", which was a
+ * fourth way of saying what the greyed plate, the passed time and the position
+ * above the running row already say.
  */
 export function statusNote(status: Status, start: string, end: string, now: string): string {
   if (status === 'live') {
     const left = gap(now, end);
-    return left ? `${left} left` : 'finishing now';
+    return left ? `On now · ${left} left` : 'Finishing now';
   }
-  if (status === 'next') {
+  if (status === 'next' && startingSoon(start, now)) {
     const until = gap(now, start);
-    return until ? `starts in ${until}` : 'starting now';
+    return until ? `Starting soon · in ${until}` : 'Starting now';
   }
   return '';
 }
