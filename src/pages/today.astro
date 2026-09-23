@@ -448,7 +448,7 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
      clipping hazard: these rows hold a three-line title, a two-line summary, a
      countdown and a progress bar, and any cap low enough to stop the dead
      space would have been low enough to cut one of them off. */
-  .t-row:is([data-status='live'], [data-status='next']) {
+  .t-row.is-up {
     --shot: 22cqmin;
     --pad: 2.8cqmin;
     flex-grow: 0;
@@ -459,43 +459,28 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
     max-height: none;
   }
 
-  /* Nothing to show, so the words start after the time block.
-
-     The picture's track is reserved rather than `auto` so that titles line up
-     down the board - that is still right for a row whose picture simply has
-     not loaded, or which is showing a studio icon. It is not right for a row
-     that will never have one: about a third of the calendar is whole-building
-     events that reach neither tier of the fallback, and on a plate their
-     reserved slot is 130px of blank paper between the time and the title,
-     which reads as a picture that failed rather than as alignment.
-
-     Two left edges is what this costs, and the plates are what make it
-     affordable: every row is its own object with its own time block, so the
-     shared edge that matters is the one down the right of that block, and it
-     does not move. This was a much worse trade when the rows were hairlines on
-     one continuous field.
-
-     Placed after the tier rules deliberately - `.t-row.is-bare` and
-     `.t-row:is([data-status='live'], …)` have identical specificity, so source
-     order is the only thing that decides it. */
-  .t-row.is-bare {
-    --shot: 0cqmin;
-    --shot-gap: 0cqmin;
-  }
-
   /* Faded, not sunk. The first version dropped the plate entirely so a
      finished class became the ground - which reads well written down and badly
      on screen: with no plate under them the time block and the title had
      nothing holding them together, and the grey block ended up the heaviest
      thing on a row that is meant to be receding. A faded plate says the same
      thing and stays an object. */
+  /* Grey, not just faint. A finished class is the one row on the board where
+     the colour carries no information at all - there is no room left to book,
+     no studio to walk to right now, nothing green about it - so the colour
+     comes out and the fade takes it the rest of the way. It also means the
+     photographs go black and white, which is the clearest "this has happened"
+     a picture can say. */
   .t-row[data-status='past'] {
     box-shadow: none;
-    opacity: 0.5;
+    filter: grayscale(1);
+    opacity: 0.55;
   }
 
-  /* Tinted toward the brand, a step short of lit. */
-  .t-row[data-status='next'] {
+  /* Tinted toward the brand, a step short of lit - and only once the class is
+     close enough to say so. A `next` row six hours out is the next one and
+     nothing more; it waits in the condensed tier with a plain white plate. */
+  .t-row[data-status='next'].is-up {
     background: var(--color-sm-wash);
     box-shadow:
       0 1px 2px rgb(20 25 22 / 0.05),
@@ -525,6 +510,34 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
     box-shadow:
       0 2px 4px rgb(14 77 41 / 0.1),
       0 10px 28px rgb(14 77 41 / 0.16);
+  }
+
+  /* Nothing to show, so the words start after the time block.
+
+     The picture's track is reserved rather than `auto` so that titles line up
+     down the board - that is still right for a row whose picture simply has
+     not loaded, or which is showing a studio icon. It is not right for a row
+     that will never have one: about a third of the calendar is whole-building
+     events that reach neither tier of the fallback, and on a plate their
+     reserved slot is 130px of blank paper between the time and the title,
+     which reads as a picture that failed rather than as alignment.
+
+     Two left edges is what this costs, and the plates are what make it
+     affordable: every row is its own object with its own time block, so the
+     shared edge that matters is the one down the right of that block, and it
+     does not move. This was a much worse trade when the rows were hairlines on
+     one continuous field.
+
+     **It has to sit below every tier rule, and this bit once.** `.t-row
+     .is-bare`, `.t-row.is-up` and `.t-row[data-status='live']` all weigh
+     (0,2,0), so source order is the only thing deciding which `--shot` wins -
+     and with this block above them, a tour running right now came out bare and
+     still reserved 25cqmin, 270px of empty plate on the one row nobody can
+     miss. Checked against the live tier specifically, because it is the only
+     one where the reserved slot is big enough to look like a fault. */
+  .t-row.is-bare {
+    --shot: 0cqmin;
+    --shot-gap: 0cqmin;
   }
 
   /* ------------------------------------------------------ the time block ---
@@ -588,11 +601,11 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
     color: var(--color-sm-slate);
   }
 
-  .t-row[data-status='next'] .t-time {
+  .t-row[data-status='next'].is-up .t-time {
     background: rgb(19 114 60 / 0.1);
     color: var(--color-sm-green-dark);
   }
-  .t-row[data-status='next'] .t-mer {
+  .t-row[data-status='next'].is-up .t-mer {
     color: var(--color-sm-green-dark);
     opacity: 0.75;
   }
@@ -601,16 +614,16 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
      the queue's size floats in the middle of it like a caption. Stacked and
      much bigger, it fills what it is standing in - and the time is worth that
      much room on the two rows somebody is actually about to act on. */
-  .t-row:is([data-status='live'], [data-status='next']) .t-time {
+  .t-row.is-up .t-time {
     flex-direction: column;
     gap: 0.2cqmin;
   }
 
-  .t-row:is([data-status='live'], [data-status='next']) .t-h {
+  .t-row.is-up .t-h {
     font-size: 4.4cqmin;
   }
 
-  .t-row:is([data-status='live'], [data-status='next']) .t-mer {
+  .t-row.is-up .t-mer {
     font-size: 1.7cqmin;
   }
 
@@ -625,12 +638,22 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
     color: var(--color-sm-on-green);
   }
 
-  /* ---------------------------------------------------------- the queue ---
+  /* ------------------------------------------------------ the condensed ---
 
-     The base case, and it is one line: the title on the left, everything that
-     qualifies it pushed to the right edge. `margin-right: auto` on the title
-     rather than `justify-content: flex-end` plus a spacer, so the cluster on
-     the right stays put whether or not the row has a note in it. */
+     The base case, and it is a title with a subtitle under it: the name of the
+     thing, then the line that qualifies it - what kind, which room, whether it
+     is full.
+
+     It used to be one line with the meta pushed to the opposite edge, which
+     read as two columns rather than as one thing, and wrapped badly the moment
+     a title ran long. Stacked, it is the same shape as the elevated rows above
+     it, just smaller - which is the point: one row design at three sizes, not
+     three row designs.
+
+     `flex-basis: 100%` on the title is what breaks the line. The DOM order is
+     tags, title, note - the elevated tiers want the meta above the title as an
+     eyebrow - so this is a flex container with `order` reversing them, and a
+     full-basis title forcing everything after it onto the next line. */
   .t-body {
     grid-column: 3;
     min-width: 0;
@@ -638,25 +661,18 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
     display: flex;
     flex-wrap: wrap;
     align-items: baseline;
-    /* Every line right-justified, not just the first. With a long title the
-       meta wraps onto a second line, and left to itself that line packs to the
-       left - which strands "finished" on the right of line one above a
-       left-aligned row of labels, reading as two different rows. The auto
-       margin on the title still wins on line one, because auto margins take
-       the free space before justify-content sees it. */
-    justify-content: flex-end;
-    gap: 0.3cqmin 1.8cqmin;
+    gap: 0.5cqmin 1.6cqmin;
   }
 
   .t-title {
     order: 1;
-    margin-right: auto;
+    flex: 0 0 100%;
     min-width: 0;
     font-family: var(--font-display);
     font-size: 2.6cqmin;
     font-weight: 700;
     letter-spacing: -0.02em;
-    line-height: 1.3;
+    line-height: 1.25;
     color: var(--color-sm-ink);
   }
 
@@ -687,16 +703,16 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
   /* -------------------------------------------------------- the feature ---
 
      Back to a block: tags, title, summary, and then how long is left. */
-  .t-row:is([data-status='live'], [data-status='next']) .t-body {
+  .t-row.is-up .t-body {
     display: block;
   }
 
-  .t-row:is([data-status='live'], [data-status='next']) .t-tags {
+  .t-row.is-up .t-tags {
     margin-bottom: 0.9cqmin;
   }
 
-  .t-row:is([data-status='live'], [data-status='next']) .t-title {
-    margin-right: 0;
+  .t-row.is-up .t-title {
+    flex: 0 1 auto;
     font-size: 3.6cqmin;
     line-height: 1.18;
   }
@@ -709,7 +725,7 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
     font-size: 4cqmin;
   }
 
-  .t-row:is([data-status='live'], [data-status='next']) .t-sum {
+  .t-row.is-up .t-sum {
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
@@ -724,7 +740,7 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
   /* How long is left, or how long until - the one number on a feature row
      that changes while you are standing there, so it is sized to be read at
      the same distance as the title. */
-  .t-row:is([data-status='live'], [data-status='next']) .t-note {
+  .t-row.is-up .t-note {
     display: block;
     margin-top: 1.2cqmin;
     font-size: 2.2cqmin;
@@ -750,7 +766,7 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
      its own, which is the one label there somebody acts on. A long studio pair
      ("leatherworking + sewing") will still wrap, and that is fine - what was
      wrong was the common case wrapping. */
-  .t-row:is([data-status='live'], [data-status='next']) :is(.t-studio, .t-kind, .t-flag) {
+  .t-row.is-up :is(.t-studio, .t-kind, .t-flag) {
     font-size: 1.7cqmin;
   }
 
@@ -809,7 +825,7 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
   }
 
   /* The mist chip has nothing to sit on once the plate is wash itself. */
-  .t-row[data-status='next'] .t-flag.is-mute {
+  .t-row[data-status='next'].is-up .t-flag.is-mute {
     background: var(--color-sm-paper);
   }
 
@@ -844,7 +860,7 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
      block is a plate tall and held one short line; this is the most relevant
      thing that could fill it, and moving it out of the tag row is what stopped
      that row wrapping on the real calendar's longer studio names. */
-  .t-row:is([data-status='live'], [data-status='next']) .t-badge {
+  .t-row.is-up .t-badge {
     margin-top: 1.2cqmin;
   }
 
@@ -880,7 +896,7 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
 
   /* Outlined, not filled: "up next" is a smaller claim than "on now", and the
      plate underneath is already saying most of it. */
-  .t-row[data-status='next'] .t-badge {
+  .t-row[data-status='next'].is-up .t-badge {
     padding: 0.36cqmin 1.16cqmin;
     color: var(--color-sm-green-dark);
     background: transparent;
@@ -1005,7 +1021,7 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
 
   /* On the wash plate the panel needs to stop being the same colour as the
      ground it sits on. */
-  .t-row[data-status='next'] .t-thumb.is-icon {
+  .t-row[data-status='next'].is-up .t-thumb.is-icon {
     background: var(--color-sm-paper);
   }
 
@@ -1033,7 +1049,7 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
      The tier rules are written against `.t-row:is(...)`, so `.t-list.is-dense`
      in front of the same selector wins without an `!important` anywhere. */
 
-  .t-list.is-dense .t-row:is([data-status='live'], [data-status='next']) {
+  .t-list.is-dense .t-row.is-up {
     --shot: 11cqmin;
     --pad: 1.5cqmin;
     /* Queue-shaped here, so it takes the queue's share of the slack too. */
@@ -1041,26 +1057,26 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
     max-height: 20cqmin;
   }
 
-  .t-list.is-dense .t-row:is([data-status='live'], [data-status='next']) .t-body {
+  .t-list.is-dense .t-row.is-up .t-body {
     display: flex;
   }
 
-  .t-list.is-dense .t-row:is([data-status='live'], [data-status='next']) .t-title {
-    margin-right: auto;
+  .t-list.is-dense .t-row.is-up .t-title {
+    flex: 0 0 100%;
     font-size: 2.6cqmin;
   }
 
-  .t-list.is-dense .t-row:is([data-status='live'], [data-status='next']) .t-sum {
+  .t-list.is-dense .t-row.is-up .t-sum {
     display: none;
   }
 
-  .t-list.is-dense .t-row:is([data-status='live'], [data-status='next']) .t-note {
+  .t-list.is-dense .t-row.is-up .t-note {
     display: inline;
     margin-top: 0;
     font-size: 1.4cqmin;
   }
 
-  .t-list.is-dense .t-row:is([data-status='live'], [data-status='next']) :is(.t-studio, .t-kind, .t-flag) {
+  .t-list.is-dense .t-row.is-up :is(.t-studio, .t-kind, .t-flag) {
     font-size: 1.3cqmin;
   }
 
@@ -1068,21 +1084,21 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
      `flex-wrap: wrap` is the safety net: a block this narrow cannot always
      hold "11:30 PM" and "ON NOW" side by side, and a wrapped badge costs one
      short line where an overflowing one costs the plate. */
-  .t-list.is-dense .t-row:is([data-status='live'], [data-status='next']) .t-time {
+  .t-list.is-dense .t-row.is-up .t-time {
     flex-direction: row;
     flex-wrap: wrap;
     gap: 0.4cqmin 0.7cqmin;
   }
 
-  .t-list.is-dense .t-row:is([data-status='live'], [data-status='next']) .t-h {
+  .t-list.is-dense .t-row.is-up .t-h {
     font-size: 2.7cqmin;
   }
 
-  .t-list.is-dense .t-row:is([data-status='live'], [data-status='next']) .t-mer {
+  .t-list.is-dense .t-row.is-up .t-mer {
     font-size: 1.3cqmin;
   }
 
-  .t-list.is-dense .t-row:is([data-status='live'], [data-status='next']) .t-badge {
+  .t-list.is-dense .t-row.is-up .t-badge {
     margin-top: 0;
     padding: 0.28cqmin 0.9cqmin;
     font-size: 1.15cqmin;
@@ -1341,7 +1357,7 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
       align-content: center;
       max-height: 24cqmin;
     }
-    .t-row:is([data-status='live'], [data-status='next']) {
+    .t-row.is-up {
       --shot: 22cqmin;
       max-height: 64cqmin;
     }
@@ -1374,7 +1390,7 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
       justify-content: flex-start;
       padding: 1cqmin 2.4cqmin;
     }
-    .t-row:is([data-status='live'], [data-status='next']) .t-time {
+    .t-row.is-up .t-time {
       flex-direction: row;
       /* The gap comes back with the direction. Stacked, the feature block sets
          `gap: 0.2cqmin` for the line under the hour; left in place on a row it
@@ -1410,7 +1426,7 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
     /* Little room for two tiers at this width - the whole board is about as
        wide as a feature row's picture on the wall. The type steps once and the
        badge carries the rest of the difference. */
-    .t-row:is([data-status='live'], [data-status='next']) .t-title {
+    .t-row.is-up .t-title {
       font-size: 3.4cqmin;
     }
     .t-row[data-status='live'] .t-title {

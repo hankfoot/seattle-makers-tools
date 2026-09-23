@@ -200,12 +200,19 @@ function badgeFor(st: Status, start: string, now: string): string | null {
 }
 
 /**
- * Put the badge in the time block, take it out, or change its text.
+ * Put the badge in the time block, take it out, or change its text - and raise
+ * or drop the row's tier with it.
+ *
+ * Those are the same question. A row is elevated exactly when it has something
+ * to announce: it is running, or it is about to start. A class six hours out is
+ * the *next* one, but nothing about it is worth half the board yet, so it sits
+ * in the condensed tier with everything else until its half-hour comes round.
  *
  * Shared by the first render and every tick because the two now disagree about
  * when it should run - see the note in tick().
  */
 function syncBadge(row: Element, wanted: string | null): void {
+  row.classList.toggle('is-up', wanted !== null);
   const slot = row.querySelector('.t-time');
   if (!slot) return;
   const existing = slot.querySelector('.t-badge');
@@ -256,7 +263,10 @@ function row(e: SmEvent, st: Status, now: string): HTMLLIElement {
   // with the separator orphaned at the head of line two. It also fills a block
   // that is a plate tall and had one short line in the middle of it.
   const badge = badgeFor(st, e.start, now);
-  if (badge) t.append(el('span', 't-badge', badge));
+  if (badge) {
+    li.classList.add('is-up');
+    t.append(el('span', 't-badge', badge));
+  }
   tags.append(el('span', 't-kind', kindOf(e)));
   const studio = studioLabel(studios);
   if (studio) tags.append(el('span', 't-studio', studio));

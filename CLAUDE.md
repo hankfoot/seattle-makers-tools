@@ -546,22 +546,63 @@ tidy rows chosen by us, and what breaks a layout like this is a 54-character
 title, a two-studio row, three simultaneous starts, and a day where three
 events in five carry no picture at all. Every one of those is on 2026-10-07.
 
-**Two tiers, and the tier is the whole design.** Every row carries the same
-elements; `data-status` decides how much of the board each gets.
+**Three tiers, and the tier is the whole design.** Every row carries the same
+elements; how much of the board each gets is decided by two things.
 
-- **feature** - live and next. Big picture, the summary, the countdown sized to
-  be read at the same distance as the title.
-- **queue** - later and past, and this is the *base* case in the stylesheet
-  because most of a day is one or the other. One line: title on the left,
-  everything that qualifies it pushed to the right edge.
+- **full** - the class that is running. Big picture, the summary, the countdown
+  sized to be read at the same distance as the title, and a green frame.
+- **elevated** - a class inside its half hour. The same shape on a wash plate,
+  a step smaller.
+- **condensed** - everything else, and the *base* case in the stylesheet
+  because most of a day is one or the other. A title with a subtitle under it:
+  the name of the thing, then the line that qualifies it. Finished rows are
+  that same shape, greyed.
 
 Until this, all eight rows were the same size, which made the board a list. The
 two things somebody walking through the door needs were rendered identically to
 a class that finished four hours ago.
 
-Four scales was the obvious next step and is worse: it steps the left edge four
-times down the page, and "later" and "past" want exactly the same room as each
-other anyway.
+**The tier used to be `data-status` alone, and that put a class six hours out
+on half the board.** Every `next` row was elevated, whether it started in 20
+minutes or at nine tonight - so the second-biggest thing on a Tuesday morning
+was a class nobody could act on for most of the day.
+
+The flag is `is-up`, and it is toggled in `syncBadge()` because **the badge and
+the tier are the same question**: a row is elevated exactly when it has
+something to announce - it is running, or it is about to start. One source of
+truth, set on first render and reconciled on every tick, so the row grows at
+the same moment its pill appears. Verified with the clock stub: at 15:05 the
+row is `next`, 179px, summary hidden; the shift moves to 15:20 and one tick
+later it is `next` still, 272px, summary shown.
+
+Four scales was tried on paper and is worse: it steps the left edge four times
+down the page, and "later" and "past" want exactly the same room as each other.
+`past` differs by colour, not by size.
+
+**The condensed row is a title with a subtitle, not one line with the meta
+pushed to the far edge.** The old arrangement read as two columns rather than
+as one thing, and wrapped badly the moment a title ran long. Stacked, it is the
+same shape as the tiers above it, just smaller - one row design at three sizes,
+rather than three row designs.
+
+`flex-basis: 100%` on the title is what breaks the line. The DOM order is tags,
+title, note, because the elevated tiers want the meta above the title as an
+eyebrow; the condensed body is a flex container with `order` reversing them and
+a full-basis title forcing everything after it onto the next line.
+
+**Finished rows are greyscaled, not just faded.** It is the one row on the
+board where the colour carries no information at all - no room left to book, no
+studio to walk to right now, nothing green about it - so the colour comes out
+and the fade takes it the rest of the way. It also turns the photographs black
+and white, which is the clearest "this has happened" a picture can say.
+
+**`.t-row.is-bare` must sit below every tier rule, and this bit once.**
+`.t-row.is-bare`, `.t-row.is-up` and `.t-row[data-status='live']` all weigh
+(0,2,0), so source order alone decides which `--shot` wins. With the bare rule
+above them, a tour running right now came out bare and still reserved 25cqmin -
+270px of empty plate on the one row nobody can miss. Worth checking against the
+live tier specifically, because it is the only one where the reserved slot is
+big enough to look like a fault.
 
 **It is CSS off `data-status`, not different markup, and that is load-bearing.**
 tick() mutates rows in place every 30 seconds and never rebuilds them - that is
