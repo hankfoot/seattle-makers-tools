@@ -560,8 +560,10 @@ events in five carry no picture at all. Every one of those is on 2026-10-07.
 elements; how much of the board each gets is decided by two things.
 
 - **full** - the class that is running. Big picture, the summary, the countdown
-  sized to be read at the same distance as the title, and a green frame.
-- **elevated** - a class inside its half hour. The same shape, a step smaller.
+  sized to be read at the same distance as the title, a solid green time block
+  and a green frame.
+- **elevated** - a class inside its half hour. **Exactly the same geometry**,
+  with a light green block and no frame.
 - **condensed** - everything else, and the *base* case in the stylesheet
   because most of a day is one or the other. A title with a subtitle under it:
   the name of the thing, then the line that qualifies it. Finished rows are
@@ -588,6 +590,17 @@ later it is `next` still, 272px, summary shown.
 Four scales was tried on paper and is worse: it steps the left edge four times
 down the page, and "later" and "past" want exactly the same room as each other.
 `past` differs by colour, not by size.
+
+**The two elevated tiers share one geometry, and they did not at first.**
+Running had a 25cqmin picture and a 4cqmin title; about to run had 22 and 3.6.
+That put the bodies of two plates of the same shape on left edges 32px apart,
+which down a column reads as a mistake rather than as hierarchy - and it was
+one. The account this tier is built from is that a class *expands* when it
+comes up and then *stays expanded* and activates when it starts: size is the
+first change, colour is the second, and making size do both jobs muddled them.
+One `--shot`, one `--pad`, one title size; the frame, the solid block, the lamp
+and the progress bar are what "running" adds. Checked by asserting the two
+bodies share a left edge, not by looking.
 
 **The condensed row is a title with a subtitle, not one line with the meta
 pushed to the far edge.** The old arrangement read as two columns rather than
@@ -788,6 +801,26 @@ columns the hour and its meridiem share a row *by construction*; the badge
 spans `1 / -1`, so it is the one item allowed to start a new one. The narrow
 layout, where the block is a header bar across the top of the plate, switches
 to `grid-auto-flow: column` and the badge gives up its span to sit inline.
+
+**The hour is right-aligned in a box as wide as the longest time, so the
+column reads as a column.** Left to size itself, each hour's grid track fitted
+its own content - so a centred "2:00" started about half a digit right of the
+"11:00" above it and its meridiem landed 22px short, three times down the
+board at slightly different places. With a fixed box the meridiems align and
+the numerals hang off a shared colon, which is what a departure board does and
+for the same reason. Measured after: every condensed hour box is 89.3px and
+every elevated one 129px, whatever the time in it.
+
+`min-width: 4.7ch` rather than a cqmin measurement, because the face is
+tabular - `ch` is the width of a digit, so 4.7 covers four digits and a colon
+and it scales with the tier's font size on its own. The narrow layout resets
+it: there is no column there, the block is a bar along the top of each plate,
+and the same box only indents the time away from the plate's left edge.
+
+About 0.8px of the pair's centring still moves between "am" and "pm" rows,
+because those two strings are not the same width. Left alone deliberately -
+it is a fifth of a millimetre on the wall, and pinning it would mean a magic
+number for a thing nobody can see.
 
 **The feature hour is 3.9cqmin, and the number is measured.** The block's inner
 width is 13.6cqmin. The widest time the calendar can produce is a two-digit

@@ -452,9 +452,18 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
     min-height: 13.4cqmin;
   }
 
+  /* One geometry for the whole elevated tier, running and about to run alike.
+
+     They had different pictures - 22cqmin against 25 - which put their bodies
+     on left edges 32px apart, so two plates of the same size and shape started
+     their words in different places. On a board read down a column that reads
+     as a mistake rather than as hierarchy, and it was: the user's own account
+     of this tier is that a class *expands* when it comes up and then *stays
+     expanded* and activates when it starts. Size is the first change; colour
+     is the second. Making size do both jobs muddled them. */
   .t-row.is-up {
-    --shot: 22cqmin;
-    --pad: 2.8cqmin;
+    --shot: 23cqmin;
+    --pad: 3cqmin;
   }
 
   /* Faded, not sunk. The first version dropped the plate entirely so a
@@ -492,8 +501,6 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
      The drop shadow stays green-cast, which is most of why a white plate still
      reads as lifted rather than as another queue row. */
   .t-row[data-status='live'] {
-    --shot: 25cqmin;
-    --pad: 3.2cqmin;
     box-shadow:
       0 2px 4px rgb(14 77 41 / 0.1),
       0 10px 28px rgb(14 77 41 / 0.16);
@@ -597,7 +604,22 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
     overflow: hidden;
   }
 
+  /* Right-aligned in a box wide enough for the longest time there is, so the
+     column reads as a column.
+
+     Without it each hour's grid track sized to its own content, so a centred
+     "2:00" started about half a digit to the right of an "11:00" above it and
+     its meridiem landed 22px short - three times down the board at slightly
+     different places. With a fixed box the meridiems align exactly and the
+     numerals hang off a shared colon, which is what a departure board does and
+     for the same reason.
+
+     `ch` rather than a cqmin measurement, because the face is tabular: `ch` is
+     the width of a digit, so 4.7 covers four digits and a colon, and it scales
+     with the tier's font size on its own. */
   .t-h {
+    min-width: 4.7ch;
+    text-align: right;
     font-size: 2.7cqmin;
     font-weight: 800;
     letter-spacing: -0.03em;
@@ -738,18 +760,16 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
     margin-bottom: 0.9cqmin;
   }
 
+  /* 3.8 for both tiers. It was 3.6 when about to start and 4.0 when running,
+     which is the same confusion as the picture above - and a title that grows
+     by a tenth when a class begins is a change nobody can see and everybody's
+     layout has to absorb. 4.6 was tried early and wrapped "Programmable LEDs"
+     onto two lines: a title big enough to break itself is smaller at five
+     metres, not bigger. */
   .t-row.is-up .t-title {
     flex: 0 1 auto;
-    font-size: 3.6cqmin;
+    font-size: 3.8cqmin;
     line-height: 1.18;
-  }
-
-  /* 4.0, not the 4.6 this started at. With the time block and a 23cqmin
-     picture taking their share, 4.6 wrapped "Programmable LEDs" onto two lines
-     and pushed the availability chip off the end of the tag row - a title big
-     enough to break itself is smaller, not bigger, at five metres. */
-  .t-row[data-status='live'] .t-title {
-    font-size: 4cqmin;
   }
 
   .t-row.is-up .t-sum {
@@ -1345,6 +1365,14 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
       justify-content: start;
       align-items: baseline;
       padding: 1cqmin 2.4cqmin;
+    }
+    /* The wide layout pads the hour out to the longest time so a *column* of
+       them lines up. There is no column here - the block is a bar along the
+       top of each plate - and the same box just indents the time away from the
+       plate's left edge. */
+    .t-h {
+      min-width: 0;
+      text-align: left;
     }
     .t-body {
       grid-column: 1;
