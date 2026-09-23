@@ -337,11 +337,19 @@ footer's added a second one. Widening the gap between them made it worse, not
 better: an empty band between two full-width hairlines reads as a blank row in
 the list. Space alone separates it now.
 
-**The availability chip is the exception, and that is the point.** Every row
-has a kind, so chipping all of them would be a wall of chips carrying no
-information. Whether you can still get in is true of some rows only, so it gets
-the tinted pill and is findable at a glance from a few metres - which is the
-distance this board is actually read from.
+**The chip is the exception, and that is the point.** Every row has a kind, so
+chipping all of them would be a wall of chips carrying no information. Two
+states are true of some rows only - a class that is **full** and a class that
+is **off** - so those get the tinted pill and stay findable at a glance from a
+few metres, which is the distance this board is actually read from.
+
+**The seat count was a third chip and is gone.** "3 left", under five places
+remaining, removed on 2026-09-22. It is a booking signal, and the people
+reading this board are already in the building: "can I walk into this" is a
+question somebody standing here has, and "how many places are left online" is
+not. It also spent the row's one chip - the thing that only works while it is
+rare - on the least useful of the three. `e.available` is still on the event;
+nothing reads it.
 
 **The refresh lightens `--color-sm-mist`, which the reel also uses.**
 `EventSlide` paints with `bg-sm-mist`, so its plates lifted `#E5E5E5` ->
@@ -373,6 +381,21 @@ live fetch exists to avoid. A data-free module lets the build-time render and
 the runtime re-render share one implementation instead of keeping two copies of
 the same rules in step by hand. `npm test` covers it: 26 assertions, no
 framework, Node strips the types.
+
+**The badge is no longer a function of status alone, and tick() had to change
+to suit.** It used to be reconciled only inside `if (li.dataset.status !== st)`,
+which was right while "next" and "On now" were the whole rule. With the
+30-minute gate a `next` row 35 minutes out carries no badge and the same row
+five minutes later carries one, *with nothing about its status having changed* -
+so left inside that branch, "Starting soon" would have appeared only when some
+other event happened to change state. `syncBadge()` runs on every tick now.
+
+Verified rather than reasoned about, using the clock-stub technique below:
+`Date` replaced with a shifted subclass at 15:10, one real tick observed
+(`past` -> `next`, "starts in 35m", no badge), the shift moved to 15:20, and one
+more tick observed - badge "Starting soon", note "starts in 25m", **status still
+`next`**. That last line is the whole test; with the old code it would have read
+`next` and no badge forever.
 
 **`refresh()` and `tick()` are separate on purpose.** Refresh (5 min, network)
 changes *what* is on. Tick (30s, no network) changes *where the day stands* -
@@ -413,6 +436,18 @@ same single row, but one describes a position in a list and the other describes
 the thing somebody in the doorway wants to know - and a board is not a queue you
 are waiting in. The rename is not free: 13 characters against "On now"'s 6, in a
 time block whose width is one number for every tier. See the badge note below.
+
+**And because it says *soon*, it has to mean it.** The row that is next at nine
+in the morning can be six hours away, and a badge reading "starting soon" over
+it is simply false. `startingSoon()` gates it at **30 minutes** - about the
+point where the label stops being a fact and becomes an instruction, which is
+to start walking to the room. Outside the window the row keeps its feature
+plate and its picture and its "starts in 4h", which is the honest version of
+the same information; it just loses the pill.
+
+The rule is in lib/day-status.ts with the rest of the time logic rather than in
+the renderer, and `npm test` pins the boundary: 31 minutes out is not soon, 30
+is, and the morning board's first class at an hour out is not.
 
 **The fit pass has an escape hatch now, and real data is what found the hole.**
 

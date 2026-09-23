@@ -5,7 +5,7 @@
  * Run with `npm test`. Node strips the types; there is no test framework and
  * no build step, which is the whole reason this is a plain .mjs.
  */
-import { sessionEnd, statuses, progress, gap, clock, clockParts, statusNote }
+import { sessionEnd, statuses, progress, gap, clock, clockParts, startingSoon, SOON_MINUTES, statusNote }
   from '../src/lib/day-status.ts';
 
 let pass = 0, fail = 0;
@@ -61,6 +61,20 @@ eq(clockParts('2026-09-19T11:59').meridiem, 'am', 'parts: minute before noon is 
 eq(clockParts('2026-09-19T14:30').hour, '2:30', 'parts: afternoon hour drops the leading zero');
 // The two must never disagree - clock() is the hero's and is built from these.
 eq(clock('2026-09-19T09:05'), `${clockParts('2026-09-19T09:05').hour} ${clockParts('2026-09-19T09:05').meridiem}`, 'parts and clock agree');
+// --- "starting soon" has to mean soon ---
+// The row that is next at nine in the morning can be six hours away, and a
+// badge reading "starting soon" over it is simply false.
+eq(SOON_MINUTES, 30, 'the window is half an hour');
+eq(startingSoon('2026-09-19T14:00', '2026-09-19T13:29'), false, '31m out is not soon');
+eq(startingSoon('2026-09-19T14:00', '2026-09-19T13:30'), true, 'exactly 30m out is soon');
+eq(startingSoon('2026-09-19T14:00', '2026-09-19T13:59'), true, '1m out is soon');
+eq(startingSoon('2026-09-19T10:00', '2026-09-19T09:00'), false, 'the morning board\'s first class is not soon');
+eq(startingSoon('2026-09-19T18:00', '2026-09-19T09:00'), false, 'nine hours out is not soon');
+// It is only ever asked of a row that has not started - statuses() calls
+// anything at or past its start `live` - but the rule should not invert if it
+// ever is.
+eq(startingSoon('2026-09-19T14:00', '2026-09-19T14:00'), true, 'starting now is soon');
+
 eq(statusNote('live','2026-09-19T13:00','2026-09-19T15:00','2026-09-19T14:00'), '1h left', 'live note');
 eq(statusNote('next','2026-09-19T13:00','2026-09-19T15:00','2026-09-19T12:30'), 'starts in 30m', 'next note');
 

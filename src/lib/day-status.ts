@@ -85,6 +85,30 @@ export function statuses<T extends Timed>(events: T[], now: string): Status[] {
   return out;
 }
 
+/**
+ * How close a class has to be before the board calls it starting soon.
+ *
+ * Thirty minutes is about the point where the label is an instruction rather
+ * than a fact - close enough that somebody reading the board should start
+ * walking to the room. Further out, `.t-note` already says "starts in 4h",
+ * which is the honest version of the same information.
+ */
+export const SOON_MINUTES = 30;
+
+/**
+ * Whether the next class is close enough to be worth chasing.
+ *
+ * Only ever asked of a `next` row, which by construction has not started -
+ * `statuses()` calls anything at or past its start `live` - so the gap is
+ * always positive and the badge cannot appear on something already running.
+ *
+ * Minutes-of-day is safe here because the board only ever shows one day: both
+ * arguments come from the same render, against the same date.
+ */
+export function startingSoon(start: string, now: string): boolean {
+  return minutesOfDay(start) - minutesOfDay(now) <= SOON_MINUTES;
+}
+
 /** 0-100, how far through a live session we are. */
 export function progress(start: string, end: string, now: string): number {
   const a = minutesOfDay(start);

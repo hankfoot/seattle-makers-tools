@@ -33,6 +33,7 @@ import {
   clock,
   clockParts,
   progress,
+  startingSoon,
   statusNote,
   nowLocal,
   type Status,
@@ -171,12 +172,39 @@ function thumbOf(e: SmEvent): string | null {
 }
 
 /**
+ * The badge on the time block, or nothing.
+ *
  * "Starting soon", not "Up next". Both name the same single row - see the note
  * on `statuses()` - but one describes a position in a list and the other
  * describes the thing somebody in the doorway actually wants to know. A board
  * is not a queue you are waiting in.
+ *
+ * And because it says *soon*, it has to mean it: the row that is next at nine
+ * in the morning can be six hours away, and a badge reading "starting soon"
+ * over it is simply false. Inside 30 minutes it is an instruction - start
+ * walking to the room - and outside it the row keeps its prominence and its
+ * "starts in 4h", which is the honest version of the same thing.
  */
-const BADGE: Partial<Record<Status, string>> = { live: 'On now', next: 'Starting soon' };
+function badgeFor(st: Status, start: string, now: string): string | null {
+  if (st === 'live') return 'On now';
+  if (st === 'next' && startingSoon(start, now)) return 'Starting soon';
+  return null;
+}
+
+/**
+ * Put the badge in the time block, take it out, or change its text.
+ *
+ * Shared by the first render and every tick because the two now disagree about
+ * when it should run - see the note in tick().
+ */
+function syncBadge(row: Element, wanted: string | null): void {
+  const slot = row.querySelector('.t-time');
+  if (!slot) return;
+  const existing = slot.querySelector('.t-badge');
+  if (!wanted) existing?.remove();
+  else if (!existing) slot.append(el('span', 't-badge', wanted));
+  else existing.textContent = wanted;
+}
 
 function el(tag: string, cls: string, text?: string): HTMLElement {
   const n = document.createElement(tag);
@@ -219,17 +247,20 @@ function row(e: SmEvent, st: Status, now: string): HTMLLIElement {
   // "CERTIFICATION · CNC + WOODSHOP  4 LEFT" sitting on one line and wrapping
   // with the separator orphaned at the head of line two. It also fills a block
   // that is a plate tall and had one short line in the middle of it.
-  const badge = BADGE[st];
+  const badge = badgeFor(st, e.start, now);
   if (badge) t.append(el('span', 't-badge', badge));
   tags.append(el('span', 't-kind', kindOf(e)));
   const studio = studioLabel(studios);
   if (studio) tags.append(el('span', 't-studio', studio));
+  // No seat counts. "3 left" is a booking signal and this board is read by
+  // people who are already in the building - it answered a question nobody
+  // standing here is asking, and spent the one chip on the row doing it.
+  // `full` stays, because "can I walk into this" is a question somebody here
+  // does have, and `cancelled` is not optional.
   if (cancelled) {
     tags.append(el('span', 't-flag is-off', 'cancelled'));
   } else if (e.soldOut) {
     tags.append(el('span', 't-flag is-mute', 'full'));
-  } else if (typeof e.available === 'number' && e.available > 0 && e.available <= 5) {
-    tags.append(el('span', 't-flag is-go', `${e.available} left`));
   }
   body.append(tags);
 
@@ -386,17 +417,15 @@ function tick(): void {
     const st = marks[i]!;
     const end = sessionEnd(e.start, e.end);
 
-    if (li.dataset.status !== st) {
-      li.dataset.status = st;
-      // The badge is the only element whose existence depends on status, and
-      // it hangs off the time block - see the note in row().
-      const slot = li.querySelector('.t-time');
-      const existing = slot?.querySelector('.t-badge');
-      const wanted = BADGE[st];
-      if (existing && !wanted) existing.remove();
-      else if (!existing && wanted) slot?.append(el('span', 't-badge', wanted));
-      else if (existing && wanted) existing.textContent = wanted;
-    }
+    if (li.dataset.status !== st) li.dataset.status = st;
+
+    // Outside that check, deliberately. The badge used to depend on status
+    // alone, so reconciling it only on a transition was enough. It does not
+    // any more: a "next" row 35 minutes out carries no badge and the same row
+    // five minutes later carries one, with nothing about its status having
+    // changed. Left inside, "Starting soon" would appear only when some
+    // *other* event happened to change state.
+    syncBadge(li, badgeFor(st, e.start, stamp));
 
     const note = statusNote(st, e.start, end, stamp);
     let noteEl = li.querySelector('.t-note');
