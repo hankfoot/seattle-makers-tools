@@ -1043,12 +1043,20 @@ than a fault, and the layout has to be built around that.
 is the reel's chain, for the reel's reason: a generic studio photo in this
 frame reads as a picture *of the class*, which it is not, while an icon reads
 as a label. `studiosForCategories` is already imported here for the studio
-name, so the icon costs nothing. The tile is tinted `--color-sm-wash` and the
-icon is `contain`-ed and padded, because these are badges drawn to sit on a
-ground rather than photographs to fill a frame - and because a tile the eye
-reads as a symbol is not a tile it reads as a picture of the room. Mist, which
-the reel uses, is too faint against the board's white paper to draw the tile at
-all.
+name, so the icon costs nothing. The panel is tinted and the icon is
+`contain`-ed and padded, because these are badges drawn to sit on a ground
+rather than photographs to fill a frame - and because a panel the eye reads as
+a symbol is not one it reads as a picture of the room.
+
+**The tint went `--color-sm-wash` -> `--color-sm-mist` on 2026-09-22, and the
+old reasoning was right about a different object.** Wash was chosen when this
+was a small inset tile that needed a tint strong enough to register at all
+against white paper - mist would not have drawn it. It is a full-height panel
+now, where mist registers perfectly well and the same wash reads as a block of
+colour: it was pulling the eye toward exactly the rows that have *no*
+photograph. Green on this board means "on now". On the `next` plate, which is
+itself wash, the panel takes paper so it does not disappear into its own
+ground.
 
 The last tier really is nothing. Whole-building events - tours, orientations,
 meetups, game night, 51 of 166 on the calendar - belong to no studio, and the
@@ -1057,6 +1065,27 @@ something true of every row and therefore nothing about this one. An event in
 two studios takes the first; the pair it happens to is leatherworking + sewing,
 and one icon beside both names is not a claim about which room it is in, where
 two tiles would be.
+
+**The picture is a panel of the card, not a sticker on it.** It was an inset
+square with a radius of its own, floating in a plate whose time block ran edge
+to edge beside it - so the one element with a margin round it read as something
+dropped on top of the card, and on a queue row it was a 92px thumbnail adrift
+in a 100px-tall plate.
+
+It is flush now: no margin, no radius of its own, the plate's `overflow:
+hidden` clipping its outer corners, and `align-self: stretch` taking it to the
+plate's full height so it sits directly against the time block. The card reads
+as three panels - **when**, **what it looks like**, **what it is** - which is
+also the order somebody scanning from the left wants them in. The gutter that
+used to be its left margin is gone from the track entirely; the only gap left
+is the body's own left padding.
+
+**`min-height: var(--shot)` is what stops it becoming a letterbox.** The
+picture used to set the row's height floor by being a fixed square. Stretched,
+its height comes from the row instead - so a one-line queue row would have
+squashed it to about 119x69. The min-height puts the floor back: at least
+square, and taller when the words need the room. Measured after: a queue row is
+119x120 and the running class's panel is 270x359.
 
 **The picture leads the row, and its column is reserved.** Both of those were
 arrived at by looking rather than by argument:
