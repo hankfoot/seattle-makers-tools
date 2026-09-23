@@ -170,7 +170,13 @@ function thumbOf(e: SmEvent): string | null {
   return THUMB_HOST.test(u) ? u : null;
 }
 
-const BADGE: Partial<Record<Status, string>> = { live: 'On now', next: 'Up next' };
+/**
+ * "Starting soon", not "Up next". Both name the same single row - see the note
+ * on `statuses()` - but one describes a position in a list and the other
+ * describes the thing somebody in the doorway actually wants to know. A board
+ * is not a queue you are waiting in.
+ */
+const BADGE: Partial<Record<Status, string>> = { live: 'On now', next: 'Starting soon' };
 
 function el(tag: string, cls: string, text?: string): HTMLElement {
   const n = document.createElement(tag);

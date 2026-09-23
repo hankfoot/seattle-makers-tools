@@ -400,6 +400,14 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
        different thing: two blocks, not noise. */
     grid-template-columns: var(--rail) calc(var(--shot) + var(--gutter)) 1fr;
     align-items: center;
+    /* Transparent on every tier but `live`, which is what stops the framed
+       plate being narrower inside than the ones around it. `background-clip`
+       is `border-box` by default, so the plate's own colour fills the band and
+       nothing shows until a border-color is set. An inset box-shadow would
+       have done this without reserving space, and cannot be used: the row is
+       `overflow: hidden` with children that paint their own backgrounds, and
+       the time block would cover the frame down the left-hand edge. */
+    border: 0.4cqmin solid transparent;
     border-radius: 1.8cqmin;
     background: var(--color-sm-paper);
     /* The time block runs to the plate's edge, so the plate has to clip it
@@ -446,16 +454,30 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
       0 2px 10px rgb(19 114 60 / 0.09);
   }
 
-  /* Lit. The one bright block on the board, and the reason the queue rows
-     around it are as quiet as they are. */
+  /* Framed, not filled.
+
+     This was a solid green plate with white type on it, and a whole field of
+     brand green turned out to be too much of it - the running class shouted
+     over the rest of the board rather than leading it, and every photograph on
+     it had to fight a green surround. The frame keeps the emphasis and gives
+     the green back its job as a signal.
+
+     Weight matters more than the colour here. A 1px rule is what the old time
+     rail was, and it is legible at arm's length and gone at five metres, which
+     is the only distance this board is read from - so the frame is 0.4cqmin,
+     about 4px on a 1080 screen and twice that on a 4K panel. The time block
+     stays solid green and is what carries the colour now.
+
+     The drop shadow stays green-cast, which is most of why a white plate still
+     reads as lifted rather than as another queue row. */
   .t-row[data-status='live'] {
     --shot: 23cqmin;
     --pad: 3.2cqmin;
     max-height: 52cqmin;
-    background: var(--color-sm-green);
+    border-color: var(--color-sm-green);
     box-shadow:
-      0 2px 4px rgb(14 77 41 / 0.18),
-      0 10px 28px rgb(14 77 41 / 0.22);
+      0 2px 4px rgb(14 77 41 / 0.1),
+      0 10px 28px rgb(14 77 41 / 0.16);
   }
 
   /* ------------------------------------------------------ the time block ---
@@ -482,6 +504,10 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
     font-family: var(--font-display);
     color: var(--color-sm-ink);
     white-space: nowrap;
+    /* The block is one width for every tier, so anything in it that will not
+       fit has to give way inside rather than spill onto the plate. */
+    min-width: 0;
+    overflow: hidden;
   }
 
   .t-h {
@@ -541,8 +567,11 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
     font-size: 1.7cqmin;
   }
 
+  /* The same green as the frame, so the block reads as part of it rather than
+     as a second decision. It was green-dark against a green plate, where it
+     needed to be a step darker to show at all; against white it does not. */
   .t-row[data-status='live'] .t-time {
-    background: var(--color-sm-green-dark);
+    background: var(--color-sm-green);
     color: var(--color-sm-paper);
   }
   .t-row[data-status='live'] .t-mer {
@@ -631,7 +660,6 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
      enough to break itself is smaller, not bigger, at five metres. */
   .t-row[data-status='live'] .t-title {
     font-size: 4cqmin;
-    color: var(--color-sm-paper);
   }
 
   .t-row:is([data-status='live'], [data-status='next']) .t-sum {
@@ -646,10 +674,6 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
     color: var(--color-sm-slate);
   }
 
-  .t-row[data-status='live'] .t-sum {
-    color: var(--color-sm-on-green);
-  }
-
   /* How long is left, or how long until - the one number on a feature row
      that changes while you are standing there, so it is sized to be read at
      the same distance as the title. */
@@ -660,10 +684,6 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
     font-weight: 700;
     letter-spacing: 0;
     color: var(--color-sm-green-dark);
-  }
-
-  .t-row[data-status='live'] .t-note {
-    color: var(--color-sm-paper);
   }
 
   .t-studio,
@@ -717,19 +737,6 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
     color: var(--color-sm-slate);
   }
 
-  /* On the lit plate the whole scale inverts: green type would vanish into its
-     own ground, so the kind takes the tinted white and the studio takes full
-     white - the same order of emphasis, in the materials that plate has. */
-  .t-row[data-status='live'] .t-kind {
-    color: var(--color-sm-on-green);
-  }
-  .t-row[data-status='live'] .t-studio {
-    color: var(--color-sm-paper);
-  }
-  .t-row[data-status='live'] .t-kind + .t-studio::before {
-    color: var(--color-sm-on-green);
-  }
-
   /* Whether you can still get in is the exception, so it gets the chip. On a
      board read from a few metres away a tinted block is findable at a glance
      in a way that another line of small tracked caps is not. */
@@ -757,11 +764,6 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
     background: var(--color-sm-paper);
   }
 
-  .t-row[data-status='live'] .t-flag {
-    color: var(--color-sm-green-dark);
-    background: var(--color-sm-paper);
-  }
-
   /* ------------------------------------------------- where the day stands ---
 
      Four states, and only two of them announce themselves. "Later" is the
@@ -776,8 +778,17 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
     padding: 0.5cqmin 1.3cqmin;
     border-radius: 999px;
     font-size: 1.5cqmin;
+    line-height: 1.25;
     color: #fff;
     background: var(--color-sm-green);
+    /* "Starting soon" is 13 characters against "On now"'s 6, and the block it
+       sits in is one width for every tier - so at 1.5cqmin the pill came out
+       wider than the block and burst through both of its edges, shoving the
+       time off the left. Capped and allowed to break, it sets as two centred
+       lines in a block that is a plate tall and has the room. */
+    max-width: 100%;
+    white-space: normal;
+    text-align: center;
   }
 
   /* It hangs off the time block, under the meridiem on a feature plate. The
@@ -834,7 +845,7 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
     max-width: 92cqmin;
     margin-top: 1.4cqmin;
     border-radius: 999px;
-    background: rgb(255 255 255 / 0.25);
+    background: var(--color-sm-wash);
     overflow: hidden;
   }
 
@@ -842,7 +853,7 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
     display: block;
     height: 100%;
     border-radius: inherit;
-    background: var(--color-sm-paper);
+    background: var(--color-sm-green);
     transition: width 600ms ease;
   }
 
@@ -880,10 +891,6 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
     /* Something to look at for the moment between layout and decode, rather
        than a hole in the plate. */
     background: var(--color-sm-mist);
-  }
-
-  .t-row[data-status='live'] .t-shot {
-    background: var(--color-sm-green-dark);
   }
 
   .t-thumb {
@@ -934,21 +941,16 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
   /* No photograph, so the studio's icon instead - `contain` and padded, because
      these are badges drawn to sit on a ground rather than photographs to fill
      a frame, and the tint is what says so: a tile the eye reads as a label
-     rather than as a picture of the class.
-
-     On the lit plate it takes white rather than wash: the icons are dark line
-     art inside a white disc, so a white tile is the disc at full size and the
-     badge keeps reading as a badge. */
+     rather than as a picture of the class. */
   .t-thumb.is-icon {
     padding: 14%;
     object-fit: contain;
     background: var(--color-sm-wash);
   }
 
-  .t-row[data-status='live'] .t-thumb.is-icon {
-    background: var(--color-sm-paper);
-  }
-
+  /* On the wash plate the tile needs to stop being the same colour as the
+     ground it sits on. The lit plate is white again, so its icons take the
+     ordinary wash tile with everything else. */
   .t-row[data-status='next'] .t-thumb.is-icon {
     background: var(--color-sm-paper);
   }

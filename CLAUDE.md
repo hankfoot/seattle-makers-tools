@@ -405,8 +405,14 @@ tagged `woodworking` on the real feed and studios.ts maps it back;
 dummy board would have been missing a label the production board shows, which
 is exactly the kind of divergence a fixture exists to prevent.
 
-**Exactly one row is ever `next`.** "Up next" has to mean one thing on a board,
+**Exactly one row is ever `next`.** The badge has to mean one thing on a board,
 or it is a synonym for "not yet" repeated down the page.
+
+It reads **"Starting soon"**; it read "Up next" until 2026-09-22. Both name the
+same single row, but one describes a position in a list and the other describes
+the thing somebody in the doorway wants to know - and a board is not a queue you
+are waiting in. The rename is not free: 13 characters against "On now"'s 6, in a
+time block whose width is one number for every tier. See the badge note below.
 
 **The fit pass has an escape hatch now, and real data is what found the hole.**
 
@@ -522,13 +528,46 @@ stands before a word of it is read:
 | past | white, faded to 0.5, no shadow |
 | later | white, standing off the ground |
 | next | wash, tinted toward the brand green |
-| live | solid green, white type, the one bright block on the board |
+| live | white, framed in brand green, with a solid green time block |
 
 Four materials down one column read as a stack filling up, which is what a day
 is. And what separates one event from the next is now the *ground showing
 through between two plates* - there are no hairlines on this board at all. A
 rule drawn across a row is a table; a gap between two plates is a board. That
 one change is most of what stopped it looking like a printout.
+
+**`live` was a solid green plate first, and a whole field of brand green was
+too much of it.** The running class shouted over the rest of the board rather
+than leading it, every photograph on it had to fight a green surround, and the
+type, the chips, the icon tiles and the progress bar all had to be inverted to
+survive on it - a second palette maintained for one row. It is a white plate in
+a green frame now, and the solid green time block is what carries the colour.
+
+Weight is what makes a frame work at this distance, not the colour. A 1px rule
+is what the old time rail was, and that was legible at arm's length and gone at
+five metres - so the frame is **0.4cqmin**, about 4px on a 1080 screen and twice
+that on a 4K panel.
+
+Every tier carries `border: 0.4cqmin solid transparent`, so the framed plate is
+not narrower inside than the plates around it. `background-clip` is `border-box`
+by default, so each plate's own colour fills the band and nothing shows until a
+`border-color` is set. An inset `box-shadow` would have done this without
+reserving space and cannot be used here: the row is `overflow: hidden` with
+children that paint their own backgrounds, so the time block would cover the
+frame down the left-hand edge.
+
+The drop shadow stays green-cast, which is most of why a white plate still reads
+as lifted rather than as another queue row.
+
+**The badge wraps, and the time block clips.** "Starting soon" at 1.5cqmin came
+out wider than the 16cqmin block it sits in and burst through both of its edges,
+shoving the time off the left. It is capped at `max-width: 100%` with
+`white-space: normal` and centred, so it sets as two lines in a block that is a
+plate tall and has the room; `.t-time` takes `min-width: 0; overflow: hidden` so
+that anything else too wide for it gives way inside rather than spilling onto
+the plate. The cost is real and is reported honestly: on the 2026-10-07 board
+the taller badge takes one row back off the bottom, and the fit pass says
+"+ 1 later not shown".
 
 **"Sunk" was the first version of `past` and it was wrong.** Finished rows had
 no plate at all - transparent, so a finished class became the ground. It reads
