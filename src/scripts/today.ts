@@ -33,7 +33,7 @@ import {
   sessionEnd,
   clock,
   clockParts,
-  endLabel,
+  gap,
   progress,
   statusNote,
   nowLocal,
@@ -254,10 +254,13 @@ function row(e: SmEvent, st: Status, now: string): HTMLLIElement {
   const t = el('span', 't-time');
   const parts = clockParts(e.start);
   t.append(el('span', 't-h', parts.hour), el('span', 't-mer', parts.meridiem));
-  // The end under the start, in the same block. The block is a plate tall and
-  // was holding one line; a session's end is the other half of the fact the
-  // column exists to carry, and it costs no height at all.
-  t.append(el('span', 't-end', endLabel(e.start, sessionEnd(e.start, e.end))));
+  // How long it runs, under the start. The end time was tried here first and
+  // reads badly - "– 12:30pm" is a second clock face in a column that already
+  // has one, and it competes with the time above it rather than qualifying it.
+  // A duration is one short token, and it answers the question somebody in the
+  // doorway is actually asking: have I got time for this.
+  const runs = gap(e.start, sessionEnd(e.start, e.end));
+  if (runs) t.append(el('span', 't-dur', runs));
   li.append(t);
 
   const body = el('div', 't-body');

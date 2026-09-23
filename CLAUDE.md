@@ -817,23 +817,29 @@ The meridiem is small on purpose: nobody standing in front of a board checks
 whether a class at 2:15 is in the morning, and setting both halves the same size
 spends the column's whole presence on the half that is never read.
 
-**The session's end sits under its start, in the same block.** The block is a
-plate tall and was holding one line; a session's end is the other half of the
-fact the column exists to carry, and on a stretched block it costs no height at
-all - measured, no row got taller. A range on one line does not fit -
-"11:30–12:30" needs about 190px of a 147px block at the queue size - so it is
-two lines, `grid-column: 1 / -1` on the end being what lets it break one.
+**How long it runs sits under the time it starts, in the same block.** The
+block is a plate tall and was holding one line; the length of the session is
+the other half of the fact the column exists to carry, and on a stretched block
+it costs no height at all - measured, no row got taller. It does not fit beside
+the hour - "2h 30m" needs about 76px next to a time already taking most of a
+147px block - so it is a second line, `grid-column: 1 / -1` on it being what
+lets it break one. Worst case measured at the feature tier: "10h 30m" is 89px
+of a 163px block, so nothing the calendar can produce overflows.
 
-**The repeated meridiem is dropped, and that is `endLabel()`'s whole job.** A
-block reading "2:15 PM" over "– 4:15 PM" says pm twice in two lines of a column
-that is read hundreds of times a day. It only carries information when the
-session crosses noon or midnight, so it appears then and not otherwise: "11:00
-AM" over "– 12:30pm", but "12:30 PM" over "– 1:30". `npm test` pins both
-crossings.
+**The *end time* was tried there first and reverted, on 2026-09-23.** It read
+"7:00 PM" over "– 8:30pm", and `endLabel()` existed to drop the repeated
+meridiem except where the session crosses noon or midnight. The dropped
+meridiem was the right detail on the wrong object: a second clock face in a
+column that already has one competes with the time above it rather than
+qualifying it, and the eye has to subtract to get the answer it wanted. A
+duration is one short token, and it answers the question somebody in the
+doorway is actually asking - have I got time for this. `gap()` already existed
+for the countdowns, so the swap deleted `endLabel()` and its four assertions
+rather than adding anything.
 
 **The narrow bar has to hand `grid-column` back.** With `grid-auto-flow:
 column` and no explicit tracks, `-1` resolves to the *first* grid line, so the
-end jumped in front of the hour and the header bar read "– 12:30pm 11:00 AM".
+duration jumped in front of the hour and the header bar read "2h 7:00 PM".
 `grid-column: auto` puts it after the meridiem, which is where a horizontal bar
 wants it anyway.
 

@@ -719,11 +719,11 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
     color: var(--color-sm-green);
   }
 
-  /* The session's end, under its start. Spans both of the block's columns, so
-     it starts a line of its own below the hour and its meridiem - the only
-     item in here that does. Small and a step lighter: the start is what the
-     column is scanned for, and this qualifies it. */
-  .t-end {
+  /* How long it runs, under the time it starts. Spans both of the block's
+     columns, so it starts a line of its own below the hour and its meridiem -
+     the only item in here that does. Small and a step lighter: the start is
+     what the column is scanned for, and this qualifies it. */
+  .t-dur {
     grid-column: 1 / -1;
     justify-self: center;
     margin-top: 0.15cqmin;
@@ -736,25 +736,25 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
     opacity: 0.85;
   }
 
-  .t-row.is-up .t-end {
+  .t-row.is-up .t-dur {
     font-size: 2cqmin;
   }
 
-  .t-row[data-status='live'] .t-end {
+  .t-row[data-status='live'] .t-dur {
     color: var(--color-sm-on-green);
     opacity: 1;
   }
 
-  .t-row[data-status='past'] .t-end {
+  .t-row[data-status='past'] .t-dur {
     color: var(--color-sm-slate);
   }
 
-  .t-row.is-off .t-end {
+  .t-row.is-off .t-dur {
     color: var(--color-sm-paper);
     opacity: 0.85;
   }
 
-  .t-row[data-status='past'].is-off .t-end {
+  .t-row[data-status='past'].is-off .t-dur {
     color: var(--color-sm-slate);
   }
 
@@ -1285,7 +1285,7 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
      at arm's length and invisible from the door. In the board's own units it
      scales with everything else. */
   .t-row.is-off .t-h,
-  .t-row.is-off .t-end,
+  .t-row.is-off .t-dur,
   .t-row.is-off .t-title {
     text-decoration: line-through;
     text-decoration-thickness: 0.26cqmin;
@@ -1503,11 +1503,11 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
       align-items: baseline;
       padding: 1cqmin 2.4cqmin;
     }
-    /* The end joins the line instead of starting one. `grid-column: 1 / -1`
-       is what puts it on its own row in the wide layout; with auto-flow
-       columns and no explicit tracks, `-1` resolves to the first line and it
-       jumped in *front* of the hour - the bar read "– 12:30pm 11:00 AM". */
-    .t-end {
+    /* The duration joins the line instead of starting one. `grid-column:
+       1 / -1` is what puts it on its own row in the wide layout; with
+       auto-flow columns and no explicit tracks, `-1` resolves to the first
+       line and it jumped in *front* of the hour - the bar read "2h 7:00 PM". */
+    .t-dur {
       grid-column: auto;
       margin-top: 0;
       margin-left: 0.8cqmin;
