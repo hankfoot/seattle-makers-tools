@@ -706,11 +706,28 @@ event stands, so one column read top to bottom is the day:
 
 | state | time block | the row |
 | --- | --- | --- |
-| upcoming | wash - light green | condensed |
+| upcoming | wash - light green, **dark green type** | condensed |
 | starting soon | wash - the same light green | expands |
 | on now | **solid green**, white type | stays expanded, gains a green frame |
 | over | hairline grey | condensed again, whole row greyscaled |
-| cancelled | alert red, struck through | whatever tier it was in |
+| cancelled | alert red, struck through | until it is over - then grey like the rest |
+
+**The type in the block is green, not ink.** Black on a tinted block is the
+hardest thing in the column, and it was taking attention from the one block
+that is actually filled - the running class. Dark green stays legible at five
+metres and lets solid green be the loud one; the meridiem takes a step lighter
+again, since nobody at this board is checking whether a class at 2:15 is in
+the morning.
+
+**A cancelled class stops being the exception once it is over.** Cancellation
+is urgent while there is still something to turn up for; afterwards it is just
+another thing that did not happen today. The alert block greyscales to a
+mid-grey that was the darkest thing on an otherwise pale evening board - the
+one row pulling the eye was the one with nothing left to say. Past wins over
+cancelled now, and the struck title and the CANCELLED chip still say which one
+it was. It needs the compound selector `.t-row[data-status='past'].is-off
+.t-time`: the two single-condition rules weigh the same, so source order would
+otherwise decide it.
 
 The middle two steps sharing a colour is the point: expanding *is* the change
 when a class comes up, and going solid is the change when it starts. Two
@@ -802,25 +819,15 @@ spans `1 / -1`, so it is the one item allowed to start a new one. The narrow
 layout, where the block is a header bar across the top of the plate, switches
 to `grid-auto-flow: column` and the badge gives up its span to sit inline.
 
-**The hour is right-aligned in a box as wide as the longest time, so the
-column reads as a column.** Left to size itself, each hour's grid track fitted
-its own content - so a centred "2:00" started about half a digit right of the
-"11:00" above it and its meridiem landed 22px short, three times down the
-board at slightly different places. With a fixed box the meridiems align and
-the numerals hang off a shared colon, which is what a departure board does and
-for the same reason. Measured after: every condensed hour box is 89.3px and
-every elevated one 129px, whatever the time in it.
-
-`min-width: 4.7ch` rather than a cqmin measurement, because the face is
-tabular - `ch` is the width of a digit, so 4.7 covers four digits and a colon
-and it scales with the tier's font size on its own. The narrow layout resets
-it: there is no column there, the block is a bar along the top of each plate,
-and the same box only indents the time away from the plate's left edge.
-
-About 0.8px of the pair's centring still moves between "am" and "pm" rows,
-because those two strings are not the same width. Left alone deliberately -
-it is a fifth of a millimetre on the wall, and pinning it would mean a magic
-number for a thing nobody can see.
+**The time is centred as ink, and the departure-board alternative was tried
+and reversed.** Padding the hour out to the width of the longest time and
+right-aligning it (`min-width: 4.7ch`) lines the meridiems up exactly and hangs
+the numerals off a shared colon, which is what a departure board does. It also
+puts a short time visibly right of the middle of its own block, because the
+empty half-digit is then *inside* the box rather than outside it. On a board
+where every row is its own plate, a time that is not centred in its block is
+what you notice; column alignment is worth less here than it would be in a
+continuous table, because these are cards, not rows of a table.
 
 **The feature hour is 3.9cqmin, and the number is measured.** The block's inner
 width is 13.6cqmin. The widest time the calendar can produce is a two-digit
@@ -968,9 +975,16 @@ the footer. The greeting is now the only place the name appears, so it says it
 properly: **"Welcome to Seattle Makers!"**, with **"Please check in at the
 kiosk"** under it.
 
-The pair is why the hero exists: one line addressed to a person, and the one
-instruction on the board - what somebody who has just walked through the door
-does next. The date and the clock are reference and sit on the other side.
+**"Please check in at the kiosk" is gone too, as of 2026-09-22, and with it the
+board's only instruction.** It was the help strip's first line before it was
+the greeting's second, and it was removed from the strip when it moved here -
+so nothing on the board now tells somebody who has just walked in what to do.
+That is the deliberate consequence of cutting it and not a leftover: if the
+instruction should come back, the footer strip beside the phone number is
+where it lived and where it fits.
+
+The greeting is the only thing on this side of the band now. The date and the
+clock are reference and sit on the other.
 
 At 6cqmin the longer greeting wrapped (26 characters against "Welcome"'s 7,
 in whatever the date column leaves), so it is **5cqmin**. A greeting that breaks

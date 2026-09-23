@@ -65,12 +65,11 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
               hero is the only place the name is said, so it says it properly.
 
               It is the one line on this board addressed to a person rather
-              than about the schedule, and the line under it is the only
-              instruction - what somebody who has just walked through the door
-              does next. That pair is why the hero exists; the date and the
-              clock are reference, and sit on the other side. */}
+              than about the schedule, and now the only thing on this side of
+              the band - the date and the clock are reference and sit on the
+              other. "Please check in at the kiosk" sat under it for a while;
+              see the note in CLAUDE.md about where that instruction went. */}
           <h2 class="t-welcome">Welcome to Seattle Makers!</h2>
-          <p class="t-sub">Please check in at the kiosk</p>
         </div>
 
         {/* Reference, stacked: what day it is, then what time it is. The date
@@ -280,10 +279,10 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
     white-space: nowrap;
   }
 
-  /* 5cqmin, not the 6 the one-word greeting used. "Welcome to Seattle
-     Makers!" is 26 characters against "Welcome"'s 7, and the hero's left
-     column is what is left after the date and the clock - at 6 it wrapped, and
-     a greeting that breaks itself is smaller at five metres, not bigger. */
+  /* 5cqmin. "Welcome to Seattle Makers!" is 26 characters against the old
+     one-word greeting's 7, and the hero's left column is what is left after
+     the date and the clock - at 6 it wrapped, and a greeting that breaks
+     itself is smaller at five metres, not bigger. */
   .t-welcome {
     font-family: var(--font-display);
     font-size: 5cqmin;
@@ -292,17 +291,6 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
     line-height: 1.08;
     color: var(--color-sm-paper);
     text-wrap: balance;
-  }
-
-  /* The board's only instruction, so it is sized to be read rather than
-     glanced at - a caption under a greeting is not what "please do this" wants
-     to look like. */
-  .t-sub {
-    margin-top: 1.2cqmin;
-    font-family: var(--font-display);
-    font-size: 2.6cqmin;
-    font-weight: 500;
-    color: var(--color-sm-on-green);
   }
 
   /* The list owns whatever is left of the board, and never more: a screen
@@ -596,7 +584,13 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
        minutes", and it left two different grounds for the same words. */
     background: var(--color-sm-wash);
     font-family: var(--font-display);
-    color: var(--color-sm-ink);
+    /* Green on green, not ink on green. Black type on a tinted block is the
+       hardest thing in the time column and it was winning attention from the
+       one block that is actually filled - the running class. Dark green keeps
+       it legible at five metres and lets the solid green block be the loud
+       one. The states that set their own colour - running, finished,
+       cancelled - all override this. */
+    color: var(--color-sm-green-dark);
     white-space: nowrap;
     /* The block is one width for every tier, so anything in it that will not
        fit has to give way inside rather than spill onto the plate. */
@@ -604,22 +598,17 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
     overflow: hidden;
   }
 
-  /* Right-aligned in a box wide enough for the longest time there is, so the
-     column reads as a column.
+  /* Centred as ink, not padded out to a column.
 
-     Without it each hour's grid track sized to its own content, so a centred
-     "2:00" started about half a digit to the right of an "11:00" above it and
-     its meridiem landed 22px short - three times down the board at slightly
-     different places. With a fixed box the meridiems align exactly and the
-     numerals hang off a shared colon, which is what a departure board does and
-     for the same reason.
-
-     `ch` rather than a cqmin measurement, because the face is tabular: `ch` is
-     the width of a digit, so 4.7 covers four digits and a colon, and it scales
-     with the tier's font size on its own. */
+     Padding the hour to the width of the longest time and right-aligning it
+     is the departure-board treatment, and it was tried: the meridiems line up
+     exactly and the numerals hang off a shared colon. It also means a short
+     time sits visibly right of the middle of its own block, because the empty
+     half-digit is inside the box rather than outside it - and on a board where
+     each row is its own plate, a time that is not centred in its block is the
+     thing you notice. Column alignment is worth less here than it would be in
+     a continuous table; these are cards. */
   .t-h {
-    min-width: 4.7ch;
-    text-align: right;
     font-size: 2.7cqmin;
     font-weight: 800;
     letter-spacing: -0.03em;
@@ -637,7 +626,10 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
     font-style: normal;
     letter-spacing: var(--tracking-label);
     text-transform: uppercase;
-    color: var(--color-sm-slate);
+    /* A step lighter than the hour it qualifies, in the same hue - nobody
+       standing at this board is checking whether a class at 2:15 is in the
+       morning. */
+    color: var(--color-sm-green);
   }
 
   /* The hairline token, not the wash the upcoming rows carry. The row is
@@ -1128,8 +1120,26 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
     background: #fdf3f3;
   }
 
-  .t-row[data-status='past'].is-off {
-    background: transparent;
+  /* Once it is over it stops being the exception.
+
+     Cancellation is an urgent fact while there was still something to turn up
+     for; afterwards it is just another thing that did not happen today, and a
+     red block greyscales to a mid-grey that was the darkest thing on an
+     otherwise pale evening board - the one row pulling the eye was the one
+     with nothing left to say. Past wins over cancelled here: the plate, the
+     block and the type all take the ordinary finished treatment, and the
+     struck title and the CANCELLED chip still say which one it was.
+
+     Written as a compound selector because `.t-row.is-off .t-time` and
+     `.t-row[data-status='past'] .t-time` weigh the same, so source order would
+     otherwise decide it. */
+  .t-row[data-status='past'].is-off .t-time {
+    background: var(--color-sm-line);
+    color: var(--color-sm-slate);
+  }
+
+  .t-row[data-status='past'].is-off .t-mer {
+    color: var(--color-sm-slate);
   }
 
   /* The block is the signal. It is about 170px of colour on a 1080 screen,
@@ -1365,14 +1375,6 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
       justify-content: start;
       align-items: baseline;
       padding: 1cqmin 2.4cqmin;
-    }
-    /* The wide layout pads the hour out to the longest time so a *column* of
-       them lines up. There is no column here - the block is a bar along the
-       top of each plate - and the same box just indents the time away from the
-       plate's left edge. */
-    .t-h {
-      min-width: 0;
-      text-align: left;
     }
     .t-body {
       grid-column: 1;
