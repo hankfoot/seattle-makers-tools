@@ -55,9 +55,10 @@ Done:
   of them do. See *Pictures* below.
 - A help strip along the bottom: sign in at the check-in PC, and the shop
   number to call for a staff member in the building.
-- The wordmark in the hero, knocked out white, with the greeting shortened to
-  "Welcome" so the board does not say the name twice. A live clock sits under
-  it - see *The clock* below.
+- The hero is a greeting, an instruction, and the two clock-like facts:
+  "Welcome to Seattle Makers!" over "Please check in at the kiosk" on the left,
+  the date over a live clock on the right. The lockup is down in the footer
+  strip - see *The hero says the name* below.
 - **Two row tiers, added 2026-09-22.** What is running and what is next get a
   big picture, the summary and room to breathe; everything else collapses to a
   one-line queue row. Finished rows are that same line, dimmed, with the
@@ -668,26 +669,46 @@ earlier attempt swapped the heading between "Daily Events" and "Welcome to
 Seattle Makers" depending on the mode, which meant the page could never show you
 what the wall would say.
 
-**The lockup is in the hero, and the greeting shortened to make room for it
-honestly.** The board used to say "Welcome to Seattle Makers" and now says
-"Welcome", with the wordmark knocked out white on the right of the green band.
-Keeping both was tried first and is the thing to avoid: the name appears twice,
-and the greeting wraps onto two lines to leave room for its own repetition. The
-greeting is still the board's voice - it is the one line here addressed to a
-person rather than about the schedule - and the mark is what says where you
-are.
+**The hero says the name in words, and the lockup moved to the foot.** This
+reversed on 2026-09-22 and the reversal is worth keeping, because the old note
+here argued the opposite and was right at the time.
 
-**It is the one-line "Skinny" variant, for the reason the footer already
-found.** At a corner-sized footprint the stacked lockup puts SEATTLE on its own
-line at about 13px and it goes soft, where one line buys roughly double the
-letter height in the same space - and this board is read from much further away
-than a footer. Reversing it costs no second asset: the artwork is black on
-transparent, so `filter: brightness(0) invert(1)` knocks it out white, held at
-88% so it does not out-shout the greeting beside it.
+It used to read "Welcome" - one word - with the wordmark knocked out white
+beside it. The argument was that the mark already said the name, so a greeting
+that said it too made the board repeat itself and wrapped the line to leave room
+for its own repetition. That was a true observation about a hero *containing the
+mark*, not a general rule, and it stopped applying the moment the mark went to
+the footer. The greeting is now the only place the name appears, so it says it
+properly: **"Welcome to Seattle Makers!"**, with **"Please check in at the
+kiosk"** under it.
 
-Unlike the time rail, it does *not* collapse on a narrow board - it grows in
-proportion instead. With the greeting down to one word, the mark is the only
-thing left saying whose board this is.
+The pair is why the hero exists: one line addressed to a person, and the one
+instruction on the board - what somebody who has just walked through the door
+does next. The date and the clock are reference and sit on the other side.
+
+At 6cqmin the longer greeting wrapped (26 characters against "Welcome"'s 7,
+in whatever the date column leaves), so it is **5cqmin**. A greeting that breaks
+itself is smaller at five metres, not bigger.
+
+**The date moved up beside the clock.** It used to sit under the greeting as
+"What's on today · Tuesday, September 22", which left the left side carrying a
+greeting, an instruction *and* a fact while the clock stood alone on the right.
+Grouping the two clock-like things is what lets the greeting be a greeting. The
+`<span id="t-date">` went with it - the date is now that element's whole
+content, and today.ts still rewrites it by id at the day rollover.
+
+**The lockup is the one-line "Skinny" variant wherever it sits.** At a
+corner-sized footprint the stacked lockup puts SEATTLE on its own line at about
+13px and it goes soft, where one line buys roughly double the letter height in
+the same space. Reversing it costs no second asset: the artwork is black on
+transparent, so `filter: brightness(0) invert(1)` knocks it out white - now
+against the ink strip rather than the green band, held at 80% so it does not
+out-shout the phone number standing next to it.
+
+In the footer it gets *smaller* on a narrow board rather than bigger, which is
+the opposite of what it did in the hero. There it was the only thing saying
+where you were and wanted every pixel; here it is a sign-off beside the one
+number somebody has to read off a wall and key into a phone.
 
 **Everything inside the board is measured in `cqmin`, and a single `rem` in
 there breaks the preview.** The board is `container-type: size`, so `cqmin` is
@@ -806,10 +827,29 @@ function returns early when the panel is not mounted, and `?now=` works without
 outcome the red bar exists to prevent, and it was broken the first time.
 
 **The help strip is part of the board, not of the page.** Someone standing in
-front of this screen has two questions the schedule cannot answer - what do I
-do now I am here, and how do I find a person - so the answers belong on the
-wall rather than on a web page nobody in the building is looking at. It is
-static markup in today.astro, because today.ts only ever replaces the rows.
+front of this screen has questions the schedule cannot answer, so the answers
+belong on the wall rather than on a web page nobody in the building is looking
+at. It is static markup in today.astro, because today.ts only ever replaces the
+rows.
+
+It used to carry two: "New here? Sign in at the check-in PC when you arrive."
+and the phone number. The first moved into the hero as the greeting's own
+second line, because an instruction about arriving belongs next to the welcome
+rather than in the small print at the foot - and once the hero said "Please
+check in at the kiosk", keeping it down here was the same instruction twice, in
+two different words, on one board. What is left is the question the schedule
+genuinely cannot answer: how to find a person. (If the kiosk and the check-in
+PC are *different* objects, this deletion lost something and the strip needs
+its line back.)
+
+**The strip is `flex-wrap: nowrap`, and that is a fix rather than a
+preference.** With the lockup in it, the sentence sizes to its own content -
+755px - and with the 227px mark and the gap that came to 1036 in a 1007 strip,
+so the pair wrapped and the lockup dropped onto a line of its own at the left.
+A wrapping *container* puts the whole item on the next line; a non-wrapping one
+lets the sentence shrink and break internally, which is what should give way.
+`.t-help-item` needs `min-width: 0` for that, since a flex item's default
+minimum is its own content.
 
 It is `flex: 0 0 auto` above a list that is `1 1 auto`, so it takes its height
 first and `fit()` drops rows to suit. That order is deliberate: a dropped row

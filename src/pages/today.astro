@@ -59,34 +59,31 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
     <section id="t-board" class="t-board" aria-label={`Today at ${SITE.org}`}>
       <header class="t-hero">
         <div class="t-hero-text">
-          {/* "Welcome", not "Welcome to Seattle Makers": the lockup beside it
-              says the name, and a board that says it twice made the greeting
-              wrap onto two lines to leave room for its own repetition. The
-              greeting is still the board's voice - it is the one thing here
-              addressed to a person rather than about the schedule. */}
-          <h2 class="t-welcome">Welcome</h2>
-          {/* One line, deliberately: Astro eats whitespace at an element
-              boundary across a line break, so the separator and the date set on
-              separate lines render as "today ·Saturday". The span holds the date
-              and nothing else - today.ts rewrites it at the day rollover. */}
-          <p class="t-sub">What's on today · <span id="t-date">{heading}</span></p>
+          {/* The full greeting, which it could not be while the lockup stood
+              beside it: the name appeared twice and the line wrapped to leave
+              room for its own repetition. With the mark down in the footer the
+              hero is the only place the name is said, so it says it properly.
+
+              It is the one line on this board addressed to a person rather
+              than about the schedule, and the line under it is the only
+              instruction - what somebody who has just walked through the door
+              does next. That pair is why the hero exists; the date and the
+              clock are reference, and sit on the other side. */}
+          <h2 class="t-welcome">Welcome to Seattle Makers!</h2>
+          <p class="t-sub">Please check in at the kiosk</p>
         </div>
 
-        {/* The lockup, knocked out white on the green band.
+        {/* Reference, stacked: what day it is, then what time it is. The date
+            used to sit under the greeting as "What's on today · Tuesday,
+            September 22", which made the left side carry a greeting, an
+            instruction and a fact, and left the clock on its own over here.
+            Grouping the two clock-like things is what lets the greeting be a
+            greeting.
 
-            The one-line "Skinny" variant, not the stacked one, for the reason
-            the footer already found the hard way: at a corner-sized footprint
-            the stacked mark puts SEATTLE on its own line at about 13px and it
-            goes soft, where one line buys roughly double the letter height in
-            the same space. This board is read from further away than a footer
-            ever is.
-
-            `alt=""` on purpose: the heading beside it already says Seattle
-            Makers, so a screen reader announcing the picture as well would
-            just read the name twice. The intrinsic size is stated so the band
-            does not reflow when the file lands. */}
+            The span is gone with it - the date is this element's whole
+            content now, and today.ts still rewrites it by id at the day
+            rollover. */}
         <div class="t-hero-side">
-          <img class="t-mark" src="/brand/wordmark-inline.png" alt="" width="500" height="63" />
           {/* The clock earns its place rather than decorating it. Every time
               note on this board is relative - "starts in 45m", "1h 15m left" -
               and a relative time with nothing absolute beside it cannot be
@@ -98,6 +95,7 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
               today.ts writes it from the board's own clock, so `?now=` moves it
               with everything else - a simulated board must never show the real
               time beside a made-up schedule. Empty until then, like the list. */}
+          <p class="t-date" id="t-date">{heading}</p>
           <p class="t-clock" id="t-clock"></p>
         </div>
       </header>
@@ -136,12 +134,32 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
           screen has no pointer, and the people who can tap a number are
           reading it off the wall into their own phone anyway. */}
       <footer class="t-help">
-        <p class="t-help-item">
-          <span class="t-help-label">New here?</span> Sign in at the check-in PC when you arrive.
-        </p>
+        {/* "New here? Sign in at the check-in PC when you arrive." used to sit
+            above this one and has gone to the hero, where it is the greeting's
+            own second line. Two ways of saying "check in" on one board is one
+            way too many, and the instruction belongs next to the welcome
+            rather than in the small print at the foot.
+
+            What is left down here is the question the schedule genuinely
+            cannot answer: how to find a person. */}
         <p class="t-help-item">
           <span class="t-help-label">Need a hand?</span> Call <b class="t-phone">(206) 659-1726</b> to reach a staff member in the building.
         </p>
+
+        {/* The lockup, knocked out white on the ink strip.
+
+            The one-line "Skinny" variant, not the stacked one, for the reason
+            the site footer already found the hard way: at a corner-sized
+            footprint the stacked mark puts SEATTLE on its own line at about
+            13px and it goes soft, where one line buys roughly double the
+            letter height in the same space. This board is read from further
+            away than a footer ever is.
+
+            `alt=""` on purpose: the greeting at the top of the board says
+            Seattle Makers in words, so a screen reader announcing the picture
+            as well would only read the name twice. The intrinsic size is
+            stated so the strip does not reflow when the file lands. */}
+        <img class="t-mark" src="/brand/wordmark-inline.png" alt="" width="500" height="63" />
       </footer>
     </section>
 
@@ -223,32 +241,37 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
     min-width: 0;
   }
 
-  /* The lockup is black artwork on transparent, so one filter reverses it to
-     white rather than shipping a second file. Not full strength: at 100% it
-     out-shouts the greeting it is standing next to, which is the wrong way
-     round for a board whose job is to say what is on. */
+  /* The reference column: the day over the minute. Right-aligned so the two
+     share an edge and read as one block rather than as two loose facts. */
   .t-hero-side {
     flex: 0 0 auto;
     display: flex;
     flex-direction: column;
     align-items: flex-end;
-    gap: 1cqmin;
+    gap: 0.8cqmin;
+    text-align: right;
   }
 
-  .t-mark {
-    width: 21cqmin;
-    height: auto;
-    filter: brightness(0) invert(1);
-    opacity: 0.88;
+  /* The quieter of the two, and deliberately: the date is a thing you check
+     once on walking in, the clock is the thing that keeps changing. Tinted
+     white rather than full, which is the same relationship the summary has to
+     the title on a lit plate. */
+  .t-date {
+    font-family: var(--font-display);
+    font-size: 2.4cqmin;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    line-height: 1.1;
+    color: var(--color-sm-on-green);
+    white-space: nowrap;
   }
 
   /* Tabular, so the minute changing does not shuffle the hour sideways - on a
      board this is the one number that redraws itself while somebody is looking
-     at it. Full-strength white, unlike the lockup above it: the mark is there
-     to be recognised, this is there to be read. */
+     at it. */
   .t-clock {
     font-family: var(--font-display);
-    font-size: 4.4cqmin;
+    font-size: 5.4cqmin;
     font-weight: 800;
     letter-spacing: -0.02em;
     line-height: 1;
@@ -257,9 +280,13 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
     white-space: nowrap;
   }
 
+  /* 5cqmin, not the 6 the one-word greeting used. "Welcome to Seattle
+     Makers!" is 26 characters against "Welcome"'s 7, and the hero's left
+     column is what is left after the date and the clock - at 6 it wrapped, and
+     a greeting that breaks itself is smaller at five metres, not bigger. */
   .t-welcome {
     font-family: var(--font-display);
-    font-size: 6cqmin;
+    font-size: 5cqmin;
     font-weight: 800;
     letter-spacing: -0.022em;
     line-height: 1.08;
@@ -267,10 +294,13 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
     text-wrap: balance;
   }
 
+  /* The board's only instruction, so it is sized to be read rather than
+     glanced at - a caption under a greeting is not what "please do this" wants
+     to look like. */
   .t-sub {
-    margin-top: 1.3cqmin;
+    margin-top: 1.2cqmin;
     font-family: var(--font-display);
-    font-size: 2.4cqmin;
+    font-size: 2.6cqmin;
     font-weight: 500;
     color: var(--color-sm-on-green);
   }
@@ -1115,6 +1145,39 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
     font-size: 1.9cqmin;
     line-height: 1.5;
     color: #b9c0bc;
+    /* One line of help at the left, the mark at the right. `center` rather
+       than the `baseline` this used while it held two sentences - there is no
+       shared baseline between a line of text and a picture, and baseline
+       alignment sat the lockup on the text's descenders.
+
+       `nowrap`, and it is the fix rather than a preference. The sentence sizes
+       to its own content - 755px of it - and with the 227px mark and the gap
+       that came to 1036 in a 1007 strip, so the pair wrapped and the lockup
+       dropped onto a line of its own at the left. A wrapping *container* puts
+       the whole item on the next line; a non-wrapping one lets the sentence
+       shrink and break internally, which is what should give way. */
+    flex-wrap: nowrap;
+    gap: 3cqmin;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  /* A flex item's default min-width is its content, so without this the
+     sentence refuses to shrink and pushes the mark off the strip instead. */
+  .t-help-item {
+    min-width: 0;
+  }
+
+  /* Knocked out white: the artwork is black on transparent, so one filter
+     reverses it rather than shipping a second file. Not full strength - at
+     100% it out-shouts the phone number beside it, which is the thing down
+     here somebody actually has to read and key in. */
+  .t-mark {
+    flex: 0 0 auto;
+    width: 19cqmin;
+    height: auto;
+    filter: brightness(0) invert(1);
+    opacity: 0.8;
   }
 
   .t-help-label {
@@ -1166,11 +1229,12 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
     .t-row[data-status='live'] {
       max-height: 72cqmin;
     }
-    /* Kept at this size, and bigger in proportion: with the greeting down to
-       one word, the lockup is the only thing on the board saying where you
-       are. */
+    /* Smaller in proportion down here, not bigger. It used to sit in the hero
+       as the only thing saying where you were, and wanted every pixel; in the
+       footer it is a sign-off standing next to the one number somebody has to
+       read off the wall and key into a phone. */
     .t-mark {
-      width: 30cqmin;
+      width: 24cqmin;
     }
     /* The time block becomes the plate's header bar, edge to edge, and every
        other item is placed explicitly under it.
