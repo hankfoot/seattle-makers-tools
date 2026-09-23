@@ -55,10 +55,13 @@ Done:
   of them do. See *Pictures* below.
 - A help strip along the bottom: sign in at the check-in PC, and the shop
   number to call for a staff member in the building.
-- The hero is a greeting, an instruction, and the two clock-like facts:
-  "Welcome to Seattle Makers!" over "Please check in at the kiosk" on the left,
-  the date over a live clock on the right. The lockup is down in the footer
-  strip - see *The hero says the name* below.
+- The hero is a greeting over a row of facts: "Welcome to Seattle Makers!" at
+  7cqmin, then today's hours on the left with the date and a live clock on the
+  right. The lockup is down in the footer strip - see *The hero says the name*.
+- **Opening hours, added 2026-09-23.** `src/data/hours.ts` carries the week as
+  the site publishes it; `lib/hours.ts` turns the clock into open / before /
+  after / closed. The greeting and the hours line both change with it, and the
+  band goes from green to ink. See *Open, and shut* below.
 - **Two row tiers, added 2026-09-22.** What is running and what is next get a
   big picture, the summary and room to breathe; everything else collapses to a
   one-line queue row. Finished rows are that same line, dimmed, with the
@@ -998,6 +1001,58 @@ clock are reference and sit on the other.
 At 6cqmin the longer greeting wrapped (26 characters against "Welcome"'s 7,
 in whatever the date column leaves), so it is **5cqmin**. A greeting that breaks
 itself is smaller at five metres, not bigger.
+
+**Open, and shut.** The board knows the space's hours now, and says three
+things with them: today's hours under the greeting, a greeting that changes
+when the door is locked, and a band that goes from green to ink.
+
+| phase | greeting | the line under it |
+| --- | --- | --- |
+| open | Welcome to Seattle Makers! | Today's hours · 2pm – 10pm |
+| before | We open at 2pm today | Today's hours · 2pm – 10pm |
+| after | Thanks for visiting! | Open again tomorrow at 2pm |
+| closed all day | See you next time! | Open again tomorrow at 2pm |
+
+**The hours are read off seattlemakers.org, not remembered** - the same rule
+the phone number follows. The site publishes them twice, in two independent
+phrasings that agree: a block on the home, contact and about pages, and a
+sentence on the contact page. Both give Mon 2-10, **Tue closed**, Wed-Fri
+2-10, Sat & Sun 10-8.
+
+**Corroborated against the calendar rather than taken on trust.** Across all
+193 events, Tuesday has **none at all**, and not one event on any day starts
+after closing. That is a strong second source for a table nobody here can
+verify by standing at the door.
+
+**The hours must never contradict the calendar, and the calendar found the
+case.** Two Wednesdays in early September ran a guided studio from 12:00
+against a 2pm opening. A board saying "Thanks for visiting" over a class that
+is running would be wrong in the one way that matters on a wall, so
+`openState()` takes `somethingLive` and reports open whenever the schedule
+says so. The published hours are what the space *claims*; the calendar is what
+is *happening*. `npm test` pins all three inversions.
+
+**The ink band is not a sleep state, and the arithmetic says why.** On a
+weekday the space is shut from midnight until two in the afternoon - so
+"closed" is the board's appearance for more hours than "open" is. It has to
+look composed rather than switched off, which is why it borrows the footer's
+ink rather than dimming anything. It is also the only part of the closed state
+readable from the far side of the room: the greeting says it in words, and
+words are exactly what you cannot read until you are close.
+
+Keyed off the three closed phases by name rather than
+`:not([data-open='open'])`, because the attribute is absent until today.ts runs
+and a negation would paint the hero ink for the first frame of every load.
+
+**The greeting got the whole width, which is what let it grow.** It was one row
+- greeting left, date and clock right - and it could never exceed about
+5.1cqmin, because its column was whatever the clock's tabular numerals left
+over. Measured: 1007px of band, less a 43px gap, less the 276px the date was
+taking, leaves 688, and "Welcome to Seattle Makers!" needs 809px at 6cqmin.
+Given the full width it is **7cqmin**. The facts moved to a row of their own,
+and the clock came down from 5.4 to 4.4cqmin - on a line of reference under a
+7cqmin title it was the loudest thing in the band, which is the wrong way round
+for a clock.
 
 **The date moved up beside the clock.** It used to sit under the greeting as
 "What's on today · Tuesday, September 22", which left the left side carrying a

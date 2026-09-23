@@ -69,7 +69,15 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
               the band - the date and the clock are reference and sit on the
               other. "Please check in at the kiosk" sat under it for a while;
               see the note in CLAUDE.md about where that instruction went. */}
-          <h2 class="t-welcome">Welcome to Seattle Makers!</h2>
+          <h2 class="t-welcome" id="t-welcome">Welcome to Seattle Makers!</h2>
+          {/* Today's hours, and - once they are spent - when the space is open
+              again. Read off seattlemakers.org; see src/data/hours.ts for the
+              two phrasings it publishes and the calendar cross-check.
+
+              Left static here rather than rendered from the build clock: the
+              build's day is not the display's day, and a board that has been
+              up since Friday must not still be saying Friday's hours. today.ts
+              owns both lines from its first tick. */}
         </div>
 
         {/* Reference, stacked: what day it is, then what time it is. The date
@@ -82,20 +90,31 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
             The span is gone with it - the date is this element's whole
             content now, and today.ts still rewrites it by id at the day
             rollover. */}
-        <div class="t-hero-side">
-          {/* The clock earns its place rather than decorating it. Every time
-              note on this board is relative - "starts in 45m", "1h 15m left" -
-              and a relative time with nothing absolute beside it cannot be
-              checked from across a room. It is also the one thing here that is
-              true by the minute, which is what stops a screen left up for days
-              from reading as a printed poster.
+        {/* Today's hours on the left, the day and the time on the right.
 
-              Minutes, not seconds: a second hand on a wall is a fidget.
-              today.ts writes it from the board's own clock, so `?now=` moves it
-              with everything else - a simulated board must never show the real
-              time beside a made-up schedule. Empty until then, like the list. */}
-          <p class="t-date" id="t-date">{heading}</p>
-          <p class="t-clock" id="t-clock"></p>
+            The hours are read off seattlemakers.org - see src/data/hours.ts
+            for the two phrasings it publishes and the calendar cross-check -
+            and left empty here rather than rendered from the build clock: the
+            build's day is not the display's day, and a board that has been up
+            since Friday must not still be showing Friday's hours. today.ts
+            owns this line and the greeting above it from its first tick. */}
+        <div class="t-hero-row">
+          <p class="t-hours" id="t-hours"></p>
+          <div class="t-hero-side">
+            {/* The clock earns its place rather than decorating it. Every time
+                note on this board is relative - "starts in 45m", "1h 15m left" -
+                and a relative time with nothing absolute beside it cannot be
+                checked from across a room. It is also the one thing here that is
+                true by the minute, which is what stops a screen left up for days
+                from reading as a printed poster.
+
+                Minutes, not seconds: a second hand on a wall is a fidget.
+                today.ts writes it from the board's own clock, so `?now=` moves it
+                with everything else - a simulated board must never show the real
+                time beside a made-up schedule. Empty until then, like the list. */}
+            <p class="t-date" id="t-date">{heading}</p>
+            <p class="t-clock" id="t-clock"></p>
+          </div>
         </div>
       </header>
 
@@ -220,12 +239,22 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
   /* The board's own greeting - part of the board, not of the page. Someone
      standing in the space is not looking at a web page called "Daily Events",
      and the page's own title is no use to them. */
+  /* Two rows: the greeting, then the facts under it.
+
+     It was one row - greeting left, date and clock right - and the greeting
+     could never exceed about 5.1cqmin, because the column it had was whatever
+     the clock's tabular numerals left over. Measured rather than guessed:
+     1007px of band, less a 43px gap, less the 276px the date was taking,
+     leaves 688 - and "Welcome to Seattle Makers!" needs 809px at 6cqmin.
+
+     Given the whole width it can be 7, which is a bump somebody notices from
+     the door. The facts drop to a line of their own, where they read as a row
+     of reference rather than as a column competing with the greeting. */
   .t-hero {
     flex: 0 0 auto;
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 4cqmin;
+    flex-direction: column;
+    gap: 1.4cqmin;
     /* Full-bleed green, but its text lands on the same left edge as the rows
        below: past a point the content stops widening and centres instead, so a
        very wide screen does not run titles into lines nobody reads from across
@@ -240,15 +269,34 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
     min-width: 0;
   }
 
-  /* The reference column: the day over the minute. Right-aligned so the two
-     share an edge and read as one block rather than as two loose facts. */
+  /* Today's hours on the left, the day and the time on the right. Baseline
+     rather than centre, so the small date sits on the clock's line instead of
+     floating in the middle of it. */
+  .t-hero-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.8cqmin 4cqmin;
+  }
+
+  /* Today's hours, under the greeting. Tinted white rather than full, the same
+     relationship the date has to the clock on the other side of the band: the
+     greeting is the voice and this is the fact under it. */
+  .t-hours {
+    font-family: var(--font-display);
+    font-size: 2.4cqmin;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    color: var(--color-sm-on-green);
+  }
+
+  /* The day and the time, side by side on one baseline. */
   .t-hero-side {
     flex: 0 0 auto;
     display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 0.8cqmin;
-    text-align: right;
+    align-items: baseline;
+    gap: 2.2cqmin;
   }
 
   /* The quieter of the two, and deliberately: the date is a thing you check
@@ -268,9 +316,13 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
   /* Tabular, so the minute changing does not shuffle the hour sideways - on a
      board this is the one number that redraws itself while somebody is looking
      at it. */
+  /* Smaller than it was. It used to anchor a column of its own opposite the
+     greeting and wanted every pixel; on a row of reference under a 7cqmin
+     title it was the loudest thing in the band, which is the wrong way round
+     for a clock. Still the biggest item on its own line. */
   .t-clock {
     font-family: var(--font-display);
-    font-size: 5.4cqmin;
+    font-size: 4.4cqmin;
     font-weight: 800;
     letter-spacing: -0.02em;
     line-height: 1;
@@ -279,18 +331,49 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
     white-space: nowrap;
   }
 
-  /* 5cqmin. "Welcome to Seattle Makers!" is 26 characters against the old
-     one-word greeting's 7, and the hero's left column is what is left after
-     the date and the clock - at 6 it wrapped, and a greeting that breaks
-     itself is smaller at five metres, not bigger. */
+  /* The greeting owns the hero's left column, and how big it can be is a
+     question about that column's width rather than about taste: it is whatever
+     is left after the date and the clock. "Welcome to Seattle Makers!" is the
+     longest thing it ever says, and a greeting that breaks itself is smaller
+     at five metres than one that does not - so this is measured rather than
+     chosen, and the measurement is in the note in CLAUDE.md. */
   .t-welcome {
     font-family: var(--font-display);
-    font-size: 5cqmin;
+    font-size: 7cqmin;
     font-weight: 800;
     letter-spacing: -0.022em;
     line-height: 1.08;
     color: var(--color-sm-paper);
     text-wrap: balance;
+  }
+
+  /* ------------------------------------------------------- shut, or not ---
+
+     Green band means the door is open; ink means it is not. The words already
+     say so - "Thanks for visiting!" is not "Welcome to Seattle Makers!" - but
+     the words are the one thing you cannot read from the far side of the room,
+     and a person walking up to a locked door wants the answer before they are
+     close enough to read anything.
+
+     Deliberately not a sleep or a dim: on a weekday the space is shut from
+     midnight until two in the afternoon, so this is the board's *normal*
+     appearance for more hours than the green one. It has to look composed
+     rather than switched off, which is why it borrows the footer's ink rather
+     than fading anything.
+
+     Keyed off the three closed phases by name rather than `:not([data-open=
+     'open'])`, because the attribute is absent until today.ts runs and a
+     negation would paint the hero ink for the first frame of every load. */
+  .t-board:is([data-open='before'], [data-open='after'], [data-open='closed']) .t-hero {
+    background: var(--color-sm-ink);
+  }
+
+  /* The green band's supporting colour is a tinted white that reads as green
+     on ink. These are the footer strip's pairing instead - the same one the
+     live site uses on its own dark bar. */
+  .t-board:is([data-open='before'], [data-open='after'], [data-open='closed'])
+    :is(.t-hours, .t-date) {
+    color: #b9c0bc;
   }
 
   /* The list owns whatever is left of the board, and never more: a screen

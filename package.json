@@ -14,7 +14,7 @@
     "serve": "npm run build && npx --yes wrangler dev",
     "events": "node scripts/fetch-events.mjs",
     "check": "astro check",
-    "test": "node --experimental-strip-types --no-warnings scripts/test-day-status.mjs && node --experimental-strip-types --no-warnings scripts/test-summarise.mjs && node --experimental-strip-types --no-warnings scripts/test-month.mjs && node scripts/test-event-image.mjs",
+    "test": "node --experimental-strip-types --no-warnings scripts/test-day-status.mjs && node --experimental-strip-types --no-warnings scripts/test-summarise.mjs && node --experimental-strip-types --no-warnings scripts/test-month.mjs && node --experimental-strip-types --no-warnings scripts/test-hours.mjs && node scripts/test-event-image.mjs",
     "qr": "node scripts/make-qr.mjs"
   },
   "dependencies": {

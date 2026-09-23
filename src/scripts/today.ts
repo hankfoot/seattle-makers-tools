@@ -27,6 +27,7 @@
  */
 import type { SmEvent } from '../lib/events';
 import { studiosForCategories, type Studio } from '../data/studios';
+import { openState, greeting, hoursNote } from '../lib/hours';
 import {
   statuses,
   sessionEnd,
@@ -51,8 +52,10 @@ const empty = document.getElementById('t-empty');
 const status = document.getElementById('t-status');
 const dateEl = document.getElementById('t-date');
 const clockEl = document.getElementById('t-clock');
+const welcomeEl = document.getElementById('t-welcome');
+const hoursEl = document.getElementById('t-hours');
 const more = document.getElementById('t-more');
-if (!board || !list || !empty || !status || !dateEl || !clockEl || !more) {
+if (!board || !list || !empty || !status || !dateEl || !clockEl || !welcomeEl || !hoursEl || !more) {
   throw new Error('today: missing mount points');
 }
 
@@ -386,6 +389,27 @@ function paintClock(): void {
   if (clockEl!.textContent !== next) clockEl!.textContent = next;
 }
 
+/**
+ * The greeting and the hours line, and the board's open/closed flag with them.
+ *
+ * `live` is passed in rather than read here because the published hours are
+ * not allowed to contradict the schedule - see the note at the top of
+ * lib/hours.ts. A class running outside opening hours is rare and real, and a
+ * board saying "Thanks for visiting" over one would be wrong in the only way
+ * that matters on a wall.
+ *
+ * The phase lands on the board element as a data attribute so the closed
+ * treatment is CSS rather than a second code path.
+ */
+function paintOpen(stamp: string, live: boolean): void {
+  const st = openState(stamp, live);
+  board!.dataset.open = st.phase;
+  const hello = greeting(st);
+  if (welcomeEl!.textContent !== hello) welcomeEl!.textContent = hello;
+  const note = hoursNote(stamp, st);
+  if (hoursEl!.textContent !== note) hoursEl!.textContent = note;
+}
+
 /** The events currently on screen, so tick() can re-stamp without refetching. */
 let shown: SmEvent[] = [];
 
@@ -396,6 +420,7 @@ function render(events: SmEvent[], day: string): void {
 
   const stamp = now();
   const marks = statuses(shown, stamp, isOff);
+  paintOpen(stamp, marks.includes('live'));
   list!.replaceChildren(...shown.map((e, i) => row(e, marks[i]!, stamp)));
   empty!.textContent = 'Nothing on the calendar today.';
   empty!.hidden = shown.length > 0;
@@ -420,9 +445,16 @@ function render(events: SmEvent[], day: string): void {
  */
 function tick(): void {
   paintClock();
-  if (!shown.length) return;
-  const stamp = now();
+  const early = now();
+  // Ahead of the early return: a board with nothing on it still opens and
+  // closes, and on a Tuesday that is the only thing it has to say.
+  if (!shown.length) {
+    paintOpen(early, false);
+    return;
+  }
+  const stamp = early;
   const marks = statuses(shown, stamp, isOff);
+  paintOpen(stamp, marks.includes('live'));
   const rows = [...list!.children] as HTMLLIElement[];
 
   shown.forEach((e, i) => {
@@ -844,6 +876,7 @@ markSimulated();
 mountDebug();
 applyMode();
 paintClock();
+paintOpen(now(), false);
 void refresh();
 
 setInterval(() => void refresh(), POLL_MS);
