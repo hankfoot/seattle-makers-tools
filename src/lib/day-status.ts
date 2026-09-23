@@ -74,13 +74,37 @@ export function sessionEnd(start: string, end?: string | null): string {
  *
  * Returns a parallel array of statuses rather than mutating, so the caller can
  * keep whatever event objects it already has.
+ *
+ * **`off` is what stops the board advertising a class that is not happening.**
+ * A cancelled event still has a start and an end, so without it the clock
+ * alone decides: the cancelled ceramics class at 17:30 came out `next` at
+ * 17:10 - a feature plate that grows a "Starting soon" pill telling somebody
+ * to walk to a room - and came out `live` at 18:00, with "On now" and a
+ * progress bar running through a session nobody is in. Both were true of the
+ * calendar as it stands today.
+ *
+ * So a cancelled event is never running and is never what is next. It keeps
+ * its place in the day - `past` once its slot has been and gone, `later`
+ * before that - because somebody who turned up for it still has to find it on
+ * the board. It just cannot be the thing the board points at.
+ *
+ * Passed in rather than detected here, because what makes an event cancelled
+ * is a string in its title and this module deliberately knows nothing about
+ * the shape of an event beyond its two times.
  */
-export function statuses<T extends Timed>(events: T[], now: string): Status[] {
-  const out: Status[] = events.map((e) =>
-    sessionEnd(e.start, e.end) <= now ? 'past' : e.start <= now ? 'live' : 'later',
-  );
-  // Soonest future start, by the array's own order - the caller sorts.
-  const upNext = out.indexOf('later');
+export function statuses<T extends Timed>(
+  events: T[],
+  now: string,
+  off: (e: T) => boolean = () => false,
+): Status[] {
+  const out: Status[] = events.map((e) => {
+    const ended = sessionEnd(e.start, e.end) <= now;
+    if (off(e)) return ended ? 'past' : 'later';
+    return ended ? 'past' : e.start <= now ? 'live' : 'later';
+  });
+  // Soonest future start, by the array's own order - the caller sorts - and
+  // skipping anything cancelled, which would otherwise take the one slot.
+  const upNext = out.findIndex((st, i) => st === 'later' && !off(events[i]!));
   if (upNext !== -1) out[upNext] = 'next';
   return out;
 }

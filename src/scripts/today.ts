@@ -154,6 +154,14 @@ function studioLabel(studios: Studio[]): string {
 const CANCELLED = /\s*\(?\bcancell?ed\b\)?\s*/i;
 
 /**
+ * Organisers edit "(CANCELLED)" into the event name rather than removing the
+ * event, so the title is the only place this is recorded. Handed to
+ * `statuses()` so a class that is not happening can never be what the board
+ * calls "on now" or points at as starting soon.
+ */
+const isOff = (e: SmEvent) => CANCELLED.test(e.title);
+
+/**
  * Where a thumbnail is allowed to come from.
  *
  * The feed is scraped from a page we do not control, so a URL out of it is
@@ -224,7 +232,7 @@ function el(tag: string, cls: string, text?: string): HTMLElement {
  * names defined once, in that page's `is:global` block.
  */
 function row(e: SmEvent, st: Status, now: string): HTMLLIElement {
-  const cancelled = CANCELLED.test(e.title);
+  const cancelled = isOff(e);
   const li = el('li', cancelled ? 't-row is-off' : 't-row') as HTMLLIElement;
   li.dataset.status = st;
 
@@ -381,7 +389,7 @@ function render(events: SmEvent[], day: string): void {
     .sort((a, b) => a.start.localeCompare(b.start));
 
   const stamp = now();
-  const marks = statuses(shown, stamp);
+  const marks = statuses(shown, stamp, isOff);
   list!.replaceChildren(...shown.map((e, i) => row(e, marks[i]!, stamp)));
   empty!.textContent = 'Nothing on the calendar today.';
   empty!.hidden = shown.length > 0;
@@ -408,7 +416,7 @@ function tick(): void {
   paintClock();
   if (!shown.length) return;
   const stamp = now();
-  const marks = statuses(shown, stamp);
+  const marks = statuses(shown, stamp, isOff);
   const rows = [...list!.children] as HTMLLIElement[];
 
   shown.forEach((e, i) => {

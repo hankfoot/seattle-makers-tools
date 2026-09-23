@@ -1062,20 +1062,65 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
     }
   }
 
-  /* Cancelled stays on the board, dimmed - someone who came for it needs to
-     see that it is off, not find no trace of it. A photograph does not dim
-     with `opacity` the way text does, so the colour comes out instead: the
-     row's one bright rectangle should not be the event that is not happening. */
+  /* ----------------------------------------------------------- cancelled ---
+
+     It stays on the board - someone who came for it needs to see that it is
+     off, not find no trace of it - and it has to say so from the door rather
+     than on inspection.
+
+     Cancellation cuts across the four statuses rather than being one of them,
+     so it overrides the plate instead of sitting in the ladder: a faint alert
+     wash for the plate and the alert itself in the time block, which is the
+     position the eye already uses to read this board's state. `statuses()`
+     guarantees it can never be the green one - see the `off` predicate there. */
+  .t-row.is-off {
+    background: #fdf3f3;
+  }
+
+  .t-row[data-status='past'].is-off {
+    background: transparent;
+  }
+
+  /* The block is the signal. It is about 170px of colour on a 1080 screen,
+     where the chip below is about 90 and the rule through the title is three
+     pixels - at five metres this is the one that carries. */
+  .t-row.is-off .t-time {
+    background: var(--color-sm-alert);
+    color: var(--color-sm-paper);
+  }
+
+  .t-row.is-off .t-mer {
+    color: #f3dada;
+  }
+
+  /* Struck through, and thickly. The rule was `1px`, which is a hairline on a
+     board measured in cqmin - the same mistake as the old time rail, legible
+     at arm's length and invisible from the door. In the board's own units it
+     scales with everything else. */
+  .t-row.is-off .t-h,
+  .t-row.is-off .t-title {
+    text-decoration: line-through;
+    text-decoration-thickness: 0.26cqmin;
+  }
+
+  .t-row.is-off .t-title {
+    color: var(--color-sm-slate);
+  }
+
+  /* The word itself, at the feature tier's size even on a queue row. Every
+     other chip on the board can afford to be small; this is the only one that
+     changes what somebody does next. */
+  .t-row.is-off .t-flag.is-off {
+    font-size: 1.7cqmin;
+    padding: 0.4cqmin 1.1cqmin;
+  }
+
+  /* A photograph does not dim with `opacity` the way text does, so the colour
+     comes out instead: the row's one bright rectangle should not be the event
+     that is not happening. */
   .t-row.is-off .t-thumb {
     filter: grayscale(1);
     opacity: 0.55;
-  }
-
-  .t-row.is-off .t-h,
-  .t-row.is-off .t-title {
-    color: var(--color-sm-slate);
-    text-decoration: line-through;
-    text-decoration-thickness: 1px;
   }
 
   /* With nothing to hold, the list must stop claiming the height it would

@@ -61,6 +61,29 @@ eq(clockParts('2026-09-19T11:59').meridiem, 'am', 'parts: minute before noon is 
 eq(clockParts('2026-09-19T14:30').hour, '2:30', 'parts: afternoon hour drops the leading zero');
 // The two must never disagree - clock() is the hero's and is built from these.
 eq(clock('2026-09-19T09:05'), `${clockParts('2026-09-19T09:05').hour} ${clockParts('2026-09-19T09:05').meridiem}`, 'parts and clock agree');
+// --- a cancelled class is never running and is never what is next ---
+// Both of these were true of the live calendar before `off` existed: the
+// cancelled ceramics class came out `next` at 17:10 and `live` at 18:00.
+{
+  const day = [
+    { start: '2026-09-22T13:00', end: '2026-09-22T14:00', title: 'Public Tour' },
+    { start: '2026-09-22T17:30', end: '2026-09-22T20:00', title: 'Ceramics (CANCELLED)' },
+    { start: '2026-09-22T19:00', end: '2026-09-22T22:00', title: 'Woodshop Basics' },
+  ];
+  const off = (e) => /cancelled/i.test(e.title);
+  const at = (t) => statuses(day, `2026-09-22T${t}`, off);
+
+  eq(at('17:10').join(','), 'past,later,next', 'cancelled cannot take the next slot');
+  // 18:00 is inside the cancelled class's own 17:30-20:00 slot, so without the
+  // predicate it is `live` - see the no-predicate check below, which is the
+  // control for this one. Woodshop Basics has not started yet, so it is next.
+  eq(at('18:00').join(','), 'past,later,next', 'cancelled cannot be on now');
+  eq(at('21:00').join(','), 'past,past,live', 'cancelled still goes past once its slot has gone');
+  // Without the predicate the old behaviour is intact, so nothing else that
+  // calls statuses() changes meaning.
+  eq(statuses(day, '2026-09-22T18:00').join(','), 'past,live,next', 'no predicate, no change');
+}
+
 // --- "starting soon" has to mean soon ---
 // The row that is next at nine in the morning can be six hours away, and a
 // badge reading "starting soon" over it is simply false.

@@ -337,6 +337,22 @@ footer's added a second one. Widening the gap between them made it worse, not
 better: an empty band between two full-width hairlines reads as a blank row in
 the list. Space alone separates it now.
 
+**Cancellation cuts across the four statuses rather than being one of them**,
+so it overrides the plate instead of sitting in the ladder: a faint alert wash
+for the plate, and the alert itself filling the time block - the position the
+eye already uses to read this board's state.
+
+The block is the signal, and the arithmetic is why. It is about 170px of colour
+on a 1080 screen; the chip beside the title is about 90, and the rule through
+the title is three pixels. At five metres only one of those carries.
+
+**The strikethrough was `1px` and that was the same mistake as the old time
+rail** - a hairline is legible at arm's length and invisible from the door, on
+a board where every other measurement is in cqmin. It is `0.26cqmin` now, so it
+scales with the type it is striking. The "CANCELLED" chip also takes the
+feature tier's size even on a queue row: every other chip here can afford to be
+small, and this is the only one that changes what somebody does next.
+
 **The chip is the exception, and that is the point.** Every row has a kind, so
 chipping all of them would be a wall of chips carrying no information. Two
 states are true of some rows only - a class that is **full** and a class that
@@ -429,7 +445,24 @@ dummy board would have been missing a label the production board shows, which
 is exactly the kind of divergence a fixture exists to prevent.
 
 **Exactly one row is ever `next`.** The badge has to mean one thing on a board,
-or it is a synonym for "not yet" repeated down the page.
+or it is a synonym for "not yet" repeated down the page. A cancelled class
+cannot be the one - see below.
+
+**A cancelled class is never running and is never what is next, and until
+2026-09-22 it could be both.** A cancelled event still has a start and an end,
+so the clock alone decided: on the calendar as it stands, the cancelled ceramics
+class at 17:30 came out **`next` at 17:10** - a feature plate that grows a
+"Starting soon" pill telling somebody to walk to a room - and **`live` at
+18:00**, with "On now" and a progress bar running through a session nobody is
+in. That is the board actively misdirecting the one person it exists to help.
+
+`statuses()` takes an `off` predicate now. A cancelled event keeps its place in
+the day - `past` once its slot has been and gone, `later` before that - because
+somebody who turned up for it still has to find it. It just cannot be the thing
+the board points at, and the `next` slot passes to the soonest class that is
+actually happening. The predicate is passed in rather than detected in
+day-status.ts, which deliberately knows nothing about an event beyond its two
+times. `npm test` pins both hours, with a no-predicate call as the control.
 
 It reads **"Starting soon"**; it read "Up next" until 2026-09-22. Both name the
 same single row, but one describes a position in a list and the other describes
@@ -1779,7 +1812,9 @@ works out mm per module, and warns below 0.8mm / errors below 0.5mm. Calibration
 155-char URL on a 2.25in card is 0.88mm and decodes 4/4 from a 300dpi *and* a
 150dpi raster, so the threshold is not alarmist.
 
-**Cancelled classes are only signalled in the title.** Organisers edit
+**Cancelled classes are only signalled in the title**, which is also why
+`isOff` is passed into `statuses()` from today.ts rather than living in
+lib/day-status.ts. Organisers edit
 "(CANCELLED)" into the event name rather than removing the event, so
 `src/lib/events.ts` matches that string.
 
