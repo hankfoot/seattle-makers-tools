@@ -171,6 +171,23 @@ const isOff = (e: SmEvent) => CANCELLED.test(e.title);
  */
 const THUMB_HOST = /^https:\/\/seattlemakers\.org\/wp-content\/uploads\//;
 
+/**
+ * The last tier of the picture chain: a plain calendar, drawn to match the
+ * studio icons.
+ *
+ * About a third of the calendar is whole-building events - tours,
+ * orientations, meetups, game night - which belong to no studio and so reach
+ * neither the photograph nor the icon. They used to show nothing, and the row
+ * gave the picture's width back (`is-bare`).
+ *
+ * That was right about the *wordmark*, which is what "nothing" was chosen
+ * over: a Seattle Makers mark on a Seattle Makers board says something true of
+ * every row and therefore nothing about this one. A calendar glyph is a
+ * different claim - "an event, in no particular room" - which is exactly what
+ * these rows are, and it keeps every plate the same shape.
+ */
+const GENERIC_ICON = '/brand/icons/event.svg';
+
 function thumbOf(e: SmEvent): string | null {
   const u = e.thumb;
   if (typeof u !== 'string' || !u) return null;
@@ -286,10 +303,11 @@ function row(e: SmEvent, st: Status, now: string): HTMLLIElement {
    * usable picture, so without the icon tier the fallback would be doing most
    * of the work on a normal day.
    *
-   * The last tier really is nothing. Whole-building events - tours,
-   * orientations, meetups, game night - belong to no studio, and the only mark
-   * that would fit is the wordmark, which on a Seattle Makers board says
-   * something true of every row and therefore nothing about this one.
+   * The last tier is a plain calendar - see GENERIC_ICON. It used to be
+   * nothing at all, on the argument that the only mark that would fit was the
+   * wordmark, which says something true of every row and therefore nothing
+   * about this one. That is still true of the wordmark and is not true of a
+   * calendar glyph.
    *
    * An event in two studios takes the first. The pair it happens to is
    * leatherworking + sewing, and one icon beside both names is not a claim
@@ -302,13 +320,8 @@ function row(e: SmEvent, st: Status, now: string): HTMLLIElement {
    * words and doubled the height of every row carrying one.
    */
   const photo = thumbOf(e);
-  const icon = studios[0]?.icon ?? null;
-  // Whole-building events - tours, orientations, meetups, about a third of the
-  // calendar - reach neither tier of the fallback and show nothing at all. The
-  // class is what lets the plate give that width back instead of holding an
-  // empty slot open; see the note on `.t-row.is-bare`.
-  if (!photo && !icon) li.classList.add('is-bare');
-  if (photo || icon) {
+  const icon = studios[0]?.icon ?? GENERIC_ICON;
+  {
     // The picture is wrapped, and the wrapper is not decoration: the live row
     // pans its photograph, and an <img> cannot clip its own transform - scaled
     // in place it would simply bleed over the words beside it. `.t-shot` owns

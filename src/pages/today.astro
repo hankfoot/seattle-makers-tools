@@ -435,8 +435,10 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
     flex: 0 0 auto;
     /* One floor for the whole condensed tier, so a row with no picture is not
        visibly shorter than the ones around it. Equals `--shot` plus twice
-       `--shot-gap`; it cannot be written as that calc, because `.is-bare`
-       zeroes both and the floor would go with them. */
+       `--shot-gap`. (It was written this way rather than as that `calc()`
+       because `.is-bare` used to zero both inputs and the floor would have
+       gone with them; that class is gone, but the literal is still clearer
+       than the arithmetic.) */
     min-height: 13.4cqmin;
   }
 
@@ -516,34 +518,6 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
     border: 0.4cqmin solid var(--color-sm-green);
     border-radius: inherit;
     pointer-events: none;
-  }
-
-  /* Nothing to show, so the words start after the time block.
-
-     The picture's track is reserved rather than `auto` so that titles line up
-     down the board - that is still right for a row whose picture simply has
-     not loaded, or which is showing a studio icon. It is not right for a row
-     that will never have one: about a third of the calendar is whole-building
-     events that reach neither tier of the fallback, and on a plate their
-     reserved slot is 130px of blank paper between the time and the title,
-     which reads as a picture that failed rather than as alignment.
-
-     Two left edges is what this costs, and the plates are what make it
-     affordable: every row is its own object with its own time block, so the
-     shared edge that matters is the one down the right of that block, and it
-     does not move. This was a much worse trade when the rows were hairlines on
-     one continuous field.
-
-     **It has to sit below every tier rule, and this bit once.** `.t-row
-     .is-bare`, `.t-row.is-up` and `.t-row[data-status='live']` all weigh
-     (0,2,0), so source order is the only thing deciding which `--shot` wins -
-     and with this block above them, a tour running right now came out bare and
-     still reserved 25cqmin, 270px of empty plate on the one row nobody can
-     miss. Checked against the live tier specifically, because it is the only
-     one where the reserved slot is big enough to look like a fault. */
-  .t-row.is-bare {
-    --shot: 0cqmin;
-    --shot-gap: 0cqmin;
   }
 
   /* ------------------------------------------------------ the time block ---

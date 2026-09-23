@@ -1228,13 +1228,21 @@ photograph. Green on this board means "on now". On the `next` plate, which is
 itself wash, the panel takes paper so it does not disappear into its own
 ground.
 
-The last tier really is nothing. Whole-building events - tours, orientations,
-meetups, game night, 51 of 166 on the calendar - belong to no studio, and the
-only mark that would fit is the wordmark, which on a Seattle Makers board says
-something true of every row and therefore nothing about this one. An event in
-two studios takes the first; the pair it happens to is leatherworking + sewing,
-and one icon beside both names is not a claim about which room it is in, where
-two tiles would be.
+**The last tier is a plain calendar**, at `/brand/icons/event.svg`, drawn to
+the same convention as the studio icons - dark line art in a white disc.
+Whole-building events - tours, orientations, meetups, game night, 51 of 166 on
+the calendar - belong to no studio and reach neither tier above it.
+
+It used to be *nothing*, and that was right about the alternative it was
+weighed against: the **wordmark**, which on a Seattle Makers board says
+something true of every row and therefore nothing about this one. A calendar
+glyph is a different claim - "an event, in no particular room" - which is
+exactly what these rows are. It also keeps every plate the same shape, which
+the empty slot did not.
+
+An event in two studios takes the first; the pair it happens to is
+leatherworking + sewing, and one icon beside both names is not a claim about
+which room it is in, where two tiles would be.
 
 **The picture is square, and inset by one small margin on every tier.** Two
 things were wrong with it and they needed opposite fixes, which is worth
@@ -1287,23 +1295,19 @@ That is a different thing from the ragged version above: every queue row starts
 on one vertical and the two feature rows on another, so it reads as two blocks
 rather than as noise.
 
-**And a row with genuinely nothing to show gives the width back.** Reserving
-the track is right for a row whose picture has not loaded yet, or which is
-showing a studio icon. It is wrong for a row that will never have one: about a
-third of the calendar is whole-building events - tours, orientations, meetups -
-which reach neither tier of the fallback, and on a plate their reserved slot is
-130px of blank paper between the time and the title. That reads as a picture
-that failed, not as alignment. `row()` marks those `is-bare` and the CSS zeroes
-`--shot` and `--shot-gap`.
+**A row with nothing to show used to give the width back, and does not any
+more.** For a while `row()` marked those rows `is-bare` and the CSS zeroed
+`--shot` and `--shot-gap`, so the words started straight after the time block -
+the alternative being 130px of blank paper, which reads as a picture that
+failed rather than as alignment. It cost two left edges down the board.
 
-Two left edges is what it costs, and the plates are what make it affordable:
-every row is its own object with its own time block, so the shared edge that
-matters is the one down the right of that block and it does not move. This was
-a much worse trade when the rows were hairlines on one continuous field.
-
-`.t-row.is-bare` has to sit **after** the tier rules in the stylesheet. It and
-`.t-row:is([data-status='live'], …)` have identical specificity, so source
-order is the only thing deciding which wins.
+The generic calendar icon retired it on 2026-09-22: with a last tier that
+always renders, no row can be bare. Worth keeping the note for the specificity
+trap it turned up, which applies to anything else keyed off a class here:
+`.t-row.is-bare`, `.t-row.is-up` and `.t-row[data-status='live']` all weigh
+(0,2,0), so source order alone decided which `--shot` won - and with the bare
+rule above them, a tour running right now came out bare and still reserved
+25cqmin of empty plate.
 
 **The narrow layout keeps the picture on the right, and that is not an
 inconsistency.** Below the board's 480px container query there is no time rail
