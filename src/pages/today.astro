@@ -1107,6 +1107,22 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
     color: var(--color-sm-slate);
   }
 
+  /* Everything on this row that is not saying "cancelled" goes grey with the
+     title. The kind label is normally brand green, which on the alert wash put
+     green type next to red type - the Christmas pairing the palette note warns
+     about, and the one place on the board it actually happened. The studio
+     goes with it: it is normally ink to match the title, and a label left
+     darker than the struck title it belongs to reads as the more important of
+     the two.
+
+     What is left is one red field and one red label on a grey row, which is
+     the whole point of the treatment. (The green "On now" badge cannot turn up
+     here either - `statuses()` will not call a cancelled class live.) */
+  .t-row.is-off .t-kind,
+  .t-row.is-off .t-studio {
+    color: var(--color-sm-slate);
+  }
+
   /* The word itself, at the feature tier's size even on a queue row. Every
      other chip on the board can afford to be small; this is the only one that
      changes what somebody does next. */

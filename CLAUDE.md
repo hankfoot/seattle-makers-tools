@@ -346,6 +346,20 @@ The block is the signal, and the arithmetic is why. It is about 170px of colour
 on a 1080 screen; the chip beside the title is about 90, and the rule through
 the title is three pixels. At five metres only one of those carries.
 
+**Everything on a cancelled row that is not saying "cancelled" goes grey.** The
+kind label is normally brand green, and on the alert wash that put green type
+next to red type - the Christmas pairing the palette note warns about, and the
+one place on the board it actually happened. "TOUR" in green beside a CANCELLED
+chip was the row that showed it. The studio goes grey with it: it is normally
+ink to match the title, and a label left darker than the struck title it
+belongs to reads as the more important of the two.
+
+What is left is one red field and one red label on a grey row, which is the
+whole point of the treatment. Checked by sampling every computed colour in the
+row rather than by looking: no green remains, and the chip is the only red
+text. The green "On now" badge cannot turn up here either, now that
+`statuses()` will not call a cancelled class live.
+
 **The strikethrough was `1px` and that was the same mistake as the old time
 rail** - a hairline is legible at arm's length and invisible from the door, on
 a board where every other measurement is in cqmin. It is `0.26cqmin` now, so it
