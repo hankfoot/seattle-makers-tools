@@ -817,6 +817,26 @@ The meridiem is small on purpose: nobody standing in front of a board checks
 whether a class at 2:15 is in the morning, and setting both halves the same size
 spends the column's whole presence on the half that is never read.
 
+**The session's end sits under its start, in the same block.** The block is a
+plate tall and was holding one line; a session's end is the other half of the
+fact the column exists to carry, and on a stretched block it costs no height at
+all - measured, no row got taller. A range on one line does not fit -
+"11:30–12:30" needs about 190px of a 147px block at the queue size - so it is
+two lines, `grid-column: 1 / -1` on the end being what lets it break one.
+
+**The repeated meridiem is dropped, and that is `endLabel()`'s whole job.** A
+block reading "2:15 PM" over "– 4:15 PM" says pm twice in two lines of a column
+that is read hundreds of times a day. It only carries information when the
+session crosses noon or midnight, so it appears then and not otherwise: "11:00
+AM" over "– 12:30pm", but "12:30 PM" over "– 1:30". `npm test` pins both
+crossings.
+
+**The narrow bar has to hand `grid-column` back.** With `grid-auto-flow:
+column` and no explicit tracks, `-1` resolves to the *first* grid line, so the
+end jumped in front of the hour and the header bar read "– 12:30pm 11:00 AM".
+`grid-column: auto` puts it after the meridiem, which is where a horizontal bar
+wants it anyway.
+
 One block width for every tier, so the column is a column; the hour size steps
 with the tier. The hour is much bigger on a feature row - a block that is a
 plate tall with a queue-sized hour in the middle of it reads as a caption
