@@ -82,6 +82,12 @@
   --color-sm-green: #13723c;
   --color-sm-green-dark: #0e4d29;
   --color-sm-green-mid: #43aa6d;
+  /* The live site's colour for type on its dark bar, and the reason this one
+     is in the tokens now: /today's board grew an ink footer strip, and the one
+     strong colour down there should be borrowed from seattlemakers.org rather
+     than invented. Never used on white - it fails badly (2.78:1), which is why
+     --color-sm-on-green exists for the green panels. */
+  --color-sm-sage: #84bf80;
   --color-sm-ink: #1a1a1a;
   --color-sm-slate: #5c6360;
   --color-sm-line: #e4e7e4;

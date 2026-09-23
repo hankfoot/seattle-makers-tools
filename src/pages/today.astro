@@ -85,7 +85,21 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
             Makers, so a screen reader announcing the picture as well would
             just read the name twice. The intrinsic size is stated so the band
             does not reflow when the file lands. */}
-        <img class="t-mark" src="/brand/wordmark-inline.png" alt="" width="500" height="63" />
+        <div class="t-hero-side">
+          <img class="t-mark" src="/brand/wordmark-inline.png" alt="" width="500" height="63" />
+          {/* The clock earns its place rather than decorating it. Every time
+              note on this board is relative - "starts in 45m", "1h 15m left" -
+              and a relative time with nothing absolute beside it cannot be
+              checked from across a room. It is also the one thing here that is
+              true by the minute, which is what stops a screen left up for days
+              from reading as a printed poster.
+
+              Minutes, not seconds: a second hand on a wall is a fidget.
+              today.ts writes it from the board's own clock, so `?now=` moves it
+              with everything else - a simulated board must never show the real
+              time beside a made-up schedule. Empty until then, like the list. */}
+          <p class="t-clock" id="t-clock"></p>
+        </div>
       </header>
 
       <!-- Empty on purpose. There is no longer a build-time render: the baked
@@ -176,7 +190,9 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
     aspect-ratio: var(--board-ar, 16 / 9);
     margin: 2.25rem auto 0;
     overflow: hidden;
-    background: var(--color-sm-paper);
+    /* Mist, not paper. The rows are plates that stand off this; white here
+       would leave the later rows invisible and the whole board flat again. */
+    background: var(--color-sm-mist);
     border: 1px solid var(--color-sm-line);
     border-radius: 10px;
     box-shadow:
@@ -211,12 +227,34 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
      white rather than shipping a second file. Not full strength: at 100% it
      out-shouts the greeting it is standing next to, which is the wrong way
      round for a board whose job is to say what is on. */
-  .t-mark {
+  .t-hero-side {
     flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 1cqmin;
+  }
+
+  .t-mark {
     width: 21cqmin;
     height: auto;
     filter: brightness(0) invert(1);
     opacity: 0.88;
+  }
+
+  /* Tabular, so the minute changing does not shuffle the hour sideways - on a
+     board this is the one number that redraws itself while somebody is looking
+     at it. Full-strength white, unlike the lockup above it: the mark is there
+     to be recognised, this is there to be read. */
+  .t-clock {
+    font-family: var(--font-display);
+    font-size: 4.4cqmin;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    color: var(--color-sm-paper);
+    white-space: nowrap;
   }
 
   .t-welcome {
@@ -246,76 +284,356 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
     overflow: hidden;
     border-top: 0;
     padding: 0 max(3.4cqmin, calc((100% - 168cqmin) / 2));
+    /* A flex column, so the rows can share out whatever the day does not use.
+       A board holds four events on a Tuesday and nine on a Saturday, and the
+       old fixed-height rows meant a quiet day ended in a third of a screen of
+       white paper under the last one. Now the rows breathe on a quiet day and
+       close up on a busy one, from one rule rather than a breakpoint per
+       count. */
+    display: flex;
+    flex-direction: column;
+    /* The ground showing through is what divides one event from the next.
+       There are no hairlines on this board any more - a rule drawn across a
+       row is a table, and the gap between two plates is a board. */
+    gap: 1.1cqmin;
+    padding-block: 1.4cqmin;
   }
 
-  /* The board's one structural idea: a rail of times down the left with the
-     day's events hanging off it. A day is a real sequence, so the order is
-     information and the rail is what makes it legible from across a room -
-     you find the time first, then read across. */
+  /* ============================================================== plates ===
+
+     The board is a ground with plates on it, not a page with rules across it.
+
+     That is the change this whole section is. Rows used to be white bands
+     divided by hairlines, which is the vocabulary of a document - and this is
+     not a document, it is a lit sign on a workshop wall read from about five
+     metres. What separates one event from the next here is the ground showing
+     through between two plates, not a line drawn on top of them.
+
+     -------------------------------------------------- material is status ---
+
+     The plate's material says where the event stands, before a word of it is
+     read:
+
+       past    sunk. No plate at all - mist, the same as the ground - so a
+               finished class settles into the board.
+       later   a white plate, standing off the ground.
+       next    a wash plate, tinted toward the brand green.
+       live    lit. A solid green plate with white type on it, the one bright
+               block on the board.
+
+     Four materials in one column reads as a stack filling up, which is what a
+     day is. It replaces the filled rail that did this job before: a 2px line
+     is legible at arm's length and gone at five metres, and the same
+     information carried as a block of colour is legible from the door.
+
+     ---------------------------------------------------------- two tiers ---
+
+     On top of the material, `data-status` also decides how much of the board
+     each row gets.
+
+       feature   live and next. Big picture, the summary, room to breathe.
+       queue     later and past - the base case here, because most of a day is
+                 one or the other. One line: time, title, and what kind of
+                 thing it is.
+
+     That split is the point of this board. What is running and what is next
+     are the two things somebody walking through the door needs, and they used
+     to be rendered the same size as a class that finished four hours ago.
+
+     Four scales was the obvious next step and is worse: it steps the left edge
+     four times down the page, and "later" and "past" want exactly the same
+     room as each other anyway.
+
+     It is all CSS off `data-status`, not different markup, and that is
+     load-bearing: tick() mutates rows in place every 30 seconds and never
+     rebuilds them, so a class that goes live at 2:15 lights up where it
+     stands. Markup that differed by tier would force a re-render on every
+     status change and take the progress bar's transition with it. */
 
   .t-row {
-    /* One number each, so a rule and the column it divides can never drift. */
-    --rail: 13cqmin;
-    --shot: 13cqmin;
-    position: relative;
+    /* One number each, so a block and the column it sits in cannot drift. */
+    --rail: 16cqmin;
+    --shot: 8.5cqmin;
+    --gutter: 2.4cqmin;
+    --pad: 1.5cqmin;
     display: grid;
-    /* Three tracks: the rail, the picture, the words - and the picture's track
-       is reserved rather than `auto`, so it is there whether or not the row has
-       one.
+    /* Three tracks: the time block, the picture, the words - and the picture's
+       track is reserved rather than `auto`, so it is there whether or not the
+       row has one.
 
        `auto` was tried first and is the obvious answer, since about half the
-       calendar's events have no picture and the track then collapses to
-       nothing. What it actually produces is a board whose titles start on two
-       different verticals, jumping by the width of a picture from row to row -
-       and this thing is read from across a room, where a straight left edge is
-       most of what makes a list scannable. The cost of reserving it is a blank
-       indent on the rows with no picture, which is why the picture is 13cqmin
-       here and not the 20cqmin it was when it sat on the right: at this width
-       the gap reads as a margin rather than as a hole. */
-    grid-template-columns: var(--rail) calc(var(--shot) + 2.4cqmin) 1fr;
-    padding: 2cqmin 0;
-    border-bottom: 1px solid var(--color-sm-line);
+       calendar's events have no picture and the track then collapses. What it
+       produces is a board whose titles start on two different verticals,
+       jumping by the width of a picture from row to row - and this is read
+       from across a room, where a straight left edge is most of what makes a
+       list scannable. The tiers step that edge exactly twice, which is a
+       different thing: two blocks, not noise. */
+    grid-template-columns: var(--rail) calc(var(--shot) + var(--gutter)) 1fr;
+    align-items: center;
+    border-radius: 1.8cqmin;
+    background: var(--color-sm-paper);
+    /* The time block runs to the plate's edge, so the plate has to clip it
+       back to its own corners. */
+    overflow: hidden;
+    box-shadow:
+      0 1px 2px rgb(20 25 22 / 0.05),
+      0 2px 10px rgb(20 25 22 / 0.05);
+    /* Grow into the day's slack, and never shrink. The `0` is the load-bearing
+       half: a row allowed to shrink would silently squash its own content
+       instead of overflowing the list, and fit() detects "too many rows" by
+       asking whether the list overflows. Shrinkable rows would let it crush
+       eight events into the space for six and report that everything fits.
+
+       The cap stops the other end - two events on a quiet Tuesday would
+       otherwise each take half the screen. Set well clear of the tallest thing
+       a row of that tier can hold, so it only ever bites into empty space. */
+    flex: 1 0 auto;
+    max-height: 18cqmin;
   }
 
-  /* The rail runs the full height of the row and down through the hairline
-     into the next one, so the day reads as one continuous line with events
-     hung off it. */
-  .t-row::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    bottom: -1px;
-    left: var(--rail);
-    width: 2px;
-    background: var(--color-sm-line);
+  .t-row:is([data-status='live'], [data-status='next']) {
+    --shot: 20cqmin;
+    --pad: 2.8cqmin;
+    max-height: 42cqmin;
   }
 
-  /* Right-aligned against the rail, tabular, so every time ends on the same
-     vertical and the column scans as a clock rather than as ragged text. */
+  /* Faded, not sunk. The first version dropped the plate entirely so a
+     finished class became the ground - which reads well written down and badly
+     on screen: with no plate under them the time block and the title had
+     nothing holding them together, and the grey block ended up the heaviest
+     thing on a row that is meant to be receding. A faded plate says the same
+     thing and stays an object. */
+  .t-row[data-status='past'] {
+    box-shadow: none;
+    opacity: 0.5;
+  }
+
+  /* Tinted toward the brand, a step short of lit. */
+  .t-row[data-status='next'] {
+    background: var(--color-sm-wash);
+    box-shadow:
+      0 1px 2px rgb(20 25 22 / 0.05),
+      0 2px 10px rgb(19 114 60 / 0.09);
+  }
+
+  /* Lit. The one bright block on the board, and the reason the queue rows
+     around it are as quiet as they are. */
+  .t-row[data-status='live'] {
+    --shot: 23cqmin;
+    --pad: 3.2cqmin;
+    max-height: 52cqmin;
+    background: var(--color-sm-green);
+    box-shadow:
+      0 2px 4px rgb(14 77 41 / 0.18),
+      0 10px 28px rgb(14 77 41 / 0.22);
+  }
+
+  /* ------------------------------------------------------ the time block ---
+
+     The times were the board's structural idea and were set in the same face,
+     weight and colour as the titles beside them, which made the spine
+     invisible. They are a block now: their own field of colour down the left
+     of every plate, running the plate's full height, with the hour big and
+     tabular and the meridiem small and tracked beneath the eye rather than
+     beside it in the same size.
+
+     One width for every tier, so the column is a column. The hour size steps
+     with the tier; the block does not. */
   .t-time {
-    padding-right: 2.4cqmin;
-    text-align: right;
+    align-self: stretch;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: center;
+    align-content: center;
+    gap: 0 0.7cqmin;
+    padding: var(--pad) 1.2cqmin;
+    background: var(--color-sm-mist);
     font-family: var(--font-display);
-    font-size: 2.6cqmin;
-    font-weight: 700;
-    letter-spacing: -0.01em;
-    line-height: 1.45;
-    font-variant-numeric: tabular-nums;
     color: var(--color-sm-ink);
     white-space: nowrap;
   }
 
+  .t-h {
+    font-size: 2.7cqmin;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.2;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Small, tracked, and in the label voice the rest of the board uses for
+     things that qualify rather than name. It is never the thing being read -
+     nobody checks whether a class at 2:15 is in the morning - so it is sized
+     for recognition rather than for reading. */
+  .t-mer {
+    font-size: 1.3cqmin;
+    font-weight: 700;
+    font-style: normal;
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--color-sm-slate);
+  }
+
+  /* The hairline token, not mist. A faded plate is about #F8F9F8 over the
+     board's mist, and a mist block on it comes out within a couple of units of
+     the plate itself - which on the 10:30pm board, where every row is past,
+     made every time look like it had fallen off its plate onto the ground.
+     Checked at that hour rather than at one with a live row in it. */
+  .t-row[data-status='past'] .t-time {
+    background: var(--color-sm-line);
+    color: var(--color-sm-slate);
+  }
+
+  .t-row[data-status='next'] .t-time {
+    background: rgb(19 114 60 / 0.1);
+    color: var(--color-sm-green-dark);
+  }
+  .t-row[data-status='next'] .t-mer {
+    color: var(--color-sm-green-dark);
+    opacity: 0.75;
+  }
+
+  /* On a feature row the block is the height of a plate, and an hour set at
+     the queue's size floats in the middle of it like a caption. Stacked and
+     much bigger, it fills what it is standing in - and the time is worth that
+     much room on the two rows somebody is actually about to act on. */
+  .t-row:is([data-status='live'], [data-status='next']) .t-time {
+    flex-direction: column;
+    gap: 0.2cqmin;
+  }
+
+  .t-row:is([data-status='live'], [data-status='next']) .t-h {
+    font-size: 4.4cqmin;
+  }
+
+  .t-row:is([data-status='live'], [data-status='next']) .t-mer {
+    font-size: 1.7cqmin;
+  }
+
+  .t-row[data-status='live'] .t-time {
+    background: var(--color-sm-green-dark);
+    color: var(--color-sm-paper);
+  }
+  .t-row[data-status='live'] .t-mer {
+    color: var(--color-sm-on-green);
+  }
+
+  /* ---------------------------------------------------------- the queue ---
+
+     The base case, and it is one line: the title on the left, everything that
+     qualifies it pushed to the right edge. `margin-right: auto` on the title
+     rather than `justify-content: flex-end` plus a spacer, so the cluster on
+     the right stays put whether or not the row has a note in it. */
   .t-body {
     grid-column: 3;
-    padding-left: 2.4cqmin;
+    min-width: 0;
+    padding: var(--pad) 2.4cqmin var(--pad) var(--gutter);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    /* Every line right-justified, not just the first. With a long title the
+       meta wraps onto a second line, and left to itself that line packs to the
+       left - which strands "finished" on the right of line one above a
+       left-aligned row of labels, reading as two different rows. The auto
+       margin on the title still wins on line one, because auto margins take
+       the free space before justify-content sees it. */
+    justify-content: flex-end;
+    gap: 0.3cqmin 1.8cqmin;
+  }
+
+  .t-title {
+    order: 1;
+    margin-right: auto;
+    min-width: 0;
+    font-family: var(--font-display);
+    font-size: 2.6cqmin;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.3;
+    color: var(--color-sm-ink);
+  }
+
+  .t-note {
+    order: 3;
+    font-family: var(--font-display);
+    font-size: 1.4cqmin;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: var(--color-sm-slate);
   }
 
   .t-tags {
+    order: 2;
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     gap: 0.9cqmin;
-    margin-bottom: 0.5cqmin;
+  }
+
+  /* Two sentences about a class that starts in six hours is not what this
+     board is for, and it was what pushed the end of the day off the bottom
+     edge. It comes back on the two rows where somebody might act on it. */
+  .t-sum {
+    display: none;
+  }
+
+  /* -------------------------------------------------------- the feature ---
+
+     Back to a block: tags, title, summary, and then how long is left. */
+  .t-row:is([data-status='live'], [data-status='next']) .t-body {
+    display: block;
+  }
+
+  .t-row:is([data-status='live'], [data-status='next']) .t-tags {
+    margin-bottom: 0.9cqmin;
+  }
+
+  .t-row:is([data-status='live'], [data-status='next']) .t-title {
+    margin-right: 0;
+    font-size: 3.6cqmin;
+    line-height: 1.18;
+  }
+
+  /* 4.0, not the 4.6 this started at. With the time block and a 23cqmin
+     picture taking their share, 4.6 wrapped "Programmable LEDs" onto two lines
+     and pushed the availability chip off the end of the tag row - a title big
+     enough to break itself is smaller, not bigger, at five metres. */
+  .t-row[data-status='live'] .t-title {
+    font-size: 4cqmin;
+    color: var(--color-sm-paper);
+  }
+
+  .t-row:is([data-status='live'], [data-status='next']) .t-sum {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+    margin-top: 0.8cqmin;
+    max-width: 68ch;
+    font-size: 2cqmin;
+    line-height: 1.5;
+    color: var(--color-sm-slate);
+  }
+
+  .t-row[data-status='live'] .t-sum {
+    color: var(--color-sm-on-green);
+  }
+
+  /* How long is left, or how long until - the one number on a feature row
+     that changes while you are standing there, so it is sized to be read at
+     the same distance as the title. */
+  .t-row:is([data-status='live'], [data-status='next']) .t-note {
+    display: block;
+    margin-top: 1.2cqmin;
+    font-size: 2.2cqmin;
+    font-weight: 700;
+    letter-spacing: 0;
+    color: var(--color-sm-green-dark);
+  }
+
+  .t-row[data-status='live'] .t-note {
+    color: var(--color-sm-paper);
   }
 
   .t-studio,
@@ -328,6 +646,15 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
     letter-spacing: var(--tracking-label);
     line-height: 1.6;
     text-transform: uppercase;
+  }
+
+  /* 1.7, measured rather than chosen: at 1.8 the tag row on the lit plate came
+     to 509px in a 501px body and dropped the availability chip onto a line of
+     its own, which is the one label there somebody acts on. A long studio pair
+     ("leatherworking + sewing") will still wrap, and that is fine - what was
+     wrong was the common case wrapping. */
+  .t-row:is([data-status='live'], [data-status='next']) :is(.t-studio, .t-kind, .t-flag, .t-badge) {
+    font-size: 1.7cqmin;
   }
 
   /* What kind of thing this is, and which room it happens in. Both stay plain
@@ -360,6 +687,19 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
     color: var(--color-sm-slate);
   }
 
+  /* On the lit plate the whole scale inverts: green type would vanish into its
+     own ground, so the kind takes the tinted white and the studio takes full
+     white - the same order of emphasis, in the materials that plate has. */
+  .t-row[data-status='live'] .t-kind {
+    color: var(--color-sm-on-green);
+  }
+  .t-row[data-status='live'] .t-studio {
+    color: var(--color-sm-paper);
+  }
+  .t-row[data-status='live'] .t-kind + .t-studio::before {
+    color: var(--color-sm-on-green);
+  }
+
   /* Whether you can still get in is the exception, so it gets the chip. On a
      board read from a few metres away a tinted block is findable at a glance
      in a way that another line of small tracked caps is not. */
@@ -381,67 +721,81 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
     background: #fbeaea;
   }
 
+  /* The wash chips have nothing to sit on once the plate is wash itself. */
+  .t-row[data-status='next'] .t-flag.is-go,
+  .t-row[data-status='next'] .t-flag.is-mute {
+    background: var(--color-sm-paper);
+  }
+
+  .t-row[data-status='live'] .t-flag {
+    color: var(--color-sm-green-dark);
+    background: var(--color-sm-paper);
+  }
+
   /* ------------------------------------------------- where the day stands ---
 
      Four states, and only two of them announce themselves. "Later" is the
      default and needs no decoration; "past" recedes rather than shouting. The
      two carrying what someone walking in actually wants - what is running, and
-     what is next - get a badge. */
+     what is next - get a badge, and the tier and the plate gave them the room
+     and the colour. */
 
   .t-badge {
-    padding: 0.3cqmin 1cqmin;
+    display: inline-flex;
+    align-items: center;
+    padding: 0.5cqmin 1.3cqmin;
     border-radius: 999px;
     color: #fff;
     background: var(--color-sm-green);
   }
 
-  /* Outlined, not filled: "up next" is a smaller claim than "on now", and two
-     solid green chips in a column would compete. */
+  /* Knocked out on the lit plate: a green pill on a green ground is a hole. */
+  .t-row[data-status='live'] .t-badge {
+    color: var(--color-sm-green-dark);
+    background: var(--color-sm-paper);
+  }
+
+  /* A status light, in the vernacular of every machine in the building: the
+     thing that is running has a lamp on it. It is the board's only repeating
+     motion, and it sits on the one row that is genuinely happening right now -
+     ambient movement anywhere else would be decoration. */
+  .t-row[data-status='live'] .t-badge::before {
+    content: '';
+    width: 1.2cqmin;
+    height: 1.2cqmin;
+    margin-right: 0.9cqmin;
+    border-radius: 50%;
+    background: currentColor;
+    animation: t-pulse 2.4s ease-in-out infinite;
+  }
+
+  @keyframes t-pulse {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.2;
+    }
+  }
+
+  /* Outlined, not filled: "up next" is a smaller claim than "on now", and the
+     plate underneath is already saying most of it. */
   .t-row[data-status='next'] .t-badge {
-    padding: 0.16cqmin 0.86cqmin;
+    padding: 0.36cqmin 1.16cqmin;
     color: var(--color-sm-green-dark);
     background: transparent;
     border: 1px solid var(--color-sm-green-mid);
   }
 
-  /* The live row is the only thing on the board with a filled green rail, so
-     the eye lands on it before reading a word. */
-  .t-row[data-status='live']::before {
-    width: 3px;
-    background: var(--color-sm-green);
-  }
-
-  .t-row[data-status='live'] .t-time {
-    color: var(--color-sm-green-dark);
-  }
-
-  /* Finished, not gone. Someone who turns up late needs to see that they
-     missed it, which a vanished row cannot tell them. */
-  .t-row[data-status='past'] {
-    opacity: 0.42;
-  }
-
-  .t-note {
-    margin-top: 0.5cqmin;
-    font-family: var(--font-display);
-    font-size: 1.4cqmin;
-    font-weight: 600;
-    letter-spacing: 0.02em;
-    color: var(--color-sm-slate);
-  }
-
-  .t-row[data-status='live'] .t-note {
-    color: var(--color-sm-green-dark);
-  }
-
   /* How far through the running session we are. Presentational only - the same
      fact is in .t-note as words, which is what a screen reader gets. */
   .t-progress {
-    height: 0.7cqmin;
-    max-width: 40cqmin;
-    margin-top: 1cqmin;
+    height: 1cqmin;
+    max-width: 92cqmin;
+    margin-top: 1.4cqmin;
     border-radius: 999px;
-    background: var(--color-sm-wash);
+    background: rgb(255 255 255 / 0.25);
     overflow: hidden;
   }
 
@@ -449,49 +803,29 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
     display: block;
     height: 100%;
     border-radius: inherit;
-    background: var(--color-sm-green);
+    background: var(--color-sm-paper);
     transition: width 600ms ease;
   }
 
-  .t-title {
-    font-family: var(--font-display);
-    font-size: 3.2cqmin;
-    font-weight: 700;
-    letter-spacing: -0.018em;
-    line-height: 1.25;
-    color: var(--color-sm-ink);
-  }
+  /* ------------------------------------------------------- the picture ---
 
-  .t-sum {
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
-    overflow: hidden;
-    margin-top: 0.7cqmin;
-    max-width: 68ch;
-    font-size: 2cqmin;
-    line-height: 1.55;
-    color: var(--color-sm-slate);
-  }
-
-  /* The event's own picture, from its page's og:image.
+     The event's own, from its page's og:image.
 
      Sized off the board like everything else in here, so the miniature on the
-     page drops and wraps exactly where the wall screen does - 13cqmin is about
-     140px on a 1080p portrait screen and 280px on a 4K panel, which is why
-     /api/events serves the 768px variant rather than the 1220px original: the
-     larger panel at 2x device pixels is what sets the size, not this one.
+     page drops and wraps exactly where the wall screen does. /api/events serves
+     the 768px variant rather than the 1220px original, which the feature tier
+     is now the thing that sets: 25cqmin is about 270px on a 1080p portrait
+     screen and twice that on a 4K panel.
 
-     Square, and no taller than the words beside it, so the pictures cost the
-     board no vertical room - a row is as tall as its text was before. `cover`
-     because these are other people's photographs at whatever aspect they were
-     shot; letterboxed into a fixed box they would read as a mistake rather
-     than as a picture.
+     Square, and `cover`, because these are other people's photographs at
+     whatever aspect they were shot; letterboxed into a fixed box they would
+     read as a mistake rather than as a picture.
 
-     `align-self: center` and not `stretch`: an image has an intrinsic aspect
-     ratio, so a grid item with one treats `stretch` as `start` and the picture
-     would hang off the top of a tall row instead. */
-  .t-thumb {
+     The wrapper is what makes the live row's slow pan possible - an image
+     cannot clip its own transform, so a scaled `<img>` would simply bleed over
+     the words beside it. `.t-shot` owns the geometry and the clipping;
+     `.t-thumb` fills it and is the only thing that moves. */
+  .t-shot {
     /* Row as well as column. An item that names only a column is auto-placed
        into the next row whose column 2 is free, which - with the body already
        occupying row 1 - is row 2: the picture ends up under the words and the
@@ -501,23 +835,104 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
     align-self: center;
     width: var(--shot);
     aspect-ratio: 1;
-    margin-left: 2.4cqmin;
-    object-fit: cover;
-    border-radius: 1.4cqmin;
+    margin: var(--pad) 0 var(--pad) var(--gutter);
+    overflow: hidden;
+    border-radius: 1.2cqmin;
     /* Something to look at for the moment between layout and decode, rather
-       than a white hole on a green-and-white board. */
+       than a hole in the plate. */
     background: var(--color-sm-mist);
+  }
+
+  .t-row[data-status='live'] .t-shot {
+    background: var(--color-sm-green-dark);
+  }
+
+  .t-thumb {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  /* Finished rows drop the picture, and what the dimming does to one is the
+     reason. A row at low opacity is legible as text and *broken* as a
+     photograph - a pale rectangle with a ghost in it reads as an image that
+     failed to load, which on a screen left up for days is the one thing a
+     picture here must never look like. Found on the 10:30pm board, where every
+     row is past: eight faded tiles read as eight faults.
+
+     Nothing is lost that the row does not still say. A finished class is an
+     archive line - the title answers "did I miss it", and the picture was only
+     ever there to help somebody choose. The track stays reserved, so the left
+     edge does not shift when a row crosses over at the end of its session. */
+  .t-row[data-status='past'] .t-shot {
+    display: none;
+  }
+
+  /* The only ambient motion on the board, and it is on the one picture worth
+     looking at: a slow pan across the running class's own photograph.
+
+     2D transform only. `translate3d` promotes the image to its own compositor
+     layer, which some capture and remote-display paths render as solid black -
+     the same trap the reel's Ken Burns keyframes carry a note about, and this
+     board is exactly the kind of screen that gets mirrored or captured.
+
+     26 seconds each way, which is slow enough that nobody watching the board
+     sees it move and everybody walking past sees that it is not a poster. */
+  .t-row[data-status='live'] .t-thumb:not(.is-icon) {
+    animation: t-pan 26s ease-in-out infinite alternate;
+  }
+
+  @keyframes t-pan {
+    from {
+      transform: scale(1.001) translate(0, 0);
+    }
+    to {
+      transform: scale(1.1) translate(-2%, -1.5%);
+    }
   }
 
   /* No photograph, so the studio's icon instead - `contain` and padded, because
      these are badges drawn to sit on a ground rather than photographs to fill
      a frame, and the tint is what says so: a tile the eye reads as a label
-     rather than as a picture of the class. Green rather than the mist above,
-     which against white paper is too faint to draw the tile at all. */
+     rather than as a picture of the class.
+
+     On the lit plate it takes white rather than wash: the icons are dark line
+     art inside a white disc, so a white tile is the disc at full size and the
+     badge keeps reading as a badge. */
   .t-thumb.is-icon {
-    padding: 1.4cqmin;
+    padding: 14%;
     object-fit: contain;
     background: var(--color-sm-wash);
+  }
+
+  .t-row[data-status='live'] .t-thumb.is-icon {
+    background: var(--color-sm-paper);
+  }
+
+  .t-row[data-status='next'] .t-thumb.is-icon {
+    background: var(--color-sm-paper);
+  }
+
+  /* A board on a wall is the one screen nobody chose to look at, so the
+     preference has to be honoured here rather than treated as a nicety.
+
+     `animation: none` rather than leaning on global.css's blanket reset, which
+     sets `animation-duration: 0.01ms !important` - that does not stop an
+     animation so much as fast-forward it, and the pan would finish instantly
+     and leave the photograph parked at its end keyframe, permanently zoomed
+     and offset. This wins on `animation-name`, which the reset does not touch.
+
+     What is left is a board that still says what is running: the lamp holds at
+     full, the photograph holds still, and the lit plate was never moving. */
+  @media (prefers-reduced-motion: reduce) {
+    .t-row[data-status='live'] .t-badge::before,
+    .t-row[data-status='live'] .t-thumb:not(.is-icon) {
+      animation: none;
+    }
+    .t-progress i {
+      transition: none;
+    }
   }
 
   /* Cancelled stays on the board, dimmed - someone who came for it needs to
@@ -529,7 +944,7 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
     opacity: 0.55;
   }
 
-  .t-row.is-off .t-time,
+  .t-row.is-off .t-h,
   .t-row.is-off .t-title {
     color: var(--color-sm-slate);
     text-decoration: line-through;
@@ -550,9 +965,12 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
   .t-empty {
     margin: auto max(3.4cqmin, calc((100% - 168cqmin) / 2));
     padding: 6cqmin 3cqmin;
-    border: 1px solid var(--color-sm-line);
-    border-radius: 12px;
-    background: var(--color-sm-mist);
+    border-radius: 1.8cqmin;
+    /* A plate, like every row - on a mist board a mist panel is a hole. */
+    background: var(--color-sm-paper);
+    box-shadow:
+      0 1px 2px rgb(20 25 22 / 0.05),
+      0 2px 10px rgb(20 25 22 / 0.05);
     text-align: center;
     font-family: var(--font-display);
     font-size: 2.2cqmin;
@@ -575,9 +993,18 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
   /* ------------------------------------------------------------- the help ---
 
      A strip along the bottom of the board, in the board's own units so it
-     scales with everything else. Mist rather than white so it reads as a
-     footer to the schedule and not as another row of it, and the ink-coloured
-     opener is what makes the two items scannable as questions.
+     scales with everything else.
+
+     Ink, and it is what turns the board into one composed object rather than
+     a panel that runs out of content: green band at the top, light body,
+     dark strip at the foot. It was mist, which on a mist board is nothing at
+     all - the schedule simply stopped and two grey sentences sat under it.
+     Dark also does the job a footer has to do here, which is to be plainly
+     *not* another row of the schedule.
+
+     Sage on ink for the number is the live site's own pairing - that is what
+     seattlemakers.org sets on its dark bar - so the one strong colour down
+     here is borrowed rather than invented.
 
      `flex: 0 0 auto` is what keeps it honest: the list above is `1 1 auto`, so
      this takes its height first and fit() then hides whatever rows no longer
@@ -590,18 +1017,17 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
     flex-wrap: wrap;
     align-items: baseline;
     gap: 0.8cqmin 5cqmin;
-    padding: 2.2cqmin max(3.4cqmin, calc((100% - 168cqmin) / 2));
-    border-top: 1px solid var(--color-sm-line);
-    background: var(--color-sm-mist);
+    padding: 2.4cqmin max(3.4cqmin, calc((100% - 168cqmin) / 2));
+    background: var(--color-sm-ink);
     font-size: 1.9cqmin;
     line-height: 1.5;
-    color: var(--color-sm-slate);
+    color: #b9c0bc;
   }
 
   .t-help-label {
     font-family: var(--font-display);
     font-weight: 700;
-    color: var(--color-sm-ink);
+    color: var(--color-sm-paper);
   }
 
   /* Bigger than the sentence around it, because it is the one thing here
@@ -611,7 +1037,7 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
     font-size: 2.6cqmin;
     font-weight: 800;
     font-variant-numeric: tabular-nums;
-    color: var(--color-sm-green-dark);
+    color: var(--color-sm-sage);
     white-space: nowrap;
   }
 
@@ -622,45 +1048,92 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
   @container (max-width: 480px) {
     .t-row {
       grid-template-columns: 1fr auto;
-      gap: 0.4rem;
+      /* cqmin, not the 0.4rem this used to be. A page unit inside the board
+         breaks the one rule the whole thing rests on: the board is a size
+         container, so a rem in here stays put while the board shrinks and the
+         miniature stops being a miniature. */
+      gap: 0.6cqmin 0;
+      --shot: 13cqmin;
+      /* Stacked rows share out the day's slack like the wide ones, but they
+         need `align-content` to do it. The grid is two rows deep here - time
+         above the words - and auto rows stretch by default, so a grown row
+         opened a band of white between a time and its own title. Centring the
+         whole grid instead puts the slack outside the pair, where it reads as
+         the row's own padding.
+
+         The caps are looser than the wide layout's for the obvious reason:
+         every row is taller stacked. */
+      align-content: center;
+      max-height: 24cqmin;
     }
-    /* No column, so no rail to divide it. */
-    .t-row::before {
-      display: none;
+    .t-row:is([data-status='live'], [data-status='next']) {
+      --shot: 22cqmin;
+      max-height: 64cqmin;
     }
-    /* The time stacks above the text now, so both are placed explicitly -
-       left to auto-placement the body would land beside the time rather than
-       under it. */
+    .t-row[data-status='live'] {
+      max-height: 72cqmin;
+    }
     /* Kept at this size, and bigger in proportion: with the greeting down to
        one word, the lockup is the only thing on the board saying where you
        are. */
     .t-mark {
       width: 30cqmin;
     }
+    /* The time block becomes the plate's header bar, edge to edge, and every
+       other item is placed explicitly under it.
+
+       `1 / -1` is the correction worth remembering. Left in column 1 it
+       stopped where the picture's column began, so a tinted bar ran two
+       thirds of the way across each plate and then gave up - which looks like
+       a rendering fault rather than a header. There is no rail at this width
+       and nothing else in that column to line up with, so the block has no
+       reason not to take the full width.
+
+       Back to a row, too: the wide layout stacks the hour over the meridiem to
+       fill a block that is a plate tall, and this one is two lines high. */
     .t-time {
-      grid-column: 1;
-      padding-right: 0;
-      text-align: left;
+      grid-column: 1 / -1;
+      grid-row: 1;
+      flex-direction: row;
+      justify-content: flex-start;
+      padding: 1cqmin 2.4cqmin;
+    }
+    .t-row:is([data-status='live'], [data-status='next']) .t-time {
+      flex-direction: row;
+      /* The gap comes back with the direction. Stacked, the feature block sets
+         `gap: 0.2cqmin` for the line under the hour; left in place on a row it
+         is the space *between* them, and "2:15PM" runs together. */
+      gap: 0 0.7cqmin;
     }
     .t-body {
       grid-column: 1;
-      padding-left: 0;
+      grid-row: 2;
+      padding-left: 2.4cqmin;
     }
     /* The one place the picture stays on the right, and it is not an
-       inconsistency: there is no rail here, so a leading picture indents the
-       *time* as well, and half the rows have no picture - which reads as two
-       different row shapes rather than as one list. On the right it is beside
-       a stacked block and every row still starts on the same edge.
-
-       Aligned to the top of that stack, and square: at this width a 4:3
-       picture beside two short lines is most of the row. */
-    .t-thumb {
+       inconsistency: the time is a bar across the top here rather than a
+       column, so there is no left edge for a leading picture to indent - and
+       half the rows have no picture, which would read as two different row
+       shapes rather than as one list. On the right it is beside the words and
+       every title still starts on the same edge. */
+    .t-shot {
       grid-column: 2;
-      grid-row: 1 / span 2;
+      grid-row: 2;
       align-self: start;
-      width: 22cqmin;
-      margin-left: 2.4cqmin;
+      /* Off the tier, like everywhere else. A flat 22cqmin here gave a
+         one-line queue row a picture twice the height of its own text. */
+      width: var(--shot);
+      margin: var(--pad) 2.4cqmin var(--pad) 2.4cqmin;
       aspect-ratio: 1;
+    }
+    /* Little room for two tiers at this width - the whole board is about as
+       wide as a feature row's picture on the wall. The type steps once and the
+       badge carries the rest of the difference. */
+    .t-row:is([data-status='live'], [data-status='next']) .t-title {
+      font-size: 3.4cqmin;
+    }
+    .t-row[data-status='live'] .t-title {
+      font-size: 3.8cqmin;
     }
   }
 

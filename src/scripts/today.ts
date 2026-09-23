@@ -31,6 +31,7 @@ import {
   statuses,
   sessionEnd,
   clock,
+  clockParts,
   progress,
   statusNote,
   nowLocal,
@@ -49,8 +50,9 @@ const list = document.getElementById('t-list') as HTMLOListElement | null;
 const empty = document.getElementById('t-empty');
 const status = document.getElementById('t-status');
 const dateEl = document.getElementById('t-date');
+const clockEl = document.getElementById('t-clock');
 const more = document.getElementById('t-more');
-if (!board || !list || !empty || !status || !dateEl || !more) {
+if (!board || !list || !empty || !status || !dateEl || !clockEl || !more) {
   throw new Error('today: missing mount points');
 }
 
@@ -192,7 +194,13 @@ function row(e: SmEvent, st: Status, now: string): HTMLLIElement {
   const li = el('li', cancelled ? 't-row is-off' : 't-row') as HTMLLIElement;
   li.dataset.status = st;
 
-  li.append(el('span', 't-time', clock(e.start)));
+  // Two spans, not one string: the time is a block on the plate now, with the
+  // hour set big and tabular and the meridiem small and tracked beneath the
+  // eye. Built from clockParts() so the hero clock and the rail cannot drift.
+  const t = el('span', 't-time');
+  const parts = clockParts(e.start);
+  t.append(el('span', 't-h', parts.hour), el('span', 't-mer', parts.meridiem));
+  li.append(t);
 
   const body = el('div', 't-body');
 
@@ -257,6 +265,11 @@ function row(e: SmEvent, st: Status, now: string): HTMLLIElement {
   const photo = thumbOf(e);
   const icon = studios[0]?.icon ?? null;
   if (photo || icon) {
+    // The picture is wrapped, and the wrapper is not decoration: the live row
+    // pans its photograph, and an <img> cannot clip its own transform - scaled
+    // in place it would simply bleed over the words beside it. `.t-shot` owns
+    // the square and the clipping; the image inside is the only thing moving.
+    const shot = el('div', 't-shot');
     const img = document.createElement('img');
     img.className = photo ? 't-thumb' : 't-thumb is-icon';
     img.src = photo ?? icon!;
@@ -283,14 +296,37 @@ function row(e: SmEvent, st: Status, now: string): HTMLLIElement {
         img.className = 't-thumb is-icon';
         img.src = icon;
       } else {
-        img.remove();
+        // The wrapper, not the image: left behind it is a tinted square with
+        // nothing in it, which reads as a picture that failed rather than as a
+        // row that never had one.
+        shot.remove();
       }
     });
-    li.append(img);
+    shot.append(img);
+    li.append(shot);
   }
 
   li.append(body);
   return li;
+}
+
+/**
+ * The wall clock in the hero.
+ *
+ * Off now(), not off `new Date()`, so a board running under `?now=` shows the
+ * hour it is pretending to be. Showing the real time beside a simulated
+ * schedule is the one thing a clock on this board could get badly wrong - the
+ * red bar says the day is made up, and a truthful clock would quietly argue
+ * with it.
+ *
+ * Written only when the text actually changes. This runs once a second so the
+ * minute never lands late - the board's own tick is 30s, which would show 2:14
+ * for half a minute after it became 2:15 - and at that rate a blind write
+ * would dirty the same node 86,400 times a day on a screen that is left up.
+ */
+function paintClock(): void {
+  const next = clock(now());
+  if (clockEl!.textContent !== next) clockEl!.textContent = next;
 }
 
 /** The events currently on screen, so tick() can re-stamp without refetching. */
@@ -312,6 +348,7 @@ function render(events: SmEvent[], day: string): void {
     month: 'long',
     day: 'numeric',
   });
+  paintClock();
   fit();
   refreshDebug();
 }
@@ -325,6 +362,7 @@ function render(events: SmEvent[], day: string): void {
  * browser has selected. Only what changed gets written.
  */
 function tick(): void {
+  paintClock();
   if (!shown.length) return;
   const stamp = now();
   const marks = statuses(shown, stamp);
@@ -712,10 +750,16 @@ override = overrideFromUrl();
 markSimulated();
 mountDebug();
 applyMode();
+paintClock();
 void refresh();
 
 setInterval(() => void refresh(), POLL_MS);
 setInterval(tick, TICK_MS);
+// The clock is its own interval rather than a passenger on tick(): at 30s it
+// would sit on the wrong minute for up to half of every one of them, which is
+// visible next to any other clock in the building. paintClock() no-ops unless
+// the text changed, so the other 29 calls cost a string compare.
+setInterval(paintClock, 1000);
 
 // A board left up for days should catch up the moment someone wakes the screen.
 document.addEventListener('visibilitychange', () => {

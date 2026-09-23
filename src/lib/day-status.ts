@@ -105,11 +105,26 @@ export function gap(fromIso: string, toIso: string): string {
   return `${h}h ${m}m`;
 }
 
-/** "2:00 pm" from a floating local string. */
-export function clock(iso: string): string {
+/**
+ * "2:00" and "pm", separately.
+ *
+ * The board sets the two at different sizes - the hour big and tabular, the
+ * meridiem small and tracked - because nobody standing in front of a board
+ * checks whether a class at 2:15 is in the morning, and setting both the same
+ * size spends the time column's whole presence on the half of it that is never
+ * read. Splitting it here rather than in the renderer keeps every time on the
+ * board coming out of one place.
+ */
+export function clockParts(iso: string): { hour: string; meridiem: string } {
   const h = Number(iso.slice(11, 13));
   const h12 = h % 12 === 0 ? 12 : h % 12;
-  return `${h12}:${iso.slice(14, 16)} ${h < 12 ? 'am' : 'pm'}`;
+  return { hour: `${h12}:${iso.slice(14, 16)}`, meridiem: h < 12 ? 'am' : 'pm' };
+}
+
+/** "2:00 pm" from a floating local string. Still what the hero clock wants. */
+export function clock(iso: string): string {
+  const { hour, meridiem } = clockParts(iso);
+  return `${hour} ${meridiem}`;
 }
 
 /** The line under a row: what the status actually means in time terms. */

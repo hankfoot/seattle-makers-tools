@@ -56,7 +56,22 @@ Done:
 - A help strip along the bottom: sign in at the check-in PC, and the shop
   number to call for a staff member in the building.
 - The wordmark in the hero, knocked out white, with the greeting shortened to
-  "Welcome" so the board does not say the name twice.
+  "Welcome" so the board does not say the name twice. A live clock sits under
+  it - see *The clock* below.
+- **Two row tiers, added 2026-09-22.** What is running and what is next get a
+  big picture, the summary and room to breathe; everything else collapses to a
+  one-line queue row. Finished rows are that same line, dimmed, with the
+  picture dropped. See *Two tiers* below.
+- **Plates on a ground, added 2026-09-22.** The board is mist and every event
+  is a plate standing off it; the plate's material carries the status - faded,
+  white, wash, lit green. No hairlines anywhere. See *Material is status*.
+- The times are blocks now, not text on a rail: their own field of colour down
+  the left of every plate, hour big and tabular over a small tracked meridiem.
+- An ink strip at the foot, which is what makes the board one composed object
+  rather than a panel that runs out of content.
+- Three moving things, and no more: a status lamp on the ON NOW badge, a 26s
+  pan across the running class's own photograph, and the clock. See *What
+  moves* below.
 - `/events-dummy.json` is a prerendered endpoint, not a file in public/. Its
   times are generated at build time relative to the build's clock, so it is
   always "today" with something running rather than a fixture that rots.
@@ -180,6 +195,10 @@ What came back:
 | `--color-sm-ink` | `#1A1A1A` | the masthead bar |
 | `--color-sm-slate` | `#606164` | body copy |
 | `--color-sm-mist` | `#E5E5E5` | the ground the white content sits on |
+
+Sage sat in this table unused for months and became a real token on
+2026-09-22, when /today's board grew an ink footer strip and needed the live
+site's own colour for type on dark. It is still never used on white.
 
 The old `--color-sm-green` was `#10733c`, sampled from the wordmark in the
 deck. Three units is invisible on its own and obvious in a tab next to the real
@@ -387,6 +406,199 @@ is exactly the kind of divergence a fixture exists to prevent.
 
 **Exactly one row is ever `next`.** "Up next" has to mean one thing on a board,
 or it is a synonym for "not yet" repeated down the page.
+
+**Two tiers, and the tier is the whole design.** Every row carries the same
+elements; `data-status` decides how much of the board each gets.
+
+- **feature** - live and next. Big picture, the summary, the countdown sized to
+  be read at the same distance as the title.
+- **queue** - later and past, and this is the *base* case in the stylesheet
+  because most of a day is one or the other. One line: title on the left,
+  everything that qualifies it pushed to the right edge.
+
+Until this, all eight rows were the same size, which made the board a list. The
+two things somebody walking through the door needs were rendered identically to
+a class that finished four hours ago.
+
+Four scales was the obvious next step and is worse: it steps the left edge four
+times down the page, and "later" and "past" want exactly the same room as each
+other anyway.
+
+**It is CSS off `data-status`, not different markup, and that is load-bearing.**
+tick() mutates rows in place every 30 seconds and never rebuilds them - that is
+what keeps the progress bar's transition alive and what the whole file is built
+around. Markup that differed by tier would force a re-render on every status
+change. As it is, a class that goes live at 2:15 simply grows where it stands.
+
+**The list is a flex column and rows take up the day's slack.** A board holds
+four events on a Tuesday and nine on a Saturday; with the queue rows collapsed,
+a quiet day ended in a third of a screen of white paper under the last row.
+Rows are `flex: 1 0 auto` with a per-tier `max-height`.
+
+Both halves of that are load-bearing. The **`0`** is: a row allowed to shrink
+would silently squash its own content instead of overflowing the list, and
+fit() detects "too many rows" by asking whether the list overflows - shrinkable
+rows would let it crush eight events into the space for six and report that
+everything fits. The **cap** is the other end: two events on a quiet Tuesday
+would otherwise each take half the screen. Caps are set well clear of the
+tallest thing a row of that tier can hold, so they only ever bite into empty
+space. A very quiet day still ends in some white, which is honest - that is all
+there is today.
+
+Verified under pressure at 900x1000: three earlier and two later dropped, "+ 3
+EARLIER · 2 LATER NOT SHOWN" printed, and the live and next rows owning the
+board. Hiding rows cannot oscillate, because flex growth never exceeds the
+space available.
+
+**There is no rail any more, and the reason is distance.** It was a 2px line
+down the left of the list, filled green from the top through the running row and
+hairline below it - a continuous spine saying how much of today is spent. It
+reads well at arm's length and is simply gone at five metres, which is the only
+distance this board is ever read from. The same information is carried by the
+time *blocks* now (below), which is the identical idea in a material that
+survives the room.
+
+A rail filled to a *percentage* was tried on paper before either and rejected:
+the live row already carries a progress bar, and two readings of the same number
+on one row is one too many.
+
+**Material is status, and it is the whole of the redesign.** The board is mist
+and every event is a plate standing off it. The plate says where the event
+stands before a word of it is read:
+
+| status | plate |
+| --- | --- |
+| past | white, faded to 0.5, no shadow |
+| later | white, standing off the ground |
+| next | wash, tinted toward the brand green |
+| live | solid green, white type, the one bright block on the board |
+
+Four materials down one column read as a stack filling up, which is what a day
+is. And what separates one event from the next is now the *ground showing
+through between two plates* - there are no hairlines on this board at all. A
+rule drawn across a row is a table; a gap between two plates is a board. That
+one change is most of what stopped it looking like a printout.
+
+**"Sunk" was the first version of `past` and it was wrong.** Finished rows had
+no plate at all - transparent, so a finished class became the ground. It reads
+well written down and badly on screen: with nothing under them the time block
+and the title had nothing holding them together, and the grey block ended up the
+heaviest thing on a row that is meant to be receding. A faded plate says the
+same thing and stays an object.
+
+Its time block then has to be the **hairline** token rather than mist. A faded
+white plate comes out around `#F8F9F8` over the mist board, and a mist block on
+it lands within a couple of units of the plate - so on the 10:30pm board, where
+every row is past, every time looked like it had fallen off its plate onto the
+ground. Found by looking at that hour specifically; at any hour with a live row
+in it the board looks fine and the bug is invisible.
+
+**The time is a block, and it is where the board got its spine back.** The times
+were the structural idea and were set in the same face, weight and colour as the
+titles beside them, which made the spine invisible. They now have their own
+field of colour running the full height of every plate, with the hour big and
+tabular over a small tracked meridiem - `clockParts()` in lib/day-status.ts
+splits them, and `clock()` is built from it so the hero clock and the rail
+cannot drift. `npm test` pins the three hours that are not simply `h % 12`.
+
+The meridiem is small on purpose: nobody standing in front of a board checks
+whether a class at 2:15 is in the morning, and setting both halves the same size
+spends the column's whole presence on the half that is never read.
+
+One block width for every tier, so the column is a column; the hour size steps
+with the tier. On a feature row the hour and meridiem **stack** - a block that
+is a plate tall with a queue-sized hour in the middle of it reads as a caption
+floating in a void.
+
+**The footer strip is ink, and that is what closes the composition.** Green band
+at the top, light body, dark strip at the foot. It was mist, which on a mist
+board is nothing at all - the schedule simply stopped and two grey sentences sat
+under it. Dark also does the job a footer has to do here, which is to be plainly
+*not* another row of the schedule. Sage on ink for the phone number is the live
+site's own pairing - that is what seattlemakers.org sets on its dark bar - so
+`--color-sm-sage` is in the tokens now rather than only in the table above. It
+must never go on white: 2.78:1, which is why `--color-sm-on-green` exists.
+
+**The narrow layout's time block spans `1 / -1`, and the bug it fixes looks like
+a rendering fault.** Left in column 1 it stopped where the picture's column
+began, so a tinted bar ran two thirds of the way across each plate and gave up.
+There is no rail at this width and nothing else in that column to line up with,
+so the block takes the full plate width and becomes a proper header bar, with
+the words and the picture placed underneath it. It also has to go back to
+`flex-direction: row` *and* restate its gap - the feature tier's stacked
+`gap: 0.2cqmin` is the space between two lines there and the space between two
+words here, so without it the plate reads "2:15PM".
+
+**Finished rows drop the picture, and what the dimming does to one is why.** A
+row at 42% is legible as text and *broken* as a photograph - a pale rectangle
+with a ghost in it reads as an image that failed to load, which on a screen left
+up for days is the one thing a picture here must never look like. Found on the
+10:30pm board, where every row is past: eight faded tiles read as eight faults.
+Nothing is lost that the row does not still say - the title answers "did I miss
+it", and the picture was only ever there to help somebody choose. The track
+stays reserved, so the left edge does not shift when a row crosses over at the
+end of its session.
+
+**The picture is wrapped now, and the wrapper is not decoration.** An `<img>`
+cannot clip its own transform, so the live row's pan would bleed the photograph
+over the words beside it. `.t-shot` owns the square, the radius and the
+`overflow: hidden`; `.t-thumb` fills it and is the only thing that moves. The
+error fallback removes the *wrapper*, not the image - left behind, it is a
+tinted square with nothing in it, which reads as a picture that failed rather
+than as a row that never had one.
+
+**The queue's right-hand cluster is right-justified on every line, not just the
+first.** With a long title the meta wraps, and left to itself that second line
+packs to the left - which strands "finished" on the right of line one above a
+left-aligned row of labels, reading as two different rows. `justify-content:
+flex-end` on the row body fixes it; the `margin-right: auto` on the title still
+wins on line one, because auto margins take the free space before
+justify-content sees it.
+
+**The clock earns its place rather than decorating.** Every time note on this
+board is relative - "starts in 45m", "1h 15m left" - and a relative time with
+nothing absolute beside it cannot be checked from across a room. It is also the
+one thing here that is true by the minute, which is what stops a screen left up
+for days from reading as a printed poster.
+
+It runs off `now()`, not `new Date()`, so a board under `?now=` shows the hour
+it is pretending to be. Showing the real time beside a simulated schedule is the
+one thing a clock here could get badly wrong: the red bar says the day is made
+up, and a truthful clock would quietly argue with it.
+
+Its own 1-second interval, not a passenger on tick(). At 30s it would sit on the
+wrong minute for up to half of every one of them, which is visible next to any
+other clock in the building. `paintClock()` writes only when the text changed,
+so the other 29 calls a minute cost a string compare - the alternative dirties
+the same node 86,400 times a day on a screen nobody ever reloads.
+
+**What moves, and what deliberately does not.** Three things, and the restraint
+is the point - ambient motion spread across a board reads as a screensaver.
+
+1. A **status lamp** on the ON NOW badge, 2.4s. It is the vernacular of every
+   machine in the building: the thing that is running has a light on it. It
+   sits on the one row that is genuinely happening.
+2. A **26-second pan** across the running class's own photograph. Slow enough
+   that somebody standing at the board does not see it move and somebody
+   walking past sees that this is not a poster. 2D transform only - the reel
+   carries the same note, and for the same reason: `translate3d` promotes the
+   image to its own compositor layer, which some capture and remote-display
+   paths render as solid black, and a wall board is exactly the kind of screen
+   that gets mirrored.
+3. The **progress bar** and the **clock**, which were already the board's only
+   honest movement.
+
+A sheen on the progress fill and a staggered entrance were both built and cut.
+The entrance one is worth recording as a trap rather than a taste: `render()`
+replaces the whole list every five minutes, so any entrance animation fires
+every five minutes forever on a screen in the space.
+
+Reduced motion is honoured here specifically, and not only by global.css's
+blanket reset. That reset sets `animation-duration: 0.01ms !important`, which
+does not stop an animation so much as fast-forward it - the pan would finish
+instantly and leave the photograph parked at its end keyframe, permanently
+zoomed and offset. Setting `animation: none` on the two rules wins on
+`animation-name`, which is not what the reset touches.
 
 **The fit is what makes a wall screen possible, and what it gives up is
 ordered.** A TV cannot be scrolled, so anything past the bottom edge is
@@ -639,15 +851,31 @@ arrived at by looking rather than by argument:
   list scannable.
 - *Leading, with the column reserved* keeps the edge and costs a blank indent
   on the rows with no picture. At the 20cqmin the picture was when it sat on
-  the right, that indent is a void; at **13cqmin** it reads as a margin. So the
+  the right, that indent is a void; small enough, it reads as a margin. So the
   picture is smaller than it would be on the right - that is the trade, and it
   is the reason for the size.
+
+The sizes are now per tier - 8.5cqmin on a queue row, 20 on the next class, 27
+on the running one - which steps that left edge exactly twice down the board.
+That is a different thing from the ragged version above: every queue row starts
+on one vertical and the two feature rows on another, so it reads as two blocks
+rather than as noise.
 
 **The narrow layout keeps the picture on the right, and that is not an
 inconsistency.** Below the board's 480px container query there is no time rail
 and the row stacks, so a leading picture indents the *time* as well - with half
 the rows unindented, it reads as two different row shapes rather than as one
 list.
+
+Three things about it changed with the tiers, and one was a latent bug. The
+picture size reads `--shot` there now instead of a flat 22cqmin, which had been
+giving a one-line queue row a picture twice the height of its own text. The row
+gap was `0.4rem` - a *page* unit inside a size container, which is the one rule
+the whole board rests on - and is cqmin now. And stacked rows need
+`align-content: center` to grow: the grid is two rows deep there, auto rows
+stretch by default, so a grown row opened a band of white between a time and
+its own title. Centring the grid puts the slack outside the pair, where it
+reads as the row's own padding.
 
 **An item that names only a grid column is auto-placed into a new grid *row*.**
 The picture is `grid-column: 2` with the body at 3; with the body already

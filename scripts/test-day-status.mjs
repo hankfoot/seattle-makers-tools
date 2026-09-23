@@ -5,7 +5,7 @@
  * Run with `npm test`. Node strips the types; there is no test framework and
  * no build step, which is the whole reason this is a plain .mjs.
  */
-import { sessionEnd, statuses, progress, gap, clock, statusNote }
+import { sessionEnd, statuses, progress, gap, clock, clockParts, statusNote }
   from '../src/lib/day-status.ts';
 
 let pass = 0, fail = 0;
@@ -51,6 +51,16 @@ eq(gap('2026-09-19T13:00','2026-09-19T13:00'), '', 'no gap');
 eq(clock('2026-09-19T00:05'), '12:05 am', 'midnight hour');
 eq(clock('2026-09-19T12:00'), '12:00 pm', 'noon');
 eq(clock('2026-09-19T14:30'), '2:30 pm', 'afternoon');
+// The board sets these two at different sizes, so the split has to survive the
+// three hours that are not simply "h % 12".
+eq(clockParts('2026-09-19T00:05').hour, '12:05', 'parts: midnight hour');
+eq(clockParts('2026-09-19T00:05').meridiem, 'am', 'parts: midnight meridiem');
+eq(clockParts('2026-09-19T12:00').hour, '12:00', 'parts: noon hour');
+eq(clockParts('2026-09-19T12:00').meridiem, 'pm', 'parts: noon is pm');
+eq(clockParts('2026-09-19T11:59').meridiem, 'am', 'parts: minute before noon is am');
+eq(clockParts('2026-09-19T14:30').hour, '2:30', 'parts: afternoon hour drops the leading zero');
+// The two must never disagree - clock() is the hero's and is built from these.
+eq(clock('2026-09-19T09:05'), `${clockParts('2026-09-19T09:05').hour} ${clockParts('2026-09-19T09:05').meridiem}`, 'parts and clock agree');
 eq(statusNote('live','2026-09-19T13:00','2026-09-19T15:00','2026-09-19T14:00'), '1h left', 'live note');
 eq(statusNote('next','2026-09-19T13:00','2026-09-19T15:00','2026-09-19T12:30'), 'starts in 30m', 'next note');
 
