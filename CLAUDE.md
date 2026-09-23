@@ -1054,12 +1054,28 @@ and the clock came down from 5.4 to 4.4cqmin - on a line of reference under a
 7cqmin title it was the loudest thing in the band, which is the wrong way round
 for a clock.
 
+**The gap under the greeting was the clock's fault, not the gap property's.**
+The facts row is baseline-aligned so the small date sits on the clock's line
+rather than floating in the middle of it - and the clock is 47.5px, so the
+shared baseline sits about 36px below the top of that row. The 26px hours line
+was being dragged down with it, opening 17px of nothing under the title that no
+amount of `gap` could close.
+
+`align-self: start` takes the hours off that baseline. The date still pairs
+with the clock, because they sit next to each other and read as one fact; the
+hours is at the far end of the band and pairs with the greeting above it
+instead. The rest was half-leading: the greeting's `line-height` was 1.08 over
+a line with no descenders, which hangs empty space under it. At 1 the box hugs
+the glyphs, and the descenders on "We open at 2pm today" still clear the line
+below - checked, because that is the one greeting that has any.
+
 **The band is then tightened, because every pixel here comes off the list.**
 Restacked it measured 225px on a 1080 board: 39 of padding, 82 of title, 15 of
 gap, 51 of facts, 39 of padding - the two paddings alone were a third of the
-band, and none of it was doing any work. At 2.3cqmin of padding and 0.7 of gap
-it is **190px**, and the 35px went to the part of the board somebody is
-actually reading. Worth knowing when editing this: the title is bigger than it
+band, and none of it was doing any work. At 3cqmin of padding and 0.3 of gap it is
+**191px**, and the 34px went to the part of the board somebody is actually
+reading - the padding went back up once the pair was tight, because the space
+wanted to be *around* the block rather than inside it. Worth knowing when editing this: the title is bigger than it
 has ever been *and* the band is shorter than it was before the greeting grew.
 
 **The date moved up beside the clock.** It used to sit under the greeting as
