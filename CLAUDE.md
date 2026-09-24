@@ -603,6 +603,19 @@ Four scales was tried on paper and is worse: it steps the left edge four times
 down the page, and "later" and "past" want exactly the same room as each other.
 `past` differs by colour, not by size.
 
+**The feature title is 3.2cqmin, and it was 3.8.** Too big on a portrait wall
+board, and expensively so: at 3.8 a 31-character title like "Industrial Sewing
+Certification" took two lines, and a two-line title is what pushes the text
+column past the picture's height and breaks the even inset above. Dropping it
+16% put four of the five titles on 2026-10-07 onto one line, took those rows'
+picture inset back to 13px all round, and freed enough height that the eight-row
+dummy board stopped hiding a row - "+ 1 earlier not shown" is gone. A smaller
+title bought *more* board, which is the opposite of what shrinking type usually
+does and is worth remembering the next time this looks too small.
+
+The queue tier stays at 2.6cqmin. It was never the complaint, and the gap
+between the tiers is what the tiering is for.
+
 **The two elevated tiers share one geometry, and they did not at first.**
 Running had a 25cqmin picture and a 4cqmin title; about to run had 22 and 3.6.
 That put the bodies of two plates of the same shape on left edges 32px apart,
@@ -1409,17 +1422,20 @@ hierarchy; on the plate it reads as a square pushed off-centre in its own slot.
 `--shot + 2 * --shot-gap`, and `--gutter` is gone - the body's left padding is
 zero, because the picture's own margin is the gap.
 
-**On the queue tier that is exactly even - 13px all round - and on the feature
-tier it cannot be.** The picture is a fixed square and the row's height comes
-from whichever is taller, it or the text column beside it. On the feature tier
-the text wins: title, summary, countdown and progress bar come to about 284px
-against a 248px picture, so the picture centres in the leftover and its gap
-above and below measures 50px against 13 at the sides. Both ways out are worse
-- stretching the box breaks the square, and growing the square until it fills
-the row makes it 322px wide on a 1080 board, which takes a third of the plate,
-narrows the title, wraps it to another line and makes the row taller again.
-Left as it is, what shows is the body's own padding rather than a picture
-placed wrongly.
+**It comes out exactly even on most rows, and where it does not, the cause is
+the title wrapping.** The picture is a fixed square and the row's height is
+whichever is taller, it or the text column beside it. Every queue row and every
+feature row with a one-line title measures 13px on all four sides. A feature
+row whose title takes two lines puts the text column above the picture's
+height, so the picture centres in the leftover and its gap above and below goes
+to about 42px.
+
+Both ways of forcing it are worse - stretching the box breaks the square, and
+growing the square until it fills the row makes it 322px wide on a 1080 board,
+which takes a third of the plate, narrows the title, wraps it to *another* line
+and makes the row taller again. What shows on a wrapped row is the body's own
+padding, not a picture placed wrongly. Bringing the title size down is what
+actually fixed most of it - see below.
 
 **The picture leads the row, and its column is reserved.** Both of those were
 arrived at by looking rather than by argument:
