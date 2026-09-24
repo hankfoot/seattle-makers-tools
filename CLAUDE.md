@@ -817,40 +817,40 @@ The meridiem is small on purpose: nobody standing in front of a board checks
 whether a class at 2:15 is in the morning, and setting both halves the same size
 spends the column's whole presence on the half that is never read.
 
-**How long it runs sits under the time it starts, in the same block.** The
-block is a plate tall and was holding one line; the length of the session is
-the other half of the fact the column exists to carry, and on a stretched block
-it costs no height at all - measured, no row got taller. It does not fit beside
-the hour - "2h 30m" needs about 76px next to a time already taking most of a
-147px block - so it is a second line, `grid-column: 1 / -1` on it being what
-lets it break one.
+**When it finishes sits under when it starts, in the same block.** The block is
+a plate tall and was holding one line; the end of the session is the other half
+of the fact the column exists to carry, and on a stretched block it costs no
+height at all - measured, no row got taller. It does not fit beside the hour, so
+it is a second line, `grid-column: 1 / -1` on it being what lets it break one.
 
-**It says "Runs", and the word is not filler.** A bare "2h" sitting under a
-clock time is a number in a column of numbers, and the column's other numbers
-are all moments - so it reads as an end time, or as a countdown to one. The
-verb is the whole difference between a length and a point in the day. It costs
-about 50px, and the worst case the calendar can produce - "Runs 10h 30m" at the
-feature tier - is 142px of a 163px block, so nothing overflows; everything here
-is in cqmin, so that 13% holds at every board size. Capitalised, because at this
-size it is a label on the number rather than a sentence about it - and the cap
-is what stops "runs" reading as the tail of the time above it.
+**It says "Until", and the word is doing the work.** A bare "8:30 pm" under a
+clock time is a second clock face arguing with the first, and the eye cannot
+tell a start from an end in a column of starts. "Until" can be read as neither
+a start nor a countdown.
 
-**The *end time* was tried there first and reverted, on 2026-09-23.** It read
-"7:00 PM" over "– 8:30pm", and `endLabel()` existed to drop the repeated
-meridiem except where the session crosses noon or midnight. The dropped
-meridiem was the right detail on the wrong object: a second clock face in a
-column that already has one competes with the time above it rather than
-qualifying it, and the eye has to subtract to get the answer it wanted. A
-duration is one short token, and it answers the question somebody in the
-doorway is actually asking - have I got time for this. `gap()` already existed
-for the countdowns, so the swap deleted `endLabel()` and its four assertions
-rather than adding anything.
+**This block went end time -> duration -> end time in one day, and the round
+trip is worth keeping.** The first version read "7:00 PM" over "– 8:30pm", with
+`endLabel()` dropping the repeated meridiem except where the session crosses
+noon or midnight. That was the right detail on the wrong object: the problem
+was never the repetition, it was that an unlabelled time under a time is
+indistinguishable from it. A duration ("Runs 3h") proved the diagnosis by
+fixing it, and exposed the second cost - a length is not what somebody standing
+here wants, it is what they have to convert into the answer. The word is what
+both versions were missing. `endLabel()` stayed deleted; `clock()` was already
+there.
+
+**The feature size is 1.8cqmin, and the number is measured.** The widest string
+the calendar can produce here is "Until 10:30 pm". At 2cqmin that came to 147px
+of the block's 163px of room - the same 10% margin the hour already runs at, on
+a second line that clips just as silently - so it backs off to 1.8, where it is
+133px. The queue tier is 1.5cqmin and its widest is 111px. Everything is in
+cqmin, so those ratios hold at every board size.
 
 **The narrow bar has to hand `grid-column` back.** With `grid-auto-flow:
 column` and no explicit tracks, `-1` resolves to the *first* grid line, so the
-duration jumped in front of the hour and the header bar read "2h 7:00 PM".
-`grid-column: auto` puts it after the meridiem, which is where a horizontal bar
-wants it anyway.
+end jumped in front of the hour and the header bar read "Until 10:00 pm 7:00
+PM". `grid-column: auto` puts it after the meridiem, which is where a
+horizontal bar wants it anyway.
 
 One block width for every tier, so the column is a column; the hour size steps
 with the tier. The hour is much bigger on a feature row - a block that is a
@@ -1399,6 +1399,27 @@ not enough to leave it adrift.
 The cost is vertical: a square picture takes more room on a short row than a
 stretched one, and the 2026-10-07 board went back to "+ 1 later not shown". The
 fit pass reports it, which is the deal.
+
+**The inset is the same number on all four sides, and it did not start that
+way.** The picture carried no right margin at first and leaned on the body's
+own left padding for the gap to the words, which was deliberately wider than
+the gap to the time block - 26px against 13px. Written down that sounds like
+hierarchy; on the plate it reads as a square pushed off-centre in its own slot.
+`.t-shot` owns all four margins now, its column reserves
+`--shot + 2 * --shot-gap`, and `--gutter` is gone - the body's left padding is
+zero, because the picture's own margin is the gap.
+
+**On the queue tier that is exactly even - 13px all round - and on the feature
+tier it cannot be.** The picture is a fixed square and the row's height comes
+from whichever is taller, it or the text column beside it. On the feature tier
+the text wins: title, summary, countdown and progress bar come to about 284px
+against a 248px picture, so the picture centres in the leftover and its gap
+above and below measures 50px against 13 at the sides. Both ways out are worse
+- stretching the box breaks the square, and growing the square until it fills
+the row makes it 322px wide on a 1080 board, which takes a third of the plate,
+narrows the title, wraps it to another line and makes the row taller again.
+Left as it is, what shows is the body's own padding rather than a picture
+placed wrongly.
 
 **The picture leads the row, and its column is reserved.** Both of those were
 arrived at by looking rather than by argument:

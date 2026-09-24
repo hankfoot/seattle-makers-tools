@@ -497,7 +497,6 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
        class's picture sit in a 35px margin and a queue row's in 16px, so the
        inset read as a different decision on every row. */
     --shot-gap: 1.2cqmin;
-    --gutter: 2.4cqmin;
     --pad: 1.5cqmin;
     display: grid;
     /* Three tracks: the time block, the picture, the words - and the picture's
@@ -511,7 +510,7 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
        from across a room, where a straight left edge is most of what makes a
        list scannable. The tiers step that edge exactly twice, which is a
        different thing: two blocks, not noise. */
-    grid-template-columns: var(--rail) calc(var(--shot) + var(--shot-gap)) 1fr;
+    grid-template-columns: var(--rail) calc(var(--shot) + 2 * var(--shot-gap)) 1fr;
     align-items: center;
     /* Needed by the live row's frame, which is drawn as an overlay rather than
        as a border - see `.t-row[data-status='live']::after`. */
@@ -736,8 +735,12 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
     opacity: 0.85;
   }
 
+  /* 1.8cqmin, and the number is measured. "Until 10:30 pm" is the widest
+     string the calendar can produce here, and at 2cqmin it came to 147px of
+     the block's 163px of room - the same 10% margin the hour runs at, on a
+     second line that clips just as silently. At 1.8 it is 133px. */
   .t-row.is-up .t-dur {
-    font-size: 2cqmin;
+    font-size: 1.8cqmin;
   }
 
   .t-row[data-status='live'] .t-dur {
@@ -824,7 +827,7 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
   .t-body {
     grid-column: 3;
     min-width: 0;
-    padding: var(--pad) 2.4cqmin var(--pad) var(--gutter);
+    padding: var(--pad) 2.4cqmin var(--pad) 0;
     display: flex;
     flex-wrap: wrap;
     align-items: baseline;
@@ -1088,9 +1091,12 @@ const heading = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
     align-self: center;
     width: var(--shot);
     aspect-ratio: 1;
-    /* No right margin: the body's own left padding is the gap to the words,
-       and it wants to be wider than the gap to the time block. */
-    margin: var(--shot-gap) 0 var(--shot-gap) var(--shot-gap);
+    /* One number on all four sides. It carried no right margin at first and
+       leaned on the body's own left padding for the gap to the words, which
+       was deliberately wider than the gap to the time block - and that read
+       as a picture pushed off-centre in its own slot rather than as a
+       hierarchy. Even is what it wants to be. */
+    margin: var(--shot-gap);
     overflow: hidden;
     border-radius: 1.2cqmin;
     /* Something to look at for the moment between layout and decode, rather

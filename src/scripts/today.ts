@@ -254,17 +254,14 @@ function row(e: SmEvent, st: Status, now: string): HTMLLIElement {
   const t = el('span', 't-time');
   const parts = clockParts(e.start);
   t.append(el('span', 't-h', parts.hour), el('span', 't-mer', parts.meridiem));
-  // How long it runs, under the start. The end time was tried here first and
-  // reads badly - "– 12:30pm" is a second clock face in a column that already
-  // has one, and it competes with the time above it rather than qualifying it.
-  // A duration is one short token, and it answers the question somebody in the
-  // doorway is actually asking: have I got time for this.
-  //
-  // It says "Runs", because a bare "2h" under a clock time is a number in a
-  // column of numbers and reads as another one - an end, or a countdown. The
-  // verb is what makes it a length rather than a moment.
-  const runs = gap(e.start, sessionEnd(e.start, e.end));
-  if (runs) t.append(el('span', 't-dur', `Runs ${runs}`));
+  // When it finishes, under when it starts. A bare "- 8:30pm" was tried here
+  // and reads as a second clock face arguing with the first; a duration
+  // ("Runs 3h") was tried after it and is unambiguous but makes the reader do
+  // the arithmetic. "Until" is the word that does both jobs - it cannot be
+  // mistaken for a start or a countdown, and it hands over the fact somebody
+  // in the doorway actually wants, which is when the room frees up.
+  const ends = sessionEnd(e.start, e.end);
+  if (ends > e.start) t.append(el('span', 't-dur', `Until ${clock(ends)}`));
   li.append(t);
 
   const body = el('div', 't-body');
