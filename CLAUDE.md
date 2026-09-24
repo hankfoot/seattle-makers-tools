@@ -825,13 +825,15 @@ the hour - "2h 30m" needs about 76px next to a time already taking most of a
 147px block - so it is a second line, `grid-column: 1 / -1` on it being what
 lets it break one.
 
-**It says "runs", and the word is not filler.** A bare "2h" sitting under a
+**It says "Runs", and the word is not filler.** A bare "2h" sitting under a
 clock time is a number in a column of numbers, and the column's other numbers
 are all moments - so it reads as an end time, or as a countdown to one. The
 verb is the whole difference between a length and a point in the day. It costs
-about 34px, and the worst case the calendar can produce - "runs 10h 30m" at the
-feature tier - is 136px of a 163px block, so nothing overflows; everything here
-is in cqmin, so that 17% holds at every board size.
+about 50px, and the worst case the calendar can produce - "Runs 10h 30m" at the
+feature tier - is 142px of a 163px block, so nothing overflows; everything here
+is in cqmin, so that 13% holds at every board size. Capitalised, because at this
+size it is a label on the number rather than a sentence about it - and the cap
+is what stops "runs" reading as the tail of the time above it.
 
 **The *end time* was tried there first and reverted, on 2026-09-23.** It read
 "7:00 PM" over "– 8:30pm", and `endLabel()` existed to drop the repeated

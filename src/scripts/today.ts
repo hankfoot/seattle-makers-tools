@@ -260,11 +260,11 @@ function row(e: SmEvent, st: Status, now: string): HTMLLIElement {
   // A duration is one short token, and it answers the question somebody in the
   // doorway is actually asking: have I got time for this.
   //
-  // It says "runs", because a bare "2h" under a clock time is a number in a
+  // It says "Runs", because a bare "2h" under a clock time is a number in a
   // column of numbers and reads as another one - an end, or a countdown. The
   // verb is what makes it a length rather than a moment.
   const runs = gap(e.start, sessionEnd(e.start, e.end));
-  if (runs) t.append(el('span', 't-dur', `runs ${runs}`));
+  if (runs) t.append(el('span', 't-dur', `Runs ${runs}`));
   li.append(t);
 
   const body = el('div', 't-body');
