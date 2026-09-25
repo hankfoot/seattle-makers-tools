@@ -459,10 +459,23 @@ so the board is *most often empty at exactly the moment this has to fire*.
 Below the return it would have worked only on the nights something ran past
 twelve.
 
-**`shownDay` and the date label are deliberately two facts.** `paintDate()`
-does not touch `shownDay`; only `render()` does. So when the midnight refresh
-fails, the board knows the date it is showing and the day its rows came from
-disagree - which is what the failure path below needs.
+**Three days, not one, and they are separated on purpose.** There is the day
+the clock says, `shownDay` - the day the rows on screen actually came from,
+set only by `render()` - and `datedDay`, what the date line under the greeting
+claims. Collapsing any two of them puts the midnight bug back in a new place.
+
+**The date needs no network, so it is never allowed to be wrong.** `tick()`
+repaints it unconditionally rather than inside the rollover branch. Hung off
+`shownDay` it looked correct and was not: `shownDay` is empty before the first
+fetch lands *and* again after a failed rollover clears the board, so a board
+that was offline across two midnights would have frozen its own date on the
+first one. It is also painted at boot, because today.astro renders the date at
+build time - a board booting the morning after a deploy, or one that cannot
+reach the calendar at all, otherwise sat under the *build* date.
+
+The classes are the half that does need the network, so only that half is
+gated on `shownDay`: it asks once per rollover and goes quiet the moment a
+render lands, or the moment a failure clears the board.
 
 **A failed refresh keeps the board, except across midnight.** "A board showing
 the last good day beats one showing an error" is right within a day and wrong
@@ -480,12 +493,15 @@ over again. `refresh()` carries a `refreshing` guard for the same reason - the
 poll could never overlap itself, but a tick firing every 30s across a slow
 rollover could.
 
-Verified in the browser with the clock-stub technique, four states: the board
+Verified in the browser with the clock-stub technique, six states: the board
 at 23:58 on the 26th with three rows, then one tick past midnight (date, hours,
-greeting and class list all move to the 27th); the same rollover with `/api/`
-rejecting (rows cleared, "Cannot reach the calendar right now.", status "Not
-connected"); 40 seconds after that with no retry storm (0 calls); and a
-same-day failure, which leaves the rows and the stamp untouched.
+greeting and class list all move to the 27th, and again on to a Tuesday, where
+the greeting goes to "See you next time!" and the list is empty); the same
+rollover with `/api/` rejecting (rows cleared, "Cannot reach the calendar right
+now.", status "Not connected"); a *second* midnight while still offline, where
+the date moves on with no rows and no network; 40 seconds after a cleared
+board with no retry storm (0 calls); and a same-day failure, which leaves the
+rows and the stamp untouched.
 
 One trap in running that check: wrapping `window.fetch` twice and capturing the
 *wrapper* as the "original" makes a later "go back online" silently keep

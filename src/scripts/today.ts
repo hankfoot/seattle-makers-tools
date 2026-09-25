@@ -433,12 +433,23 @@ let shown: SmEvent[] = [];
 let shownDay = '';
 
 /**
+ * And the day the *date line* says, which is a third thing again.
+ *
+ * It is what the board claims the date is, and unlike the rows it needs no
+ * network - so it is kept honest on its own, rather than as a side effect of
+ * a fetch that may not come back.
+ */
+let datedDay = '';
+
+/**
  * The date under the greeting. Deliberately does not touch `shownDay`: which
  * day it *is* and which day the rows came from are different facts, and a
  * midnight refresh that fails has to leave them disagreeing so that refresh()
  * can see it did.
  */
 function paintDate(day: string): void {
+  if (day === datedDay) return;
+  datedDay = day;
   dateEl!.textContent = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
     weekday: 'long',
     month: 'long',
@@ -485,11 +496,17 @@ function tick(): void {
   // Ahead of the empty-board return below, deliberately: the last class of the
   // day has usually finished by midnight, so the board is *most often* empty
   // at exactly the moment this has to fire.
-  if (shownDay && early.slice(0, 10) !== shownDay) {
-    // The date is ours to fix immediately; the classes need the network.
-    paintDate(early.slice(0, 10));
-    void refresh();
-  }
+  const clockDay = early.slice(0, 10);
+  // The date needs nothing but the clock, so it is never allowed to be wrong,
+  // whatever the rows are doing. Unconditional rather than hung off `shownDay`:
+  // that is empty before the first fetch lands and again after a failed
+  // rollover clears the board, and both are states this has to survive - a
+  // board offline across two midnights would otherwise freeze its own date.
+  paintDate(clockDay);
+  // The classes do need the network. `shownDay` is the day the rows on screen
+  // actually came from, so this asks once per rollover and goes quiet again
+  // the moment a render lands - or the moment a failure clears the board.
+  if (shownDay && clockDay !== shownDay) void refresh();
 
   // A board with nothing on it still opens and closes, and on a Tuesday that
   // is the only thing it has to say.
@@ -942,6 +959,11 @@ markSimulated();
 mountDebug();
 applyMode();
 paintClock();
+// Before the first fetch, and whether or not it lands. today.astro renders the
+// date at build time, so a board booting the morning after a deploy - or one
+// that cannot reach the calendar at all - would otherwise sit under the *build*
+// date until a fetch succeeded.
+paintDate(today());
 paintOpen(now(), false);
 void refresh();
 
