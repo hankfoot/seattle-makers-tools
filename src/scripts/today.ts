@@ -422,6 +422,30 @@ function paintOpen(stamp: string, live: boolean): void {
 /** The events currently on screen, so tick() can re-stamp without refetching. */
 let shown: SmEvent[] = [];
 
+/**
+ * The day those rows belong to.
+ *
+ * Not the same question as "what day is it", and the difference is the whole
+ * of the midnight bug: at 00:00 the clock rolls over and every row on the
+ * board is suddenly yesterday's. Something has to notice, and the only thing
+ * that runs often enough is tick().
+ */
+let shownDay = '';
+
+/**
+ * The date under the greeting. Deliberately does not touch `shownDay`: which
+ * day it *is* and which day the rows came from are different facts, and a
+ * midnight refresh that fails has to leave them disagreeing so that refresh()
+ * can see it did.
+ */
+function paintDate(day: string): void {
+  dateEl!.textContent = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+  });
+}
+
 function render(events: SmEvent[], day: string): void {
   shown = events
     .filter((e) => typeof e.start === 'string' && e.start.slice(0, 10) === day)
@@ -434,11 +458,8 @@ function render(events: SmEvent[], day: string): void {
   empty!.textContent = 'Nothing on the calendar today.';
   empty!.hidden = shown.length > 0;
 
-  dateEl!.textContent = new Date(`${day}T00:00:00`).toLocaleDateString('en-US', {
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric',
-  });
+  shownDay = day;
+  paintDate(day);
   paintClock();
   fit();
   refreshDebug();
@@ -455,8 +476,23 @@ function render(events: SmEvent[], day: string): void {
 function tick(): void {
   paintClock();
   const early = now();
-  // Ahead of the early return: a board with nothing on it still opens and
-  // closes, and on a Tuesday that is the only thing it has to say.
+
+  // Midnight. tick() re-stamps what is on screen and never refetches, so
+  // across a rollover it would spend up to a whole poll interval greying out
+  // yesterday's classes under yesterday's date - and the board's clock, which
+  // runs on its own second, would already be reading 12:0x am beside them.
+  //
+  // Ahead of the empty-board return below, deliberately: the last class of the
+  // day has usually finished by midnight, so the board is *most often* empty
+  // at exactly the moment this has to fire.
+  if (shownDay && early.slice(0, 10) !== shownDay) {
+    // The date is ours to fix immediately; the classes need the network.
+    paintDate(early.slice(0, 10));
+    void refresh();
+  }
+
+  // A board with nothing on it still opens and closes, and on a Tuesday that
+  // is the only thing it has to say.
   if (!shown.length) {
     paintOpen(early, false);
     return;
@@ -835,9 +871,18 @@ function stamp(fetchedAt?: string, _live?: boolean): string {
   return `Checked ${moment(new Date())}`;
 }
 
-let lastDay = today();
+/**
+ * One refresh at a time.
+ *
+ * The 5-minute poll could never overlap itself, but the midnight check in
+ * tick() fires every 30 seconds until the day on screen matches the clock -
+ * so a slow or failing fetch across a rollover would otherwise stack.
+ */
+let refreshing = false;
 
 async function refresh(): Promise<void> {
+  if (refreshing) return;
+  refreshing = true;
   const day = today();
   try {
     let data: { events?: SmEvent[]; fetchedAt?: string; live?: boolean } | null = null;
@@ -862,19 +907,31 @@ async function refresh(): Promise<void> {
     if (!data) throw new Error('no source');
 
     render(data.events!, day);
-    lastDay = day;
     status!.textContent = stamp(data.fetchedAt, data.live);
   } catch {
-    // Keep whatever is on screen - a board showing the last good day beats one
-    // showing an error. But with no baked fallback there may be nothing on
-    // screen at all, and an empty list must not be read as "nothing is on".
+    // Keep whatever is on screen - a board showing the last good *hour* beats
+    // one showing an error.
+    //
+    // That stops being true across midnight. Yesterday's classes under today's
+    // date are not stale, they are wrong, and the board has no way to say so:
+    // the stamp that used to read "Offline - showing an older day" lives in
+    // the crumb row, which is page chrome and is not rendered at all when the
+    // board takes the screen. So on the wall - the only place this runs - that
+    // warning was written to an element nobody could see, above a schedule
+    // being presented as today's. The rows go.
+    if (shownDay && day !== shownDay) {
+      shown = [];
+      shownDay = '';
+      list!.replaceChildren();
+      fit();
+    }
     if (!shown.length) {
       empty!.textContent = 'Cannot reach the calendar right now.';
       empty!.hidden = false;
       status!.textContent = 'Not connected';
-    } else if (day !== lastDay) {
-      status!.textContent = 'Offline - showing an older day';
     }
+  } finally {
+    refreshing = false;
   }
 }
 

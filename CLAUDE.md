@@ -440,6 +440,57 @@ more tick observed - "Starting soon · in 25m", the row expanded, **status still
 `next`**. That last line is the whole test; with the old code it would have read
 `next` and stayed condensed forever.
 
+**Midnight was a bug until 2026-09-25, and the shape of it is worth keeping.**
+`refresh()` always computed `today()` fresh, so the *fetch* handled the
+rollover correctly - what it did not do was happen. The day only changed on the
+5-minute poll, so for up to five minutes after midnight the board sat on
+yesterday's classes under yesterday's date while its own clock, which runs on
+its own second, already read 12:0x am beside them.
+
+`tick()` is the function whose whole job is "where does the day stand", and it
+never asked what day it was - it re-stamps `shown` against the clock and
+refetches nothing. It compares the clock's day against `shownDay` now, paints
+the date immediately and calls `refresh()` for the classes, which brings the
+window down to one tick.
+
+**The check has to sit above tick()'s empty-board early return**, and that is
+not a detail: the last class of the day has almost always finished by midnight,
+so the board is *most often empty at exactly the moment this has to fire*.
+Below the return it would have worked only on the nights something ran past
+twelve.
+
+**`shownDay` and the date label are deliberately two facts.** `paintDate()`
+does not touch `shownDay`; only `render()` does. So when the midnight refresh
+fails, the board knows the date it is showing and the day its rows came from
+disagree - which is what the failure path below needs.
+
+**A failed refresh keeps the board, except across midnight.** "A board showing
+the last good day beats one showing an error" is right within a day and wrong
+across one: yesterday's classes under today's date are not stale, they are
+wrong. There was a `status` line for it reading "Offline - showing an older
+day", and it was written to an element **that is not rendered on the wall** -
+the stamp lives in the crumb row, which is page chrome and goes when the board
+takes the screen. So the one place this code runs is the one place the warning
+could not be seen. Across a rollover the rows are cleared and the board says
+"Cannot reach the calendar right now." instead.
+
+Clearing also sets `shownDay` back to `''`, which is what stops the tick check
+retrying every 30 seconds for the rest of the night; the 5-minute poll takes
+over again. `refresh()` carries a `refreshing` guard for the same reason - the
+poll could never overlap itself, but a tick firing every 30s across a slow
+rollover could.
+
+Verified in the browser with the clock-stub technique, four states: the board
+at 23:58 on the 26th with three rows, then one tick past midnight (date, hours,
+greeting and class list all move to the 27th); the same rollover with `/api/`
+rejecting (rows cleared, "Cannot reach the calendar right now.", status "Not
+connected"); 40 seconds after that with no retry storm (0 calls); and a
+same-day failure, which leaves the rows and the stamp untouched.
+
+One trap in running that check: wrapping `window.fetch` twice and capturing the
+*wrapper* as the "original" makes a later "go back online" silently keep
+failing. Take a pristine `fetch` off a throwaway iframe's `contentWindow`.
+
 **`refresh()` and `tick()` are separate on purpose.** Refresh (5 min, network)
 changes *what* is on. Tick (30s, no network) changes *where the day stands* -
 past / live / next / later - which is what makes this a live view rather than a
